@@ -1,0 +1,58 @@
+PROG -> BODY.
+
+BODY -> CLASS BODY.
+BODY -> eof.
+
+CLASS -> class id lb CBODY rb.
+
+CBODY -> static TYPE id CBODY_2 CBODY.
+CBODY -> .
+
+CBODY_2 -> INIT sc.
+CBODY_2 -> FUNC.
+
+FUNC -> TYPE id ( PAR ) F_BODY.
+F_BODY -> sc.
+F_BODY -> lb ST_LIST rb.
+
+PAR -> TYPE PAR2.
+PAR2 -> .
+PAR2 -> id PAR3.
+PAR3 -> com TYPE id PAR3.
+PAR3 -> .
+
+ST_LIST -> STAT ST_LIST.
+ST_LIST ->  .
+
+STAT -> while ( EXPR ) lb ST_LIST rb.
+STAT -> if ( EXPR ) lb ST_LIST rb ELSE.
+STAT -> return RET sc.
+STAT -> sc.
+STAT -> continue sc.
+STAT -> break sc.
+STAT -> id IDEN eq EXPR sc.
+STAT -> static TYPE id INIT sc.
+STAT -> TYPE id INIT sc.
+STAT -> EXPR sc.
+
+IDEN -> sel id.
+IDEN -> .
+
+INIT -> eq EXPR.
+INIT -> .
+
+RET -> EXPR.
+RET -> .
+
+ELSE -> .
+ELSE -> else ELSE2.
+ELSE2 -> if lb ST_LIST rb ELSE.
+ELSE2 -> lb ST_LIST rb.
+
+TYPE -> void.
+TYPE -> int.
+TYPE -> string.
+TYPE -> double.
+
+EXPR -> id.
+
