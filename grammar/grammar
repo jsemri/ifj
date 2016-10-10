@@ -53,6 +53,3 @@
 	TYPE →  int
 	TYPE →  string
 	TYPE →  double
-	
-	EXPR →  id
-	
