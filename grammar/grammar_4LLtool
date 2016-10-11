@@ -11,7 +11,7 @@ CBODY -> .
 CBODY_2 -> INIT sc.
 CBODY_2 -> FUNC.
 
-FUNC -> TYPE id ( PAR ) F_BODY.
+FUNC -> ( PAR ) F_BODY.
 F_BODY -> sc.
 F_BODY -> lb ST_LIST rb.
 
