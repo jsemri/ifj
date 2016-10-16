@@ -11,7 +11,7 @@ char* str_init(T_string *s, unsigned space) {
 }
 
 // adds character at the end of string
-int str_addchar(T_string *dest, char c) {
+int str_addchar(T_string *dest, const char c) {
     if (dest->space > dest->length + 1) {
         dest->buf[dest->length] = c;
         dest->buf[dest->length+1] = 0;
