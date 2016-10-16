@@ -70,11 +70,14 @@ typedef struct {
         double d;       // values
         int n;
         T_keyword keyword;  // keyword
-        String str;     // "string.h"
-    };
-} Token;
+        T_string str;     // "string.h"
+    } ;
+} T_token;
 
-// TODO
-// token functions
-
+// allocates and initializes new token
+T_token* token_new();
+// removes string from token
+void token_clean(T_token *t);
+// removes token
+void token_free(T_token **t);
 #endif
