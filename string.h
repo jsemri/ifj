@@ -16,7 +16,7 @@ typedef struct {
 } T_string;
 
 // allocates a space for buffer
-char *str_init(T_string *s, unsigned space);
+char *str_init(T_string *s);
 
 // adds character at the end of string
 int str_addchar(T_string *dest, const char c);

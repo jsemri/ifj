@@ -4,10 +4,10 @@
 
 
 // allocates space for buffer
-char* str_init(T_string *s, unsigned space) {
-    s->space = space;
+char* str_init(T_string *s) {
+    s->space = 2;
     s->length = 0;
-    return (s->buf = calloc(space, 1));
+    return (s->buf = calloc(2, 1));
 }
 
 // adds character at the end of string
