@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "string.h"
 
-
 // allocates space for buffer
 char* str_init(T_string *s) {
     s->space = 2;

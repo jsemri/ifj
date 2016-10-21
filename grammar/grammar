@@ -1,7 +1,7 @@
-	PROG →  BODY
+	PROG →  BODY eof
 	
 	BODY →  CLASS BODY
-	BODY →  eof
+	BODY →  ε
 	
 	CLASS →  class id { CBODY }
 	
