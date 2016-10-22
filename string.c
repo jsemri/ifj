@@ -75,7 +75,7 @@ int str_cmp(const T_string *s1, const T_string *s2) {
 }
 
 // copies src to dest
-int str_copy(const T_string *src, T_string *dest) {
+int str_copy(T_string *dest,const T_string *src) {
     if (src != dest) {
         str_clear(dest);
         return str_catstr(dest, src);
