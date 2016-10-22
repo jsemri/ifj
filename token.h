@@ -34,6 +34,7 @@ typedef enum {
 
 // token types
 typedef enum {
+    TT_empty,           // just for initialization
     TT_plus,            // +
     TT_minus,           // -
     TT_mul,             // *
@@ -71,13 +72,13 @@ typedef struct {
         int n;
         T_keyword keyword;  // keyword
         T_string str;     // "string.h"
-    } ;
+    };
 } T_token;
 
 // allocates and initializes new token
 T_token* token_new();
 // removes string from token
-void token_clean(T_token *t);
+void token_clear(T_token *t);
 // removes token
 void token_free(T_token **t);
 #endif
