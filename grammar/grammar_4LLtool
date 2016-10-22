@@ -16,6 +16,7 @@ F_BODY -> sc.
 F_BODY -> lb ST_LIST rb.
 
 PAR -> TYPE PAR2.
+PAR -> .
 PAR2 -> .
 PAR2 -> id PAR3.
 PAR3 -> com TYPE id PAR3.

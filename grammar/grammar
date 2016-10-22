@@ -16,6 +16,7 @@
 	F_BODY →  { ST_LIST }
 	
 	PAR →  TYPE PAR2
+    PAR → ε
 	PAR2 → ε
 	PAR2 →  id PAR3
 	PAR3 →  com TYPE id PAR3
