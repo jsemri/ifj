@@ -1,56 +1,56 @@
-	PROG →  BODY eof
-	
-	BODY →  CLASS BODY
-	BODY →  ε
-	
-	CLASS →  class id { CBODY }
-	
-	CBODY →  static TYPE id CBODY_2 CBODY
-	CBODY → ε
-	
-	CBODY_2 →  INIT ;
-	CBODY_2 →  FUNC
-	
-	FUNC →  ( PAR ) F_BODY
-	F_BODY →  ;
-	F_BODY →  { ST_LIST }
-	
-	PAR →  TYPE PAR2
-    PAR → ε
-	PAR2 → ε
-	PAR2 →  id PAR3
-	PAR3 →  com TYPE id PAR3
-	PAR3 → ε
-	
-	ST_LIST →  STAT ST_LIST
-	ST_LIST →  ε
-	
-	STAT →  while ( EXPR ) { ST_LIST }
-	STAT →  if ( EXPR ) { ST_LIST } ELSE
-	STAT →  return RET ;
-	STAT →  ;
-	STAT →  continue ;
-	STAT →  break ;
-	STAT →  id IDEN eq EXPR ;
-	STAT →  static TYPE id INIT ;
-	STAT →  TYPE id INIT ;
-	STAT →  EXPR ;
-	
-	IDEN →  . id
-	IDEN → ε
-	
-	INIT →  eq EXPR
-	INIT → ε
-	
-	RET →  EXPR
-	RET → ε
-	
-	ELSE → ε
-	ELSE →  else ELSE2
-	ELSE2 →  if { ST_LIST } ELSE
-	ELSE2 →  { ST_LIST }
-	
-	TYPE →  void
-	TYPE →  int
-	TYPE →  string
-	TYPE →  double
+PROG →  BODY eof
+
+BODY →  CLASS BODY
+BODY →  ε
+
+CLASS →  class id { CBODY }
+
+CBODY →  static TYPE id CBODY_2 CBODY
+CBODY → ε
+
+CBODY_2 →  INIT ;
+CBODY_2 →  FUNC
+
+FUNC →  ( PAR ) F_BODY
+F_BODY →  ;
+F_BODY →  { ST_LIST }
+
+PAR →  TYPE PAR2
+PAR → ε
+PAR2 → ε
+PAR2 →  id PAR3
+PAR3 →  com TYPE id PAR3
+PAR3 → ε
+
+ST_LIST →  STAT ST_LIST
+ST_LIST →  ε
+
+STAT →  while ( EXPR ) { ST_LIST }
+STAT →  if ( EXPR ) { ST_LIST } ELSE
+STAT →  return RET ;
+STAT →  ;
+STAT →  continue ;
+STAT →  break ;
+STAT →  id IDEN eq EXPR ;
+STAT →  static TYPE id INIT ;
+STAT →  TYPE id INIT ;
+STAT →  EXPR ;
+
+IDEN →  . id
+IDEN → ε
+
+INIT →  eq EXPR
+INIT → ε
+
+RET →  EXPR
+RET → ε
+
+ELSE → ε
+ELSE →  else ELSE2
+ELSE2 →  if { ST_LIST } ELSE
+ELSE2 →  { ST_LIST }
+
+TYPE →  void
+TYPE →  int
+TYPE →  string
+TYPE →  double
