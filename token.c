@@ -10,7 +10,7 @@ void token_clear(T_token *t) {
     if (t) {
         // check if token is identifier or string
         if (t->type == TT_id || t->type == TT_string)
-            str_free(&t->str);
+            str_free(&t->attr.str);
     }
 }
 
@@ -18,7 +18,7 @@ void token_free(T_token **t) {
     if (*t) {
         // check if token is identifier or string
         if ((*t)->type == TT_id || (*t)->type == TT_string)
-            str_free(&((*t)->str));
+            str_free(&((*t)->attr.str));
         free(*t);
         *t = NULL;
     }

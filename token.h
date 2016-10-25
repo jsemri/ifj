@@ -72,7 +72,7 @@ typedef struct {
         int n;
         T_keyword keyword;  // keyword
         T_string str;     // "string.h"
-    };
+    }attr;
 } T_token;
 
 // allocates and initializes new token
