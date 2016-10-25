@@ -41,7 +41,7 @@ typedef enum {
     TT_div,             // /
     TT_greater,         // >
     TT_lesser,          // <
-    TT_gratEq,          // >=
+    TT_greatEq,         // >=
     TT_lessEq,          // <=
     TT_equal,           // ==
     TT_notEq,           // !=
