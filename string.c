@@ -2,11 +2,23 @@
 #include <stdlib.h>
 #include "string.h"
 
-// allocates space for buffer
-char* str_init(T_string *s) {
+#define INITIAL_STR_SIZE 2
+
+// allocates space for string and buffer
+T_string* str_init() {
+    // string pointer
+    T_string *s = malloc(sizeof(T_string));
+    if (!s)
+        return NULL;
+    // buffer filled with 0
+    s->buf = calloc(INITIAL_STR_SIZE, 1);
+    if (!s->buf) {
+        free(s);
+        return NULL;
+    }
     s->space = 2;
     s->length = 0;
-    return (s->buf = calloc(2, 1));
+    return s;
 }
 
 // adds character at the end of string
@@ -45,7 +57,7 @@ int str_addstr(T_string *dest, const char *src) {
         dest->space += len;
         strcpy(dest->buf + dest->length, src);
         dest->length += len;
-        return 1;
+        return 0;
     }
 }
 
@@ -92,8 +104,6 @@ void str_clear(T_string *str) {
 // removes string buffer
 void str_free(T_string *str) {
     free(str->buf);
-    str->buf = NULL;
-    str->space = 0;
-    str->length = 0;
+    free(str);
 }
 
