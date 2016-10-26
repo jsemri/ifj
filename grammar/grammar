@@ -47,7 +47,7 @@ RET → ε
 
 ELSE → ε
 ELSE →  else ELSE2
-ELSE2 →  if { ST_LIST } ELSE
+ELSE2 →  if ( EXPR ) { ST_LIST } ELSE
 ELSE2 →  { ST_LIST }
 
 TYPE →  void

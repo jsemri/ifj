@@ -47,7 +47,7 @@ RET -> .
 
 ELSE -> .
 ELSE -> else ELSE2.
-ELSE2 -> if lb ST_LIST rb ELSE.
+ELSE2 -> if ( EXPR ) lb ST_LIST rb ELSE.
 ELSE2 -> lb ST_LIST rb.
 
 TYPE -> void.
