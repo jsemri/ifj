@@ -58,7 +58,7 @@ typedef enum {
     TT_not,             // !
     TT_id,              // identifier
     TT_keyword,         // keyword
-    TT_number,          // int constant
+    TT_int,             // int constant
     TT_string,          // string literal
     TT_double,          // double constant
     TT_eof              // end of file
@@ -68,10 +68,10 @@ typedef enum {
 typedef struct {
     T_tokenType type;
     union {
-        double d;       // values
+        double d;           // values double or integer
         int n;
         T_keyword keyword;  // keyword
-        T_string str;     // "string.h"
+        T_string *str;      // POINTER to a T_string
     }attr;
 } T_token;
 
