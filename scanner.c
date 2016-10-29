@@ -5,6 +5,7 @@
 #include "ctype.h"
 #include "token.h"
 #include "string.h"
+#include "globals.h"
 
 FILE *source;
 T_token *token;
@@ -92,7 +93,7 @@ int get_token() {
                     number = str_init();
                     str_addchar(number, c);
                 } else {
-                    return ERROR;
+                    return LEX_ERROR;
                 }
                 break;
 
@@ -122,7 +123,7 @@ int get_token() {
                     state = S_double2;
                     str_addchar(number, c);
                 } else {
-                    return ERROR;
+                    return LEX_ERROR;
                 }
                 break;
 
@@ -151,7 +152,7 @@ int get_token() {
                     state = S_doubleExp3;
                     str_addchar(number, c);
                 } else {
-                    return ERROR;
+                    return LEX_ERROR;
                 }
                 break;
 
@@ -160,7 +161,7 @@ int get_token() {
                     state = S_doubleExp3;
                     str_addchar(number, c);
                 } else {
-                    return ERROR;
+                    return LEX_ERROR;
                 }
                 break;
 
@@ -186,7 +187,7 @@ int get_token() {
                     token->type = TT_string;
                     return OK;
                 } else if (c == '\n' || c == EOF) {
-                    return ERROR;
+                    return LEX_ERROR;
                 } else {                  
                     str_addchar(token->attr.str, c);
                 }
@@ -194,7 +195,7 @@ int get_token() {
 
             case S_stringBackSlash:
                 if (c == '\n' || c == EOF) {
-                    return ERROR;
+                    return LEX_ERROR;
                 } else {
                     state = S_string;
                 }
@@ -268,7 +269,7 @@ int get_token() {
                     token->type = TT_or;
                     return OK;
                 } else {
-                    return ERROR;
+                    return LEX_ERROR;
                 }
                 break;
 
@@ -277,7 +278,7 @@ int get_token() {
                     token->type = TT_and;
                     return OK;
                 } else {
-                    return ERROR;
+                    return LEX_ERROR;
                 }
                 break;
 

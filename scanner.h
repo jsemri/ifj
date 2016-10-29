@@ -6,8 +6,6 @@
 #include "string.h"
 
 #define OK 0
-#define EOF (-1)
-#define ERROR 2
 
 typedef enum {
     S_start,                    //initial
