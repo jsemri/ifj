@@ -21,7 +21,7 @@ typedef enum {
     S_or,                       // ||
     S_and,                      // &&
     S_string,
-    S_stringBackslash,
+    S_stringBackSlash,
     S_int,
     S_double,  // unused
     S_double2,
@@ -33,7 +33,6 @@ typedef enum {
 } T_state;
 
 void set_file(FILE *f);
-int get_token();  // TODO What is the type of attribute `token`?
-                                // (string* or T_token*) .. assuming T_token*
+int get_token();
 
 #endif

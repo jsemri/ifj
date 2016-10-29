@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "scanner.h"
 #include "ctype.h"
 #include "token.h"
@@ -7,6 +8,7 @@
 
 FILE *source;
 T_token *token;
+const char *KEYWORDS[17] = { "boolean", "break", "class", "continue", "do", "double", "else", "false", "for", "if", "int", "return", "String", "static", "true", "void", "while" };
 
 // sets a file to read from
 void set_file(FILE *f) {
@@ -179,7 +181,7 @@ int get_token() {
             /*_________String________*/
             case S_string:
                 if (c == '\\') {
-                    state = S_stringBackslash;
+                    state = S_stringBackSlash;
                 } else if (c == '"') {
                     token->type = TT_string;
                     return OK;
@@ -190,7 +192,7 @@ int get_token() {
                 }
                 break;
 
-            case S_stringBackslash:
+            case S_stringBackSlash:
                 if (c == '\n' || c == EOF) {
                     return ERROR;
                 } else {
@@ -204,6 +206,13 @@ int get_token() {
                     str_addchar(token->attr.str, c);     // add char to str, the ID is valid
                 } else {
                     ungetc(c, source);            // last char was not valid, end of ID, undo last char
+                    for (int i = TK_boolean; i <= TK_while; i++) {
+                        if (strcmp(token->attr.str->buf, KEYWORDS[i]) == 0) {
+                            token->type = TT_keyword;
+                            token->attr.keyword = i;
+                            return OK;
+                        }
+                    }
                     token->type = TT_id;
                     return OK;
                 }
@@ -317,10 +326,4 @@ int get_token() {
     // Pokud funkce dojde az, sem musel byt nacteny charakter EOF 
     token->type = TT_eof;
     return OK;
-}
-
-int main(int argc, char const *argv[])
-{
-    /* code */
-    return 0;
 }
