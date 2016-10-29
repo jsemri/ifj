@@ -24,7 +24,7 @@
 // FIXME
 // put here all global variables which are in use between most of modules
 
-FILE *source;
-T_token *token;
+extern FILE *source;
+extern T_token *token;
 
 #endif

@@ -1,9 +1,12 @@
-#include <stdio.h>;
-#include "scanner.h";
-#include "ctype.h";
+#include <stdio.h>
+#include <stdlib.h>
+#include "scanner.h"
+#include "ctype.h"
 #include "token.h"
+#include "string.h"
 
 FILE *source;
+T_token *token;
 
 // sets a file to read from
 void set_file(FILE *f) {
@@ -19,9 +22,11 @@ int is_next_eof() {
 }
 
 
-int get_token(T_token *token) {
+int get_token() {
     T_state state = S_start;
-    int c;
+    int c; //read character
+    token_clear(token);
+    T_string *number;
 
     // Reads chars from a file until EOF occurs
     while((c = fgetc(source)) != EOF) {
@@ -74,33 +79,38 @@ int get_token(T_token *token) {
                 } else if (c == '&'){
                     state = S_and;
                 } else if (isalpha(c) || c == '_' || c == '$') {    // ID starts with _$a-Z
-                    str_addchar(&token->attr.str, c);
+                    token->attr.str = str_init();
+                    str_addchar(token->attr.str, c);
                     state = S_ID;
                 } else if (c == '"') {
                     state = S_string;
+                    token->attr.str = str_init();
                 } else if (isdigit(c)) {
                     state = S_int;
-                    // save number into string
+                    number = str_init();
+                    str_addchar(number, c);
                 } else {
-                     return ERROR;
+                    return ERROR;
                 }
                 break;
 
             /*_________Numbers________*/
             case S_int:
                 if (isdigit(c)) {
-                    ;                     // add number to a string
+                    str_addchar(number, c);     // add number to a string
                 } else if (c == '.') {
                     state = S_double;
-                    // add the dot into the string
+                    str_addchar(number, c);     // add the dot into the string
                 } else if (c == 'e' || c == 'E') {
                     state = S_doubleExp;
-                    // add into string
+                    str_addchar(number, c);
                 } else {
-                    ungetc(c, source);            // last char was not valid, end of ID, undo last char
-                    // TODO unknown type TT_int, missing end of statement
-                    /*token->type = TT_int;
-                    token->n = ;*/ //return string value in int
+                    ungetc(c, source);          // last char was not valid, end of ID, undo last char
+
+                    token->type = TT_int;
+                    token->attr.n = (int) strtol(number->buf, NULL, 10); //return string value in int
+                    str_free(number);
+
                     return OK;
                 }
                 break;
@@ -108,7 +118,7 @@ int get_token(T_token *token) {
             case S_double:
                 if (isdigit(c)) {
                     state = S_double2;
-                    // add num into string
+                    str_addchar(number, c);
                 } else {
                     return ERROR;
                 }
@@ -116,15 +126,17 @@ int get_token(T_token *token) {
 
             case S_double2:
                 if (isdigit(c)) {
-                    ; // add into string and stay
+                    str_addchar(number, c); // add into string and stay
                 } else if (c == 'e' || c == 'E') {
                     state = S_doubleExp;
-                    // add into string
+                    str_addchar(number, c);
                 } else {
                     ungetc(c, source);            // last char was not valid, end of ID, undo last char
-                    // TODO unknown type TT_int, missing end of statement
-                    /*token->type = TT_int;
-                    token->n = ;*/ //return string value in int
+
+                    token->type = TT_double;
+                    token->attr.d = strtod(number->buf, NULL); //return string value in int
+                    str_free(number);
+
                     return OK;
                 }
                 break;
@@ -132,10 +144,10 @@ int get_token(T_token *token) {
             case S_doubleExp:
                 if (c == '+' || c == '-') {
                     state = S_doubleExp2;
-                    // add into string
+                    str_addchar(number, c);
                 } else if (isdigit(c)) {
                     state = S_doubleExp3;
-                    // add into string
+                    str_addchar(number, c);
                 } else {
                     return ERROR;
                 }
@@ -144,7 +156,7 @@ int get_token(T_token *token) {
             case S_doubleExp2:
                 if (isdigit(c)) {
                     state = S_doubleExp3;
-                    // add into string
+                    str_addchar(number, c);
                 } else {
                     return ERROR;
                 }
@@ -152,12 +164,14 @@ int get_token(T_token *token) {
 
             case S_doubleExp3:
                 if (isdigit(c)) {
-                    ; // add into string
+                    str_addchar(number, c); // add into string and stay in this state
                 } else {
                     ungetc(c, source);            // last char was not valid, end of ID, undo last char
-                    // TODO unknown type TT_int, missing end of statement
-                    /*token->type = TT_int;
-                    token->n = ;*/ //return string value in int
+
+                    token->type = TT_double;
+                    token->attr.d = strtod(number->buf, NULL);
+                    str_free(number);
+
                     return OK;
                 }
                 break;
@@ -171,9 +185,8 @@ int get_token(T_token *token) {
                     return OK;
                 } else if (c == '\n' || c == EOF) {
                     return ERROR;
-                } else {
-
-                    str_addchar(&token->attr.str, c);
+                } else {                  
+                    str_addchar(token->attr.str, c);
                 }
                 break;
 
@@ -188,7 +201,7 @@ int get_token(T_token *token) {
             /*_________ID________*/
             case S_ID:
                 if (isalnum(c) || c == '_' || c == '$') {
-                    str_addchar(&token->attr.str, c);     // add char to str, the ID is valid
+                    str_addchar(token->attr.str, c);     // add char to str, the ID is valid
                 } else {
                     ungetc(c, source);            // last char was not valid, end of ID, undo last char
                     token->type = TT_id;
@@ -265,9 +278,9 @@ int get_token(T_token *token) {
                     state = S_commentLine;
                 } else if (c == '*') {
                     state = S_commentBlock;
-                } else {                 // it is division
+                } else {                    // it is division
                     token->type = TT_div;
-                    ungetc(c, source);        // we need to return that one char we checked
+                    ungetc(c, source);      // we need to return that one char we checked
                     return OK;
                 }
                 break;
@@ -282,7 +295,8 @@ int get_token(T_token *token) {
                 if (c == '*') {
                     state = S_commentBlockStar;
                 } else if (is_next_eof()) {
-                    return ERROR;
+                    token->type = TT_eof;
+                    return OK;
                 }
                 break;
 
@@ -292,12 +306,21 @@ int get_token(T_token *token) {
                 } else if (c == '/') {
                     state = S_start;
                 } else if (is_next_eof()) {
-                    return ERROR;
+                    token->type = TT_eof;
+                    return OK;
                 } else {
                     state = S_commentBlock;
                 }
                 break;
-
         }
     }
+    // Pokud funkce dojde az, sem musel byt nacteny charakter EOF 
+    token->type = TT_eof;
+    return OK;
+}
+
+int main(int argc, char const *argv[])
+{
+    /* code */
+    return 0;
 }
