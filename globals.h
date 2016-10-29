@@ -21,8 +21,7 @@
 #define OTHER_ERROR 10
 #define INTERNAL_ERROR 99
 
-// FIXME
-// put here all global variables which are in use between most of modules
+// FIXME Put here all global variables which are used across most of the modules
 
 extern FILE *source;
 extern T_token *token;
