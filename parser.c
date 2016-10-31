@@ -364,7 +364,8 @@ int stat() {
             case TK_String:
                 {
                     // rule: STAT -> TYPE id INIT
-
+                    if (in_block)
+                        return leave(__func__, SYNTAX_ERROR);
                     res = type();
                     if (res)
                         return leave(__func__, 0) + res;
