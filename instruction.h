@@ -37,7 +37,10 @@ typedef struct T_ilist {
     T_instr *act;   // active item
 } ilist;
 
-// TODO
-// add functions
+ilist *list_init();
+void list_insert_first(ilist *L, T_instr *ins);
+void list_insert_last(ilist *L, T_instr *ins);
+void list_delete(ilist *L);
+void list_free(ilist **L);
 
 #endif
