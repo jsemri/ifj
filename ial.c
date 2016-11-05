@@ -138,8 +138,3 @@ void htab_remove(T_symbol_table *stab, const char *key) {
     }
 }
 
-// TODO Pak mě vymaž, ale zatím chci být schopen se zkompilovat.
-// Můj vnitřek by měl přijít do nějakýho testu. A taky, dejte mi vnitřek :)
-int main() {
-    return 0;
-}
