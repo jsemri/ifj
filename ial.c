@@ -104,7 +104,7 @@ void table_remove(T_symbol_table *stab) {
 
         for (unsigned i = 0; i < stab->size; i++) {
             while ((item = stab->arr[i]) != NULL) {
-                htab_remove(stab, item->id);
+                symbol_remove(stab, item->id);
             }
         }
 
@@ -115,7 +115,7 @@ void table_remove(T_symbol_table *stab) {
 
 
 // deletes one item from the table (called by table_remove)
-void htab_remove(T_symbol_table *stab, const char *key) {
+void symbol_remove(T_symbol_table *stab, const char *key) {
     unsigned index = hash(key, stab->size);
     T_symbol* item = stab->arr[index];
     T_symbol* item_ptr = stab->arr[index];
@@ -137,5 +137,3 @@ void htab_remove(T_symbol_table *stab, const char *key) {
         }
     }
 }
-
-
