@@ -12,6 +12,7 @@
 #include "token_vector.h"
 #include <stdbool.h>
 #include "debug.h"
+#include "instruction.h"
 
 // unget token
 static bool get_token_flag = false;

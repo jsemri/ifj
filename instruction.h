@@ -8,8 +8,14 @@
 
 // instruction type
 typedef enum {
-    TI_nop
-    // TODO
+    TI_nop,
+    TI_add,     // arithmetic
+    TI_sub,
+    TI_mul,
+    TI_div,
+    TI_ifgoto,  // jumps
+    TI_goto,
+    TI_lab
     // more instructions
 } T_instr_type;
 
