@@ -288,7 +288,7 @@ int leave(const char *fi, int rc) {
     (void)fi;
     return rc;
 }
-int show_token() {
-    return 0;
+int show_token(int rc) {
+    return rc;
 }
 #endif
