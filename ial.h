@@ -46,7 +46,7 @@ typedef struct {
 } T_symbol_table;
 
 // hash function
-unsigned hash(const char *key);
+unsigned hash(const char *key, unsigned size);
 
 // initialization of symbol table
 T_symbol_table *table_init(unsigned size);
