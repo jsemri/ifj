@@ -18,7 +18,7 @@ void set_file(FILE *f) {
 
 int is_next_eof() {
     int c = fgetc(source);    //checking EOF
-    int ret_value = (c == EOF) ? 1 : 0; // if next char
+    int ret_value = (c == EOF); // if next char
     ungetc(c, source);
 
     return ret_value;

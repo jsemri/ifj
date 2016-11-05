@@ -9,8 +9,7 @@
 // instruction type
 typedef enum {
     TI_nop
-    // TODO
-    // more instructions
+    // TODO More instructions
 } T_instr_type;
 
 // instruction mode
@@ -37,7 +36,6 @@ typedef struct T_ilist {
     T_instr *act;   // active item
 } ilist;
 
-// TODO
-// add functions
+// TODO Add functions
 
 #endif
