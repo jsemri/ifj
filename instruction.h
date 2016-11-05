@@ -8,10 +8,8 @@
 
 // instruction type
 typedef enum {
-<<<<<<< HEAD
     TI_nop
     // TODO More instructions
-=======
     TI_nop,
     TI_add,     // arithmetic
     TI_sub,
@@ -21,7 +19,6 @@ typedef enum {
     TI_goto,
     TI_lab
     // more instructions
->>>>>>> syntax-analysis
 } T_instr_type;
 
 // instruction mode
@@ -48,14 +45,11 @@ typedef struct T_ilist {
     T_instr *act;   // active item
 } ilist;
 
-<<<<<<< HEAD
 // TODO Add functions
-=======
 ilist *list_init();
 void list_insert_first(ilist *L, T_instr *ins);
 void list_insert_last(ilist *L, T_instr *ins);
 void list_delete(ilist *L);
 void list_free(ilist **L);
->>>>>>> syntax-analysis
 
 #endif
