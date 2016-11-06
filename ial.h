@@ -20,7 +20,7 @@ typedef struct T_symbol {
         isstr,
         isint,
         isdouble
-    } date_type;
+    } data_type;
     // `defined` flag
     bool is_def;
     // possible values
