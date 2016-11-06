@@ -6,7 +6,7 @@
 // initialization of symbol table
 T_symbol_table *table_init(unsigned size) {
     T_symbol_table* table = malloc(sizeof(T_symbol_table) +
-                                           size * sizeof(T_symbol));
+                                   size * sizeof(T_symbol));
     if (table == NULL)
         return NULL;
 
@@ -27,6 +27,11 @@ T_symbol *table_insert(T_symbol_table *stab, T_symbol *s) {
 
     T_symbol* item_pom = table_find(stab, s->id);
 
+
+
+
+
+
     if(item_pom == NULL){
         T_symbol* item;
 
@@ -38,12 +43,13 @@ T_symbol *table_insert(T_symbol_table *stab, T_symbol *s) {
 
         item->id = s->id;
         item->symbol_type = s->symbol_type;
-        item->date_type = s->date_type;
+        item->data_type = s->data_type;
         item->is_def = s->is_def;
         item->value = s->value;
         item->symbol_attr = s->symbol_attr;
         item->member_class = s->member_class;
-        item->next = NULL;
+        item->next = stab->arr[hash(s->id,stab->size)];
+        //arr[hash(symbol->id)]; // FIXME ??
 
         return item;
     } else {
@@ -96,15 +102,18 @@ T_symbol *table_find(T_symbol_table *stab, const char *key) {
     return item;
 }
 
-
 // deletes whole table
 void table_remove(T_symbol_table *stab) {
     if (stab != NULL) {
-        T_symbol* item = NULL;
+        T_symbol* s = NULL;
 
         for (unsigned i = 0; i < stab->size; i++) {
-            while ((item = stab->arr[i]) != NULL) {
-                symbol_remove(stab, item->id);
+            while ((s = stab->arr[i]) != NULL) {
+                stab->arr[i] = s->next;
+                free(s->id);
+                if (s->data_type == isstr)
+                    str_free(s->value.str);
+                free(s);
             }
         }
 
@@ -112,28 +121,3 @@ void table_remove(T_symbol_table *stab) {
     }
 }
 
-
-
-// deletes one item from the table (called by table_remove)
-void symbol_remove(T_symbol_table *stab, const char *key) {
-    unsigned index = hash(key, stab->size);
-    T_symbol* item = stab->arr[index];
-    T_symbol* item_ptr = stab->arr[index];
-
-
-    while (item != NULL) {
-        if (strcmp(item->id,key) == 0) {
-            if (item_ptr == item) {
-                stab->arr[index] = item->next;
-            }
-            item_ptr->next = item->next;
-
-            free(item);
-            break;
-        }
-        else {
-            item_ptr = item;
-            item = item->next;
-        }
-    }
-}
