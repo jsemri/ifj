@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "scanner.h"
-#include "ctype.h"
+#include <ctype.h>
 #include "token.h"
 #include "string.h"
 #include "globals.h"
@@ -61,11 +61,11 @@ int get_token() {
                 } else if (c == ')') {
                     token->type = TT_rBracket;
                     return OK;
-                } else if (c == '{') {                        
+                } else if (c == '{') {
                     token->type = TT_lCurlBracket;
                     return OK;
                 } else if (c == '}') {
-                    token->type = TT_rCurlBracket;            
+                    token->type = TT_rCurlBracket;
                     return OK;
                 } else if (c == '/') {
                     state = S_commentOrDiv;                 // comment (block, line) or division
@@ -188,7 +188,7 @@ int get_token() {
                     return OK;
                 } else if (c == '\n' || c == EOF) {
                     return LEX_ERROR;
-                } else {                  
+                } else {
                     str_addchar(token->attr.str, c);
                 }
                 break;
@@ -209,6 +209,7 @@ int get_token() {
                     ungetc(c, source);            // last char was not valid, end of ID, undo last char
                     for (int i = TK_boolean; i <= TK_while; i++) {
                         if (strcmp(token->attr.str->buf, KEYWORDS[i]) == 0) {
+                            token_clear(token);
                             token->type = TT_keyword;
                             token->attr.keyword = i;
                             return OK;
@@ -220,11 +221,11 @@ int get_token() {
                 break;
 
             /*_________OPERATORS________*/
-            case S_lesserOrLesserEqual:        
+            case S_lesserOrLesserEqual:
                 if (c == '=') {
                     token->type = TT_lessEq;
                     return OK;
-                } else {                        
+                } else {
                     ungetc(c, source);            // It's just <, undo last char read
                     token->type = TT_lesser;
                     return OK;
@@ -235,8 +236,8 @@ int get_token() {
                 if (c == '=') {
                     token->type = TT_greatEq;
                     return OK;
-                } else {                        
-                    ungetc(c, source);            // It's just >, undo last char read    
+                } else {
+                    ungetc(c, source);            // It's just >, undo last char read
                     token->type = TT_greater;
                     return OK;
                 }
@@ -246,18 +247,18 @@ int get_token() {
                 if (c == '=') {
                     token->type = TT_equal;
                     return OK;
-                } else {                        
+                } else {
                     ungetc(c, source);            // Just =, undo last char
                     token->type = TT_assign;
                     return OK;
                 }
                 break;
 
-            case S_notOrNotEqual:                
+            case S_notOrNotEqual:
                 if (c == '=') {
                     token->type = TT_notEq;
                     return OK;
-                } else {                        
+                } else {
                     ungetc(c, source);            // Just =, undo last char
                     token->type = TT_not;
                     return OK;
@@ -298,7 +299,7 @@ int get_token() {
             case S_commentLine:
                 if (c == '\n') {
                     state = S_start;
-                } 
+                }
                 break;
 
             case S_commentBlock:
@@ -324,7 +325,7 @@ int get_token() {
                 break;
         }
     }
-    // Pokud funkce dojde az, sem musel byt nacteny charakter EOF 
+    // Pokud funkce dojde az, sem musel byt nacteny charakter EOF
     token->type = TT_eof;
     return OK;
 }
