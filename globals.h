@@ -8,6 +8,8 @@
 
 #include "token.h"
 #include <stdio.h>
+#include "ial.h"
+#include "instruction.h"
 
 // error codes
 #define LEX_ERROR 1
@@ -23,6 +25,8 @@
 
 // FIXME Put here all global variables which are used across most of the modules
 
+extern ilist *instr_list;
+extern T_symbol_table *symbol_tab;
 extern FILE *source;
 extern T_token *token;
 
