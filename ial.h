@@ -64,4 +64,7 @@ T_symbol *table_insert(T_symbol_table *stab, T_symbol *s);
 // deletes whole table
 void table_remove(T_symbol_table *stab);
 
+// deletes one item from the table (called by table_remove)
+void symbol_remove(T_symbol_table *stab, const char *key);
+
 #endif
