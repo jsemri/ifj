@@ -60,20 +60,21 @@ T_symbol *table_find(T_symbol_table *stab, const char *key) {
 }
 
 // deletes whole table
-void table_remove(T_symbol_table *stab) {
-    if (stab != NULL) {
+void table_remove(T_symbol_table **stab) {
+    if (*stab != NULL) {
         T_symbol* s;
 
-        for (unsigned i = 0; i < stab->size; i++) {
-            while ((s = stab->arr[i]) != NULL) {
-                stab->arr[i] = s->next;
+        for (unsigned i = 0; i < (*stab)->size; i++) {
+            while ((s = (*stab)->arr[i]) != NULL) {
+                (*stab)->arr[i] = s->next;
                 free((void*)s->id);
                 if (s->symbol_type == isvar && s->data_type == isstr)
                     str_free(s->value.str);
                 free(s);
             }
         }
-        free(stab);
+        free(*stab);
+        *stab = NULL;
     }
 }
 

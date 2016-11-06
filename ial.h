@@ -61,6 +61,6 @@ T_symbol *table_find(T_symbol_table *stab, const char *key);
 T_symbol *table_insert(T_symbol_table *stab, T_symbol *s);
 
 // deletes whole table
-void table_remove(T_symbol_table *stab);
+void table_remove(T_symbol_table **stab);
 
 #endif
