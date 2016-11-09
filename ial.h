@@ -19,7 +19,8 @@ typedef struct T_symbol {
     enum {
         isstr,
         isint,
-        isdouble
+        isdouble,
+        isvoid
     } data_type;
     // `defined` flag
     bool is_def;
@@ -34,6 +35,8 @@ typedef struct T_symbol {
         bool is_init;        // initialization flag of
         ilist *func_ilist;   // function's instruction list
     } symbol_attr;
+    unsigned arg_count;      // argument count
+    char *arguments[];       // argument names
     // member class of variable or function
     struct T_symbol *member_class;
     // next symbol
