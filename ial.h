@@ -1,47 +1,7 @@
 #ifndef IAL_H
 #define IAL_H
 
-#include <stdbool.h>
-#include "instruction.h"
-#include "string.h"
-
-// symbol
-typedef struct T_symbol {
-    // key and identifier
-    const char *id;
-    // symbol type
-    enum {
-        isclass,
-        isfunc,
-        isvar
-    } symbol_type;
-    // data type (including return value)
-    enum {
-        isstr,
-        isint,
-        isdouble,
-        isvoid
-    } data_type;
-    // `defined` flag
-    bool is_def;
-    // possible values
-    union {
-        T_string *str;
-        int num;
-        double d;
-    } value;
-    // symbol attribute
-    union {
-        bool is_init;        // initialization flag of
-        ilist *func_ilist;   // function's instruction list
-    } symbol_attr;
-    unsigned arg_count;      // argument count
-    char *arguments[];       // argument names
-    // member class of variable or function
-    struct T_symbol *member_class;
-    // next symbol
-    struct T_symbol *next;
-} T_symbol;
+#include "symbol.h"
 
 typedef struct {
     unsigned size;      // hash table size
