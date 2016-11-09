@@ -45,12 +45,13 @@ unsigned hash(const char *key, unsigned size) {
 // search for symbol with `key`
 // returns a pointer to the searched symbol
 // returns NULL if symbol was not found
-T_symbol *table_find(T_symbol_table *stab, const char *key) {
+T_symbol *table_find(T_symbol_table *stab, const char *key, T_symbol *mclass) {
     unsigned index = hash(key, stab->size);
     T_symbol* item = stab->arr[index];
 
     while (item != NULL) {
-        if (strcmp(item->id,key) == 0) {
+        // member class and identifiers have to be same
+        if (strcmp(item->id,key) == 0 && item->member_class == mclass) {
             return item;
         }
         item = item->next;
@@ -68,8 +69,20 @@ void table_remove(T_symbol_table **stab) {
             while ((s = (*stab)->arr[i]) != NULL) {
                 (*stab)->arr[i] = s->next;
                 free((void*)s->id);
-                if (s->symbol_type == isvar && s->data_type == isstr)
-                    str_free(s->value.str);
+                if (s->symbol_type == isvar ) {
+                    if (s->data_type == isstr)
+                        str_free(s->attr.var->value.str);
+                    free(s->attr.var);
+                }
+                else if (s->symbol_type == isfunc) {
+                    if (s->attr.func->par_count) {
+                        // parameter types
+                        free(s->attr.func->dtypes);
+                        // parameter names
+                        free(s->attr.func->par_names);
+                    }
+                    free(s->attr.func);
+                }
                 free(s);
             }
         }

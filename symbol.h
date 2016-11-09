@@ -13,12 +13,33 @@ typedef enum {
     isvoid
 } T_data_types;
 
-// parameters of function
+// function attributes
 typedef struct {
+    // instruction list
+    // NULL if no function body
+    ilist *func_ilist;
+    // number of parameters
     unsigned par_count;
-    char *names[];  // argument names
+    // data types of parameters
+    // NULL if no parameters
     T_data_types *dtypes;
-} T_params;
+    // parameters names
+    // NULL if no parameters
+    char **par_names;
+} T_func_symbol;
+
+// variable attributes
+typedef struct {
+    bool is_def;
+    // initialization flag
+    bool is_init;
+    // value of variable
+    union {
+        T_string *str;
+        int num;
+        double d;
+    } value;
+} T_var_symbol;
 
 
 // symbol
@@ -31,22 +52,21 @@ typedef struct T_symbol {
         isfunc,
         isvar
     } symbol_type;
+    /*
+       Using static variable or function before declaration.
+       If undefined variable or function is found (or class), it is added to
+       symbol table with flag set to 0. After leaving a member class. If the
+       flag is unchanged semantic error have occurred.
+    */
+    bool is_def;
+
     // data type (including return value)
     T_data_types data_type;
-    // `defined` flag
-    bool is_def;
-    // possible values
+    // symbol attributes
     union {
-        T_string *str;
-        int num;
-        double d;
-    } value;
-    // symbol attribute
-    union {
-        bool is_init;        // initialization flag of
-        ilist *func_ilist;   // function's instruction list
-    } symbol_attr;
-    T_params *params;         // function's parameters
+        T_var_symbol *var;
+        T_func_symbol *func;
+    } attr;
     // member class of variable or function
     struct T_symbol *member_class;
     // next symbol

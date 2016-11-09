@@ -11,24 +11,32 @@
 #include "scanner.h"
 #include "token_vector.h"
 #include <stdbool.h>
+#include <stdlib.h>
 #include "debug.h"
 #include "instruction.h"
+#include "ial.h"
+#include "symbol.h"
 
+// symbol table size
+#define RANGE 8
 // unget token
 static bool get_token_flag = false;
 #define get_token()  (get_token_flag ? (get_token_flag = false) : get_token())
 #define unget_token() get_token_flag = true
 
 // global variables
+T_symbol_table *symbol_tab;
 T_token *token;
 static int in_block = 0;
+// pointer to actual class
+static T_symbol *actual_class;
 
 // each function represents a nonterminal symbol in LL(1) table
 int prog();
 int body();
 int class();
 int cbody();
-int cbody2();
+int cbody2(T_symbol *symbol);
 int func();
 int fbody();
 int par();
@@ -75,7 +83,10 @@ int body() {
         return leave(__func__, SYNTAX_ERROR);
 }
 
-// CLASS -> id lb CBODY rb
+/* CLASS -> id lb CBODY rb
+    symbol of type class defined
+    actual class pointer changed
+*/
 int class() {
     enter(__func__);
     int res = 0;
@@ -86,29 +97,60 @@ int class() {
     // `id` expected
     if (token->type != TT_id)
         return leave(__func__, SYNTAX_ERROR);
-    else {
-        // .... do something with id
+/*
+    // searching for id in table
+    // if not found then insert to table
+    T_symbol *symbol;
+    if ( (symbol = table_find(symbol_tab, token->attr.str->buf))
+          && symbol->symbol_type == isclass && symbol->is_def) {
+        return leave(__func__, DEFINITION_ERROR);
     }
 
-    // goind for '{'
+    if (!symbol) {
+        if ( !(symbol = calloc(1, sizeof(T_symbol) )) ) {
+            return leave(__func__, INTERNAL_ERROR);
+        }
+
+        // changing actual class
+        actual_class = symbol;
+        symbol->id = token->attr.str->buf;
+
+        // removing String pointer
+        token->attr.str->buf = 0;
+
+        symbol->symbol_type = isclass;
+        table_insert(symbol_tab, symbol);
+        // that is all for class, no more informations needed so far
+    }
+    symbol->is_def = true;
+*/
+
+    // going for '{'
     if (get_token())
          return leave(__func__, LEX_ERROR);
 
     if (token->type != TT_lCurlBracket)
         return leave(__func__, SYNTAX_ERROR);
-    else {
 
-        // cbody should return } in token
-        res = cbody();
-    }
+    // cbody should return } in token
+    res = cbody();
 
     return res+leave(__func__, 0);
 }
 
-// CBODY -> static TYPE id CBODY2 CBODY
+/* CBODY -> static TYPE id CBODY2 CBODY
+   Symbol table:
+    for symbol(function or variable) is here defined:
+        -data type
+        -member class
+        -id
+        -definition flag
+*/
 int cbody() {
     enter(__func__);
     int res;
+    // temporary variable for data type
+    unsigned dtype = 0;
     // static or '}'
     if (get_token())
         return leave(__func__, LEX_ERROR);
@@ -119,18 +161,60 @@ int cbody() {
         if (get_token())
             return leave(__func__, LEX_ERROR);
 
-        res = type();
-        if (res)
-            return leave(__func__, res);
-        // id expected
+        // 'data type' expected
+        if (token->type == TT_keyword) {
+            switch (token->attr.keyword) {
+                case TK_void:   // do stuff
+                case TK_int:
+                case TK_double:
+                case TK_String:
+                   dtype = token->attr.keyword;
+                   break;
+                default:
+                    return leave(__func__, SYNTAX_ERROR);
+            }
+        }
+        else
+            return leave(__func__, SYNTAX_ERROR);
+
+        // 'id' expected
         if (get_token())
             return leave(__func__, LEX_ERROR);
 
         if (token->type != TT_id)
             return leave(__func__, SYNTAX_ERROR);
-        // else do stuff with id
 
-        res = cbody2();
+        // handle identifier
+        // searching for id in table
+        // if not found then insert to table
+        T_symbol *symbol;
+/*        if ( (symbol = table_find(symbol_tab, token->attr.str->buf))
+              && symbol->member_class == actual_class && symbol->is_def) {
+            return leave(__func__, DEFINITION_ERROR);
+        }
+
+        // symbol is in the table but has is_def flag set to zero
+        if (!symbol) {
+            if ( !(symbol = calloc(1, sizeof(T_symbol) )) ) {
+                return leave(__func__, INTERNAL_ERROR);
+            }
+            symbol->id = token->attr.str->buf;
+            symbol->data_type = dtype;
+            token->attr.str->buf = 0;
+            table_insert(symbol_tab, symbol);
+
+        } else {
+            // variable was used before and was assumed to have
+            // specific data type
+            // TODO double or int - modify
+            if (symbol->data_type != dtype)
+                return leave(__func__, TYPE_ERROR);
+        }
+
+        symbol->is_def = true;
+        symbol->member_class = actual_class;
+*/
+        res = cbody2(symbol);
         if (res)
             return leave(__func__, res);
 
@@ -145,7 +229,7 @@ int cbody() {
 }
 
 // TYPE -> void|int|double|string
-// FIXME return type by parameter
+// FIXME to be deleted
 int type() {
     enter(__func__);
     if (token->type == TT_keyword) {
@@ -165,8 +249,15 @@ int type() {
 }
 
 
-// CBODY2 ->INIT; | FUNC
-int cbody2() {
+/* CBODY2 -> '=' ';' '('
+ Symbol table:
+ for identifier is defined:
+  -symbol type
+  if variable - value (precedence analysis)
+              - initialization flag
+  if function - call func()
+*/
+int cbody2(T_symbol *symbol) {
     enter(__func__);
     // '=' or ';' or '(' expected
     if (get_token())
@@ -174,6 +265,11 @@ int cbody2() {
 
     // variable
     if (token->type == TT_assign) {
+        // if variable is of void type
+        if (symbol->data_type == isvoid )
+            return leave(__func__, SEMANTIC_ERROR);
+
+  //      symbol->symbol_type = isvar;
         // creating token vector
         token_vector tvect = token_vec_init();
         // reading till ';' or 'eof' read
@@ -185,17 +281,28 @@ int cbody2() {
             token_push_back(tvect, token);
         }
         // TODO call precedence analyser
+        // TODO static a = func(); - interpret will do
         token_vec_delete(tvect);
+        // setting initialization flag
+//        symbol->symbol_attr.is_init = true;
+
         if (token->type == TT_semicolon)
             return leave(__func__, 0);
         return leave(__func__, SYNTAX_ERROR);
     }
     else if (token->type == TT_semicolon) {
-        // TODO do stuff with variable
+        // if variable is of void type
+      //  if (symbol->data_type == isvoid )
+            return leave(__func__, SEMANTIC_ERROR);
+
+    //    symbol->symbol_type = isvar;
+        // setting initialization flag
+  //      symbol->symbol_attr.is_init = false;
         return leave(__func__, 0);
     }
     // function
     else if (token->type == TT_lBracket) {
+//        symbol->symbol_type = isfunc;
         // TODO do stuff with function id
         return func()+leave(__func__, 0);
     }
@@ -205,8 +312,11 @@ int cbody2() {
     return leave(__func__, 0);
 }
 
-// FUNC -> ( PAR ) FBODY
-// '(' has been read
+/* FUNC -> ( PAR ) FBODY
+ '(' has been read
+ Symbol table:
+
+*/
 int func() {
     enter(__func__);
     int res = 0;
@@ -235,7 +345,7 @@ int par() {
         return leave(__func__, 0);
     else if (token->type == TT_keyword) {
 
-        if (type())
+    if (type())
             return leave(__func__, SYNTAX_ERROR);
     }
     else
@@ -751,15 +861,32 @@ int parse() {
         return INTERNAL_ERROR;
     }
 
+    symbol_tab = table_init(RANGE);
+
+/*
+    while (token->type != TT_eof)
+        get_token();
+*/
     int res;
+
     res =  prog();
-    if (res == 1)
-        fprintf(stderr, "Lexer error\n");
-    else if (res == 2)
+    if (res == LEX_ERROR)
+        fprintf(stderr, "Lexical error\n");
+    else if (res == SYNTAX_ERROR)
         fprintf(stderr, "Syntax error\n");
+    else if (res == DEFINITION_ERROR)
+        fprintf(stderr, "Definition error\n");
+    else if (res == INTERNAL_ERROR)
+        fprintf(stderr, "Internal error\n");
+    else if (res == TYPE_ERROR)
+        fprintf(stderr, "Type error\n");
+    else if (res == SEMANTIC_ERROR)
+        fprintf(stderr, "Semantic error\n");
     else
         fprintf(stderr, "Success\n");
 
+    print_table(symbol_tab);
+    table_remove(&symbol_tab);
     token_free(&token);
     return res;
 
