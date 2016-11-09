@@ -2,7 +2,8 @@
 #include "globals.h"
 #include "token.h"
 #include <string.h>
-
+#include <stdio.h>
+#include "ial.h"
 
 #ifdef DEBUG
 // variables for each function:
@@ -23,6 +24,15 @@ static int ret;
 static int st_else;
 static int st_else2;
 static int type;
+static char *arr[] = {"class", "func", "var"};
+
+void print_table(T_symbol_table *st) {
+    for (unsigned i = 0;i < st->size; i++) {
+        for (T_symbol *s = st->arr[i];s;s = s->next)
+            printf("|%s--%s|->", s->id, arr[s->symbol_type]);
+        printf("||\n");
+    }
+}
 
 void enter(const char *fi) {
 
