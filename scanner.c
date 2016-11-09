@@ -6,10 +6,17 @@
 #include "token.h"
 #include "string.h"
 #include "globals.h"
+#include "debug.h"
+
+#define KEYW_COUNT 17
 
 FILE *source;
 T_token *token;
-const char *KEYWORDS[17] = { "boolean", "break", "class", "continue", "do", "double", "else", "false", "for", "if", "int", "return", "String", "static", "true", "void", "while" };
+const char *KEYWORDS[KEYW_COUNT] = {
+    "void", "int", "double", "String", "boolean",
+    "break", "class", "continue", "do", "else",
+    "false", "for", "if", "return", "static", "true",
+    "while" };
 
 // sets a file to read from
 void set_file(FILE *f) {
@@ -39,34 +46,34 @@ int get_token() {
                     ;    // Ignores whitespaces, do nothing
                 } else if (c == '+') {
                     token->type = TT_plus;
-                    return OK;
+                    return show_token(OK);
                 } else if (c == '-') {
                     token->type = TT_minus;
-                    return OK;
+                    return show_token(OK);
                 } else if (c == '*') {
                     token->type = TT_mul;
-                    return OK;
+                    return show_token(OK);
                 } else if (c == '.') {
                     token->type = TT_dot;
-                    return OK;
+                    return show_token(OK);
                 } else if (c == ',') {
                     token->type = TT_comma;
-                    return OK;
+                    return show_token(OK);
                 } else if (c == ';') {
                     token->type = TT_semicolon;
-                    return OK;
+                    return show_token(OK);
                 } else if (c == '(') {
                     token->type = TT_lBracket;
-                    return OK;
+                    return show_token(OK);
                 } else if (c == ')') {
                     token->type = TT_rBracket;
-                    return OK;
+                    return show_token(OK);
                 } else if (c == '{') {
                     token->type = TT_lCurlBracket;
-                    return OK;
+                    return show_token(OK);
                 } else if (c == '}') {
                     token->type = TT_rCurlBracket;
-                    return OK;
+                    return show_token(OK);
                 } else if (c == '/') {
                     state = S_commentOrDiv;                 // comment (block, line) or division
                 } else if (c == '<') {
@@ -114,7 +121,7 @@ int get_token() {
                     token->attr.n = (int) strtol(number->buf, NULL, 10); //return string value in int
                     str_free(number);
 
-                    return OK;
+                    return show_token(OK);
                 }
                 break;
 
@@ -140,7 +147,7 @@ int get_token() {
                     token->attr.d = strtod(number->buf, NULL); //return string value in int
                     str_free(number);
 
-                    return OK;
+                    return show_token(OK);
                 }
                 break;
 
@@ -175,7 +182,7 @@ int get_token() {
                     token->attr.d = strtod(number->buf, NULL);
                     str_free(number);
 
-                    return OK;
+                    return show_token(OK);
                 }
                 break;
 
@@ -185,7 +192,7 @@ int get_token() {
                     state = S_stringBackSlash;
                 } else if (c == '"') {
                     token->type = TT_string;
-                    return OK;
+                    return show_token(OK);
                 } else if (c == '\n' || c == EOF) {
                     return LEX_ERROR;
                 } else {
@@ -207,16 +214,16 @@ int get_token() {
                     str_addchar(token->attr.str, c);     // add char to str, the ID is valid
                 } else {
                     ungetc(c, source);            // last char was not valid, end of ID, undo last char
-                    for (int i = TK_boolean; i <= TK_while; i++) {
+                    for (int i = 0; i < KEYW_COUNT; i++) {
                         if (strcmp(token->attr.str->buf, KEYWORDS[i]) == 0) {
                             token_clear(token);
                             token->type = TT_keyword;
                             token->attr.keyword = i;
-                            return OK;
+                            return show_token(OK);
                         }
                     }
                     token->type = TT_id;
-                    return OK;
+                    return show_token(OK);
                 }
                 break;
 
@@ -224,51 +231,51 @@ int get_token() {
             case S_lesserOrLesserEqual:
                 if (c == '=') {
                     token->type = TT_lessEq;
-                    return OK;
+                    return show_token(OK);
                 } else {
                     ungetc(c, source);            // It's just <, undo last char read
                     token->type = TT_lesser;
-                    return OK;
+                    return show_token(OK);
                 }
                 break;
 
              case S_greaterOrGreaterEqual:
                 if (c == '=') {
                     token->type = TT_greatEq;
-                    return OK;
+                    return show_token(OK);
                 } else {
                     ungetc(c, source);            // It's just >, undo last char read
                     token->type = TT_greater;
-                    return OK;
+                    return show_token(OK);
                 }
                 break;
 
             case S_assignOrEqual:
                 if (c == '=') {
                     token->type = TT_equal;
-                    return OK;
+                    return show_token(OK);
                 } else {
                     ungetc(c, source);            // Just =, undo last char
                     token->type = TT_assign;
-                    return OK;
+                    return show_token(OK);
                 }
                 break;
 
             case S_notOrNotEqual:
                 if (c == '=') {
                     token->type = TT_notEq;
-                    return OK;
+                    return show_token(OK);
                 } else {
                     ungetc(c, source);            // Just =, undo last char
                     token->type = TT_not;
-                    return OK;
+                    return show_token(OK);
                 }
                 break;
 
             case S_or:
                 if (c == '|') {
                     token->type = TT_or;
-                    return OK;
+                    return show_token(OK);
                 } else {
                     return LEX_ERROR;
                 }
@@ -277,7 +284,7 @@ int get_token() {
             case S_and:
                 if (c == '&') {
                     token->type = TT_and;
-                    return OK;
+                    return show_token(OK);
                 } else {
                     return LEX_ERROR;
                 }
@@ -292,7 +299,7 @@ int get_token() {
                 } else {                    // it is division
                     token->type = TT_div;
                     ungetc(c, source);      // we need to return that one char we checked
-                    return OK;
+                    return show_token(OK);
                 }
                 break;
 
@@ -307,7 +314,7 @@ int get_token() {
                     state = S_commentBlockStar;
                 } else if (is_next_eof()) {
                     token->type = TT_eof;
-                    return OK;
+                    return show_token(OK);
                 }
                 break;
 
@@ -318,7 +325,7 @@ int get_token() {
                     state = S_start;
                 } else if (is_next_eof()) {
                     token->type = TT_eof;
-                    return OK;
+                    return show_token(OK);
                 } else {
                     state = S_commentBlock;
                 }
@@ -327,5 +334,5 @@ int get_token() {
     }
     // Pokud funkce dojde az, sem musel byt nacteny charakter EOF
     token->type = TT_eof;
-    return OK;
+    return show_token(OK);
 }
