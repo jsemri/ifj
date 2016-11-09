@@ -103,7 +103,8 @@ void str_clear(T_string *str) {
 
 // removes string buffer
 void str_free(T_string *str) {
-    free(str->buf);
+    if (str->buf)
+        free(str->buf);
     free(str);
 }
 
