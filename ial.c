@@ -75,12 +75,6 @@ void table_remove(T_symbol_table **stab) {
                     free(s->attr.var);
                 }
                 else if (s->symbol_type == isfunc) {
-                    if (s->attr.func->par_count) {
-                        // parameter types
-                        free(s->attr.func->dtypes);
-                        // parameter names
-                        free(s->attr.func->par_names);
-                    }
                     free(s->attr.func);
                 }
                 free(s);

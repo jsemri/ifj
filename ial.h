@@ -1,9 +1,69 @@
 #ifndef IAL_H
 #define IAL_H
 
-#include "symbol.h"
+#include <stdbool.h>
+#include "instruction.h"
+#include "string.h"
 
+
+struct T_Hash_symbol_table;
+// data types
+typedef enum {
+    isstr,
+    isint,
+    isdouble,
+    isvoid
+} T_data_types;
+
+// function attributes
 typedef struct {
+    // instruction list
+    ilist *func_ilist;
+    // parameter count
+    unsigned par_count;
+    // pointer to parameters
+    void **arguments;
+    // local variable count
+    unsigned local_count;
+    // local symbol table
+    struct T_Hash_symbol_table *local_table;
+} T_func_symbol;
+
+// variable attributes
+typedef struct {
+    // value of variable
+    union {
+        T_string *str;
+        int num;
+        double d;
+    } value;
+} T_var_symbol;
+
+
+// symbol
+typedef struct T_symbol {
+    // key and identifier
+    const char *id;
+    // symbol type
+    enum {
+        isclass,
+        isfunc,
+        isvar
+    } symbol_type;
+    // data type (including return value)
+    T_data_types data_type;
+    // symbol attributes
+    union {
+        T_var_symbol *var;
+        T_func_symbol *func;
+    } attr;
+    // member class of variable or function
+    struct T_symbol *member_class;
+    // next symbol
+    struct T_symbol *next;
+} T_symbol;
+
+typedef struct T_Hash_symbol_table {
     unsigned size;      // hash table size
     T_symbol *arr[];    // array of lists
 } T_symbol_table;
