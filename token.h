@@ -12,23 +12,23 @@
 
 // keywords
 typedef enum {
+    TK_void = 0,
+    TK_int,
+    TK_double,
+    TK_String,
     TK_boolean,
     TK_break,
     TK_class,
     TK_continue,
     TK_do,
-    TK_double,
     TK_else,
     TK_false,
     TK_for,
     TK_if,
-    TK_int,
     TK_return,
-    TK_String,
     TK_static,
     TK_true,
-    TK_void,
-    TK_while
+    TK_while,
 } T_keyword;
 
 
