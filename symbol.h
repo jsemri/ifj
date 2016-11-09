@@ -30,7 +30,6 @@ typedef struct {
 
 // variable attributes
 typedef struct {
-    bool is_def;
     // initialization flag
     bool is_init;
     // value of variable
