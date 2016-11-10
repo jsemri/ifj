@@ -9,10 +9,10 @@
 struct T_Hash_symbol_table;
 // data types
 typedef enum {
-    is_str,
+    is_void,
     is_int,
     is_double,
-    is_void
+    is_str
 } T_data_types;
 
 // function attributes

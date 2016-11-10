@@ -3,8 +3,6 @@
 
 #define INITIAL_VECTOR_SIZE 16
 
-#include <stdio.h>
-
 token_vector token_vec_init() {
     // initialization of vector
     token_vector ptr = calloc(1, sizeof(struct T_token_vector));
