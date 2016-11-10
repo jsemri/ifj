@@ -290,6 +290,9 @@ int show_token(int rc) {
     return rc;
 }
 #else
+void print_table(T_symbol_table *st) {
+    (void)st;
+}
 void enter(const char *fi) {
     (void)fi;
 }
