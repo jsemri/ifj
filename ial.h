@@ -9,10 +9,10 @@
 struct T_Hash_symbol_table;
 // data types
 typedef enum {
-    isstr,
-    isint,
-    isdouble,
-    isvoid
+    is_str,
+    is_int,
+    is_double,
+    is_void
 } T_data_types;
 
 // function attributes
@@ -21,7 +21,7 @@ typedef struct {
     ilist *func_ilist;
     // parameter count
     unsigned par_count;
-    // pointer to parameters
+    // pointer to parameters in local table
     void **arguments;
     // local variable count
     unsigned local_count;
@@ -46,9 +46,9 @@ typedef struct T_symbol {
     const char *id;
     // symbol type
     enum {
-        isclass,
-        isfunc,
-        isvar
+        is_class,
+        is_func,
+        is_var
     } symbol_type;
     // data type (including return value)
     T_data_types data_type;
@@ -57,7 +57,7 @@ typedef struct T_symbol {
         T_var_symbol *var;
         T_func_symbol *func;
     } attr;
-    // member class of variable or function
+    // member class
     struct T_symbol *member_class;
     // next symbol
     struct T_symbol *next;
