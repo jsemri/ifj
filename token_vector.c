@@ -1,14 +1,14 @@
 #include "token_vector.h"
 #include <stdlib.h>
 
-#define INITIAL_VECTOR_SIZE 2
+#define INITIAL_VECTOR_SIZE 16
 
 token_vector token_vec_init() {
     // initialization of vector
     token_vector ptr = calloc(1, sizeof(struct T_token_vector));
     if (!ptr)
         return NULL;
-    ptr->arr = calloc(2, sizeof(T_token));
+    ptr->arr = calloc(INITIAL_VECTOR_SIZE, sizeof(T_token));
     // allocating token buffer
     if (!ptr->arr) {
         free(ptr);
@@ -52,7 +52,7 @@ int token_push_back(token_vector tvect, const T_token *t) {
         if (!(p->attr.str = str_init()))
             return 1;
 
-        if (str_copy(p->attr.str, t->attr.str)) {
+        if (!str_copy(p->attr.str, t->attr.str)) {
             str_free(p->attr.str);
             return 1;
         }
