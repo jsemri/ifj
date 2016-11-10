@@ -15,6 +15,7 @@
 #include "debug.h"
 #include "instruction.h"
 #include "ial.h"
+#include "semantic-analyser.h"
 
 // symbol table size
 #define RANGE 8
@@ -26,6 +27,7 @@ static bool get_token_flag = false;
 // global variables
 T_symbol_table *symbol_tab;
 T_token *token;
+FILE *source;
 static int in_block = 0;
 // pointer to actual class
 static T_symbol *actual_class;
@@ -37,13 +39,12 @@ static int class();
 static int cbody();
 static int cbody2(T_symbol *symbol);
 static int func(T_symbol *symbol);
-static int fbody(T_symbol *symbol);
+static int fbody();
 static int par(T_symbol *symbol);
 static int st_list();
 static int stat();
 static int st_else();
 static int st_else2();
-static int type();     // to be deleted latter
 
 // PROG -> BODY eof
 static int prog()
@@ -194,28 +195,6 @@ static int cbody()
 
     return leave(__func__, 0);
 }}}
-
-// TYPE -> void|int|double|string
-// FIXME to be deleted
-static int type()
-{{{
-    enter(__func__);
-    if (token->type == TT_keyword) {
-        switch (token->attr.keyword) {
-            case TK_void:   // do stuff
-            case TK_int:
-            case TK_double:
-            case TK_String:
-                return leave(__func__, 0);
-            default:
-                return leave(__func__, SYNTAX_ERROR);
-        }
-        return leave(__func__, 0);
-    }
-    else
-        return leave(__func__, SYNTAX_ERROR);
-}}}
-
 
 /*
    CBODY2 -> '=' ';' '('
@@ -434,7 +413,7 @@ static int par(T_symbol *symbol)
 
 // FBODY -> { ST_LIST }
 // FBODY -> ;
-static int fbody(T_symbol *symbol) {
+static int fbody() {{{
     enter(__func__);
     if (get_token())
         return leave(__func__, LEX_ERROR);
@@ -447,7 +426,7 @@ static int fbody(T_symbol *symbol) {
     }
 
     return leave(__func__, SYNTAX_ERROR);
-}
+}}}
 
 // ST_LIST -> ε
 // ST_LIST -> {STLIST} STLIST
@@ -492,7 +471,6 @@ static int st_list() {
 static int stat() {
     enter(__func__);
     int bc = 0;
-    int res = 0;
     // while|for|if|return|continue|break|types
     if (token->type == TT_keyword) {
         switch(token->attr.keyword) {
@@ -500,12 +478,10 @@ static int stat() {
             case TK_double:
             case TK_String:
                 {
-                    // rule: STAT -> TYPE id INIT
+                    // rule: STAT -> TYPE id ;| = EXPR ;
+                    // local variable cannot be declared in block {...}
                     if (in_block)
                         return leave(__func__, SYNTAX_ERROR);
-                    res = type();
-                    if (res)
-                        return leave(__func__, 0) + res;
 
                     if (get_token()) {
                         return leave(__func__, LEX_ERROR);
@@ -521,18 +497,11 @@ static int stat() {
                         return leave(__func__, 0);
                     }
                     else if (token->type == TT_assign) {
-                        // creating token vector
-                        token_vector tvect = token_vec_init();
-                        // reading till ';' or 'eof' read
                         while (token->type != TT_semicolon && token->type != TT_eof) {
                             if (get_token()) {
-                                token_vec_delete(tvect);
                                 return leave(__func__, LEX_ERROR);
                             }
-                            token_push_back(tvect, token);
                         }
-                        // TODO call precedenceanalyser
-                        token_vec_delete(tvect);
                         if (token->type == TT_semicolon)
                             return leave(__func__, 0);
                         return leave(__func__, SYNTAX_ERROR);
@@ -549,27 +518,21 @@ static int stat() {
                     if (token->type != TT_lBracket) {
                         return leave(__func__, SYNTAX_ERROR);
                     }
-                    // reading whole expression
-                    token_vector tvect = token_vec_init();
-                    // reading till ';' or 'eof' read
+                    // reading `)` or 'eof' read
                     bc = 0; // bracket counter
                     do {
                         if (get_token()) {
-                            token_vec_delete(tvect);
                             return leave(__func__, LEX_ERROR);
                         }
                         if (token->type == TT_lBracket)
                             bc++;
                         if (token->type == TT_rBracket)
                             bc--;
-                        token_push_back(tvect, token);
                     } while ( bc != -1 && token->type != TT_eof);
 
                     if (token->type == TT_eof) {
                          return leave(__func__, SYNTAX_ERROR);
                     }
-                    // TODO call precedence analyser
-                    token_vec_delete(tvect);
 
                     if (get_token()) {
                         return leave(__func__, LEX_ERROR);
@@ -593,27 +556,21 @@ static int stat() {
                     if (token->type != TT_lBracket) {
                         return leave(__func__, SYNTAX_ERROR);
                     }
-                    // reading whole expression
-                    token_vector tvect = token_vec_init();
-                    // reading till ';' or 'eof' read
+                    // reading till ')' or 'eof' read
                     bc = 0; // bracket counter
                     do {
                         if (get_token()) {
-                            token_vec_delete(tvect);
                             return leave(__func__, LEX_ERROR);
                         }
                         if (token->type == TT_lBracket)
                             bc++;
                         if (token->type == TT_rBracket)
                             bc--;
-                        token_push_back(tvect, token);
                     } while ( bc != -1 && token->type != TT_eof);
 
                     if (token->type == TT_eof) {
                          return leave(__func__, SYNTAX_ERROR);
                     }
-                    // TODO call precedence analyser
-                    token_vec_delete(tvect);
 
                     if (get_token()) {
                         return leave(__func__, LEX_ERROR);
@@ -628,12 +585,12 @@ static int stat() {
                     res = st_list();
                     in_block--;
                     if (res)
-                        return res+leave(__func__, 0);
+                        return leave(__func__, res);
                     // if next word is else do call st_else()
                     if (get_token())
                         return leave(__func__, LEX_ERROR);
                     if (token->type == TT_keyword && token->attr.keyword == TK_else)
-                        return st_else()+leave(__func__, 0);
+                        return leave(__func__, st_else());
                     // no else read, must unget
                     unget_token();
                     return leave(__func__, 0);
@@ -643,24 +600,16 @@ static int stat() {
                 // RET return;
                 // reading whole expression
                 {
-                    token_vector tvect = token_vec_init();
                     // reading till ';' or 'eof' read
                     while ( token->type != TT_semicolon && token->type != TT_eof) {
                         if (get_token()) {
-                            token_vec_delete(tvect);
                             return leave(__func__, LEX_ERROR);
                         }
-                        token_push_back(tvect, token);
                     }
 
                     if (token->type == TT_eof) {
                          return leave(__func__, SYNTAX_ERROR);
                     }
-                    // vector is not empty, expression handeler
-                    if (tvect->last) {
-                        // TODO call precedence analyser
-                    }
-                    token_vec_delete(tvect);
 
                     return leave(__func__, 0);
                 }
@@ -686,14 +635,11 @@ static int stat() {
                     return leave(__func__, 0);
                 else if (token->type == TT_assign) {
                     // id.id = ........;
-                    token_vector tvect = token_vec_init();
                     // reading till ';' or 'eof' read
                     while ( token->type != TT_semicolon && token->type != TT_eof) {
                         if (get_token()) {
-                            token_vec_delete(tvect);
                             return leave(__func__, LEX_ERROR);
                         }
-                        token_push_back(tvect, token);
                     }
                     if (token->type == TT_eof) {
                         return leave(__func__, SYNTAX_ERROR);
@@ -703,27 +649,22 @@ static int stat() {
                 else if (token->type == TT_lBracket) {
                     // XXX func1()+func2();
                     // reading whole expression
-                    token_vector tvect = token_vec_init();
                     // reading till ';' or 'eof' read
                     bc = 0; // bracket counter
                     do {
                         if (get_token()) {
-                            token_vec_delete(tvect);
                             return leave(__func__, LEX_ERROR);
                         }
                         if (token->type == TT_lBracket)
                             bc++;
                         if (token->type == TT_rBracket)
                             bc--;
-                        token_push_back(tvect, token);
                     } while ( bc != -1 && token->type != TT_eof);
 
                     if (token->type == TT_eof) {
-                        token_vec_delete(tvect);
                         return leave(__func__, SYNTAX_ERROR);
                     }
                     // TODO expression handling
-                    token_vec_delete(tvect);
                     if (get_token())
                         return leave(__func__, LEX_ERROR);
 
@@ -735,14 +676,11 @@ static int stat() {
             return leave(__func__, SYNTAX_ERROR);
         }
         else if (token->type == TT_assign) {
-            token_vector tvect = token_vec_init();
             // reading till ';' or 'eof' read
             while ( token->type != TT_semicolon && token->type != TT_eof) {
                 if (get_token()) {
-                    token_vec_delete(tvect);
                     return leave(__func__, LEX_ERROR);
                 }
-                token_push_back(tvect, token);
             }
             if (token->type == TT_eof) {
                 return leave(__func__, SYNTAX_ERROR);
@@ -752,34 +690,29 @@ static int stat() {
         else if (token->type == TT_lBracket) {
             // id();
             // reading whole expression
-            token_vector tvect = token_vec_init();
             // reading till ';' or 'eof' read
             bc = 0; // bracket counter
             do {
                 if (get_token()) {
-                    token_vec_delete(tvect);
                     return leave(__func__, LEX_ERROR);
                 }
                 if (token->type == TT_lBracket)
                     bc++;
                 if (token->type == TT_rBracket)
                     bc--;
-                token_push_back(tvect, token);
             } while ( bc != -1 && token->type != TT_eof);
 
             if (token->type == TT_eof) {
-                token_vec_delete(tvect);
                 return leave(__func__, SYNTAX_ERROR);
             }
-            // TODO expression handling
-            token_vec_delete(tvect);
+
             if (get_token())
                 return leave(__func__, LEX_ERROR);
 
             if (token->type == TT_semicolon)
                 return leave(__func__, 0);
 
-            return leave(__func__, 0);
+            return leave(__func__, SYNTAX_ERROR);
         }
     }
         return leave(__func__, SYNTAX_ERROR);
@@ -818,27 +751,21 @@ static int st_else2() {
     }
     // only '('
     if (token->type == TT_lBracket) {
-        // reading whole expression
-        token_vector tvect = token_vec_init();
         // reading till ')' or 'eof' read
         int bc = 0; // bracket counter
         do {
             if (get_token()) {
-                token_vec_delete(tvect);
                 return leave(__func__, LEX_ERROR);
             }
             if (token->type == TT_lBracket)
                 bc++;
             if (token->type == TT_rBracket)
                 bc--;
-            token_push_back(tvect, token);
         } while ( bc != -1 && token->type != TT_eof);
 
         if (token->type == TT_eof) {
             return leave(__func__, SYNTAX_ERROR);
         }
-        // TODO call precedence analyser
-        token_vec_delete(tvect);
 
         if (get_token()) {
             return leave(__func__, LEX_ERROR);
@@ -882,6 +809,24 @@ int parse() {
        filling symbol table + checking redefinitions
     */
     res =  prog();
+    if (res)
+        goto errors;
+
+    // TODO call again semantic analyser and build instruction list
+    print_table(symbol_tab);
+
+    if (fseek(source, 0, SEEK_SET)) {
+        res = INTERNAL_ERROR;
+        goto errors;
+    } else {
+        #ifdef DEBUG
+        puts("_____________________________________________\n\n\n");
+        #endif
+        res = second_throughpass();
+    }
+
+
+    errors:
     if (res == LEX_ERROR)
         fprintf(stderr, "Lexical error\n");
     else if (res == SYNTAX_ERROR)
@@ -896,9 +841,6 @@ int parse() {
         fprintf(stderr, "Semantic error\n");
     else
         fprintf(stderr, "Success\n");
-
-    // TODO call again semantic analyser and build instruction list
-    print_table(symbol_tab);
 
     table_remove(&symbol_tab);
     token_free(&token);
