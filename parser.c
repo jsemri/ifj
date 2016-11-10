@@ -221,6 +221,12 @@ static int cbody2(T_symbol *symbol)
             return leave(__func__, INTERNAL_ERROR);
         }
 
+        // initialize string variable
+        if (symbol->data_type == is_str) {
+            if ( !(symbol->attr.var->value.str = str_init()) )
+                return leave(__func__, INTERNAL_ERROR);
+        }
+
         // just reading everything till `;`
         while (token->type != TT_semicolon && token->type != TT_eof) {
             if (get_token()) {

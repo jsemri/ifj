@@ -26,6 +26,7 @@ T_symbol_table *symbol_tab;
 T_token *token;
 // pointer to actual class
 static T_symbol *actual_class;
+static T_symbol *actual_func;
 
 // each function represents a nonterminal symbol in LL(1) table
 static int prog();
@@ -112,6 +113,8 @@ static int cbody()
         // in case that symbol is function local symbol table is set
         T_symbol *s = table_find(symbol_tab,token->attr.str->buf, actual_class);
         if (s->symbol_type == is_func) {
+            // updating actual function
+            actual_func = s;
             // local table
             T_symbol_table *local_tab = s->attr.func->local_table;
             res = cbody2(local_tab);
@@ -162,7 +165,9 @@ static int func(T_symbol_table *local_tab)
     // just read parameters
     par();
     // process body
-    return leave(__func__,fbody(local_tab));
+    int res = fbody(local_tab);
+    print_function(actual_func);
+    return leave(__func__, res);
 }}}
 
 /*
@@ -241,9 +246,36 @@ static int stat(T_symbol_table *local_tab) {
                 {{{
                     // rule: STAT -> TYPE id ;| = EXPR ;
 
-                    // id
+                    // allocate space for new symbol
+                    T_symbol *symbol = calloc(1, sizeof(T_symbol));
+                    if (!symbol) {
+                        return leave(__func__, INTERNAL_ERROR);
+                    }
+
+                    // allocate space for variable
+                    symbol->attr.var = calloc(1, sizeof(T_var_symbol));
+                    if (!symbol->attr.var) {
+                         return leave(__func__, INTERNAL_ERROR);
+                    }
+
+                    // initialize string variable
+                    if (symbol->data_type == is_str) {
+                        if ( !(symbol->attr.var->value.str = str_init()) )
+                            return leave(__func__, INTERNAL_ERROR);
+                    }
+
+                    symbol->data_type = token->attr.keyword; // set data type
+                    symbol->symbol_type = is_var;   // set symbol type
+
+                    // id in token
                     get_token();
-                    // TODO put var to table
+                    if (table_find(local_tab, token->attr.str->buf, NULL)) {
+                        // redefinition
+                        return leave(__func__, DEFINITION_ERROR);
+                    }
+                    symbol->id = token->attr.str->buf;  // set var name
+                    token->attr.str->buf = NULL;        // discredit free call
+                    table_insert(local_tab, symbol);    // insert to table
 
                     // ; or =
                     get_token();
@@ -251,14 +283,20 @@ static int stat(T_symbol_table *local_tab) {
                     if (token->type == TT_semicolon) {
                         return leave(__func__, 0);
                     }
-                    else // assign
-                    {
+                    else {
+                        // assign '='
                         while (token->type != TT_semicolon) {
                             get_token();
                             // TODO expression + token vector
                         }
                         return leave(__func__, 0);
                     }
+                    /*
+                    free_var:
+                    free(symbol->attr)
+                    free_symbol:
+                    free(symbol);
+                    return leave(__func__, rc);*/
                 }}}
             case TK_while:
                 {{{
