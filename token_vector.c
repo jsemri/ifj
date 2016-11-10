@@ -3,6 +3,8 @@
 
 #define INITIAL_VECTOR_SIZE 16
 
+#include <stdio.h>
+
 token_vector token_vec_init() {
     // initialization of vector
     token_vector ptr = calloc(1, sizeof(struct T_token_vector));
@@ -38,8 +40,10 @@ int token_push_back(token_vector tvect, const T_token *t) {
     // reallocation if needed
     if (tvect->size == tvect->last) {
         void *p = realloc(tvect->arr, 2*tvect->size*sizeof(T_token));
-        if (!p)
+        if (!p) {
+            puts("realloc");
             return 1;
+        }
         // changing allocated space
         tvect->arr = p;
         tvect->size *= 2;
@@ -49,10 +53,13 @@ int token_push_back(token_vector tvect, const T_token *t) {
     T_token *p = &tvect->arr[tvect->last];
     if (t->type == TT_id || t->type == TT_string) {
         // checking string initialization and string copying
-        if (!(p->attr.str = str_init()))
+        if (!(p->attr.str = str_init())) {
+            puts("strinit");
             return 1;
+        }
 
-        if (!str_copy(p->attr.str, t->attr.str)) {
+        if (-1 == str_copy(p->attr.str, t->attr.str)) {
+            puts("strcopy");
             str_free(p->attr.str);
             return 1;
         }
