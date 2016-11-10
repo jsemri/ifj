@@ -41,7 +41,6 @@ int token_push_back(token_vector tvect, const T_token *t) {
     if (tvect->size == tvect->last) {
         void *p = realloc(tvect->arr, 2*tvect->size*sizeof(T_token));
         if (!p) {
-            puts("realloc");
             return 1;
         }
         // changing allocated space
@@ -54,12 +53,10 @@ int token_push_back(token_vector tvect, const T_token *t) {
     if (t->type == TT_id || t->type == TT_string) {
         // checking string initialization and string copying
         if (!(p->attr.str = str_init())) {
-            puts("strinit");
             return 1;
         }
 
         if (-1 == str_copy(p->attr.str, t->attr.str)) {
-            puts("strcopy");
             str_free(p->attr.str);
             return 1;
         }
