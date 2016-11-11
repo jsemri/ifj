@@ -1,3 +1,8 @@
+/**
+ * @file ial.h
+ * @brief Contains symbol table.
+ */
+
 #ifndef IAL_H
 #define IAL_H
 
@@ -7,6 +12,7 @@
 
 
 struct T_Hash_symbol_table;
+
 // data types
 typedef enum {
     is_void,
@@ -15,52 +21,40 @@ typedef enum {
     is_str
 } T_data_types;
 
-// function attributes
+/// Function attributes.
 typedef struct {
-    // instruction list
-    ilist *func_ilist;
-    // parameter count
-    unsigned par_count;
-    // pointer to parameters in local table
-    void **arguments;
-    // local variable count
-    unsigned local_count;
-    // local symbol table
-    struct T_Hash_symbol_table *local_table;
+    ilist *func_ilist;          // instruction list
+    unsigned par_count;         // number of parameters
+    void **arguments;           // pointer to parameters in local table
+    unsigned local_count;                       // local variable count
+    struct T_Hash_symbol_table *local_table;    // local symbol table
 } T_func_symbol;
 
-// variable attributes
+/// Variable attributes.
 typedef struct {
-    // value of variable
     union {
         T_string *str;
         int num;
         double d;
-    } value;
+    } value;                         // value of variable
 } T_var_symbol;
 
 
-// symbol
+/// Structure of symbol.
 typedef struct T_symbol {
-    // key and identifier
-    const char *id;
-    // symbol type
+    const char *id;                 // symbol identifier, first key
     enum {
         is_class,
         is_func,
         is_var
-    } symbol_type;
-    // data type (including return value)
-    T_data_types data_type;
-    // symbol attributes
+    } symbol_type;                  // symbol type
+    T_data_types data_type;         // symbol data type
     union {
         T_var_symbol *var;
         T_func_symbol *func;
-    } attr;
-    // member class
-    struct T_symbol *member_class;
-    // next symbol
-    struct T_symbol *next;
+    } attr;                         // symbol attribute
+    struct T_symbol *member_class;  // member class, second key
+    struct T_symbol *next;          // next symbol in list
 } T_symbol;
 
 typedef struct T_Hash_symbol_table {
@@ -68,22 +62,40 @@ typedef struct T_Hash_symbol_table {
     T_symbol *arr[];    // array of lists
 } T_symbol_table;
 
-// hash function
 unsigned hash(const char *key, unsigned size);
 
-// initialization of symbol table
+/**
+ * @brief Initializes symbol table.
+ *
+ * @param size length of list array
+ * @return Pointer to new symbol table, NULL if allocation fails.
+ */
 T_symbol_table *table_init(unsigned size);
 
-// search for symbol with `key` and member class `mclass`
-// returns a pointer to the searched symbol
-// returns NULL if symbol was not found
+/**
+ * @brief search for symbol with `key` and member class `mclass`
+ *
+ * @param *stab pointer to symbol table
+ * @param key identifier name
+ * @param *mclass pointer to a member class
+ * @return Pointer to the searched symbol, NULL if symbol was not found.
+ */
 T_symbol *table_find(T_symbol_table *stab, const char *key, T_symbol *mclass);
 
-// inserts symbol item to symbol table
-// returns pointer to the inserted symbol
+/**
+ * @brief Inserts symbol item to symbol table.
+ *
+ * @param *stab pointer to symbol table
+ * @param s symbol to insert
+ * @return Pointer to the inserted symbol.
+ */
 T_symbol *table_insert(T_symbol_table *stab, T_symbol *s);
 
-// deletes whole table
+/**
+ * @brief Deletes whole table and sets it's pointer to NULL.
+ *
+ * @param *stab pointer to symbol table
+ */
 void table_remove(T_symbol_table **stab);
 
 #endif

@@ -33,7 +33,7 @@ void token_vec_delete(token_vector tvect) {
     free(tvect);
 }
 
-int token_push_back(token_vector tvect, const T_token *t) {
+int token_push_back(token_vector tvect, const T_token *token) {
 
     // reallocation if needed
     if (tvect->size == tvect->last) {
@@ -48,22 +48,22 @@ int token_push_back(token_vector tvect, const T_token *t) {
 
     // temporary pointer
     T_token *p = &tvect->arr[tvect->last];
-    if (t->type == TT_id || t->type == TT_string) {
+    if (token->type == TT_id ||token->type == TT_string) {
         // checking string initialization and string copying
         if (!(p->attr.str = str_init())) {
             return 1;
         }
 
-        if (-1 == str_copy(p->attr.str, t->attr.str)) {
+        if (-1 == str_copy(p->attr.str,token->attr.str)) {
             str_free(p->attr.str);
             return 1;
         }
 
     }
     else {
-        p->attr = t->attr;
+        p->attr =token->attr;
     }
-    p->type = t->type;
+    p->type =token->type;
 
     tvect->last++;
     return 0;
