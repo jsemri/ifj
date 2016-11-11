@@ -7,6 +7,7 @@
 #include "token.h"
 #include <stdio.h>
 #include "string.h"
+#include <string.h>
 #include "globals.h"
 #include "scanner.h"
 #include "token_vector.h"
@@ -437,7 +438,8 @@ static int fbody() {{{
 // ST_LIST -> ε
 // ST_LIST -> {STLIST} STLIST
 // ST_LIST -> STAT STLIST
-static int st_list() {
+static int st_list()
+{{{
     enter(__func__);
     // read only if '{' or ';'
     if (token->type == TT_lCurlBracket || token->type == TT_rCurlBracket ||
@@ -471,10 +473,11 @@ static int st_list() {
         return st_list();
     }
     return leave(__func__, SYNTAX_ERROR);
-}
+}}}
 
 // STAT -> many...
-static int stat() {
+static int stat()
+{{{
     enter(__func__);
     int bc = 0;
     // while|for|if|return|continue|break|types
@@ -495,7 +498,6 @@ static int stat() {
                     if (token->type != TT_id) {
                         return leave(__func__, SYNTAX_ERROR);
                     }
-                    // TODO do stuff for id
                     if (get_token()) {
                         return leave(__func__, LEX_ERROR);
                     }
@@ -653,7 +655,6 @@ static int stat() {
                     return leave(__func__, 0);
                 }
                 else if (token->type == TT_lBracket) {
-                    // XXX func1()+func2();
                     // reading whole expression
                     // reading till ';' or 'eof' read
                     bc = 0; // bracket counter
@@ -670,7 +671,6 @@ static int stat() {
                     if (token->type == TT_eof) {
                         return leave(__func__, SYNTAX_ERROR);
                     }
-                    // TODO expression handling
                     if (get_token())
                         return leave(__func__, LEX_ERROR);
 
@@ -722,12 +722,13 @@ static int stat() {
         }
     }
         return leave(__func__, SYNTAX_ERROR);
-}
+}}}
 
 // ELSE -> .
 // ELSE -> else ELSE2
 // ELSE2 -> { ST_LIST }
-static int st_else() {
+static int st_else()
+{{{
     enter(__func__);
 
     if (get_token()) {
@@ -746,10 +747,11 @@ static int st_else() {
     }
 
     return leave(__func__, SYNTAX_ERROR);
-}
+}}}
 
 // ELSE2 -> if ( EXPR ) { ST_LIST } ELSE
-static int st_else2() {
+static int st_else2()
+{{{
     enter(__func__);
 
     if (get_token()) {
@@ -796,29 +798,58 @@ static int st_else2() {
         return leave(__func__, 0);
     }
     return leave(__func__, SYNTAX_ERROR);
-}
+}}}
 
-int parse() {
+int parse()
+{{{
 
     if (!(token = token_new()) ) {
-        fprintf(stderr, "Internal error\n");
         return INTERNAL_ERROR;
     }
 
-    symbol_tab = table_init(RANGE);
+    // create global symbol table
+    if (!(symbol_tab = table_init(RANGE))) {
+        token_free(&token);
+        return INTERNAL_ERROR;
+    }
 
     // return value
-    int res;
+    int res = INTERNAL_ERROR;
+
+    // filling global symbol table with built-in class ifj
+    T_symbol *ifj_class = calloc(1, sizeof(T_symbol));
+    if (!ifj_class) {
+        goto errors;
+    }
+    // 4 - size of literal "ifj"
+    if (!(ifj_class->id = calloc(1, strlen("ifj16")))) {
+        free(ifj_class);
+        goto errors;
+    }
+    strcpy((void*)ifj_class->id, "ifj16");
+    table_insert(symbol_tab, ifj_class);
 
     /*
        lexical + syntax analysis
        filling symbol table + checking redefinitions
     */
-    res =  prog();
+    res = prog();
     if (res)
         goto errors;
 
-    // TODO call again semantic analyser and build instruction list
+    // checking Main class and run() function
+    T_symbol *Mainclass = table_find(symbol_tab, "Main", NULL);
+    if (!Mainclass) {
+        res = SEMANTIC_ERROR;
+        goto errors;
+    }
+    T_symbol *run_func = table_find(symbol_tab, "run", Mainclass);
+    if (!run_func || run_func->symbol_type != is_func) {
+        res = SEMANTIC_ERROR;
+        goto errors;
+    }
+
+    // just for debug
     print_table(symbol_tab);
 
     if (fseek(source, 0, SEEK_SET)) {
@@ -851,5 +882,5 @@ int parse() {
     table_remove(&symbol_tab);
     token_free(&token);
     return res;
-}
+}}}
 

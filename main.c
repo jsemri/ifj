@@ -8,7 +8,7 @@ int main(int argc, char **argv) {
 
     if (argc != 2) {
         fprintf(stderr, "Error: No input file.\n");
-        return INPUT_ERROR;
+        return INTERNAL_ERROR;
     }
     if (!(source = fopen(argv[1], "r"))) {
         fprintf(stderr, "Error: Opening the file failed.\n");
