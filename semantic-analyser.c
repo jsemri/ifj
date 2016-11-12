@@ -7,6 +7,7 @@
 #include "token.h"
 #include <stdio.h>
 #include "string.h"
+#include <string.h>
 #include "globals.h"
 #include "scanner.h"
 #include "token_vector.h"
@@ -15,6 +16,7 @@
 #include "debug.h"
 #include "instruction.h"
 #include "ial.h"
+#include "symbol.h"
 
 // unget token
 static bool get_token_flag = false;
@@ -41,6 +43,7 @@ static int st_list(T_symbol_table *local_tab);
 static int stat(T_symbol_table *local_tab);
 static int st_else(T_symbol_table *local_tab);
 static int st_else2(T_symbol_table *local_tab);
+
 
 // PROG -> BODY eof
 static int prog()
@@ -410,9 +413,10 @@ static int stat(T_symbol_table *local_tab) {
         }
     }
     // id = exp
-    else {
-        T_symbol *loc_sym, *glob_sym, *class_sym;    // local and global symbol
+    else
+    {{{
         char *iden = token->attr.str->buf;           // identifier name
+        T_symbol *loc_sym, *glob_sym, *class_sym;    // local and global symbol
 
         // checking whether it was defined
         loc_sym = table_find(local_tab, iden, NULL);    // local var
@@ -434,23 +438,16 @@ static int stat(T_symbol_table *local_tab) {
 
             get_token();
             iden = token->attr.str->buf;        // identifier
-            // is member of class
+            // looking for symbol
             T_symbol *sym = table_find(symbol_tab, iden, class_sym);
-            if (!sym) {
-                return DEFINITION_ERROR;
-            }
 
             // id.id -> `(` or ` = ` or `;`
             get_token();
-            // ; - dead code
-            if (token->type == TT_semicolon) {
-                return leave(__func__, 0);
-            }
-            else if (token->type == TT_assign) {
+            if (token->type == TT_assign) {
 
                 // id . id = ....;
-                // if assignment goes to function
-                if (sym->symbol_type != is_var) {
+                // if assignment goes to function or symbol is not found
+                if ( !sym || sym->symbol_type != is_var) {
                     return DEFINITION_ERROR;
                 }
 
@@ -471,25 +468,27 @@ static int stat(T_symbol_table *local_tab) {
             }
             else {
                 // id.id()
-                // calling goes to variable
-                if (sym->symbol_type != is_func) {
+                // calling goes to variable or symbol not found
+                if (!sym || sym->symbol_type != is_func) {
                     return DEFINITION_ERROR;
                 }
-                // reading whole expression
-                // reading till ';' or 'eof' read
+
+                // reading till ';'
                 // TODO handle simple function call
-                bc = 0; // bracket counter
-                do {
+                token_vector tvect = token_vec_init();  // creating vector
+                if (!tvect) {
+                    return INTERNAL_ERROR;
+                }
+                // reading till ';'
+                while ( token->type != TT_semicolon) {
                     get_token();
-                    if (token->type == TT_lBracket)
-                        bc++;
-                    if (token->type == TT_rBracket)
-                        bc--;
-                } while ( bc != -1);
+                    if (token_push_back(tvect, token)) {
+                        token_vec_delete(tvect);
+                        return INTERNAL_ERROR;
+                    }
+                }
 
-                // ;
-                get_token();
-
+                // ; was last
                 return leave(__func__, 0);
             }
         }}}
@@ -525,24 +524,22 @@ static int stat(T_symbol_table *local_tab) {
             }
             // TODO proceed simple function call
             // id();
-            // reading whole expression
-            // reading till ';' or 'eof' read
-            bc = 0; // bracket counter
-            do {
+            // reading till ';'
+            token_vector tvect = token_vec_init();  // creating vector
+            if (!tvect) {
+                return INTERNAL_ERROR;
+            }
+            while ( token->type != TT_semicolon) {
                 get_token();
-                // TODO expression
-                if (token->type == TT_lBracket)
-                    bc++;
-                if (token->type == TT_rBracket)
-                    bc--;
-            } while ( bc != -1);
-
+                if (token_push_back(tvect, token)) {
+                    token_vec_delete(tvect);
+                    return INTERNAL_ERROR;
+                }
+            }
             // ;
-            get_token();
-
             return leave(__func__, 0);
         }}}
-    }
+    }}}
 }
 
 // ELSE -> .

@@ -17,6 +17,7 @@
 #include "instruction.h"
 #include "ial.h"
 #include "semantic-analyser.h"
+#include "symbol.h"
 
 // symbol table size
 #define RANGE 8
@@ -420,7 +421,8 @@ static int par(T_symbol *symbol)
 
 // FBODY -> { ST_LIST }
 // FBODY -> ;
-static int fbody() {{{
+static int fbody()
+{{{
     enter(__func__);
     if (get_token())
         return leave(__func__, LEX_ERROR);
@@ -623,6 +625,7 @@ static int stat()
     }
     // id = exp
     else if (token->type == TT_id) {
+
         // inline rule
         if (get_token())
             return leave(__func__, LEX_ERROR);
@@ -632,12 +635,10 @@ static int stat()
                 return leave(__func__, LEX_ERROR);
             // id.id -> `(` or ` = ` or `;`
             if (token->type == TT_id) {
-                if (get_token())
+                if (get_token()) {
                     return leave(__func__, LEX_ERROR);
-                // ;
-                if (token->type == TT_semicolon)
-                    return leave(__func__, 0);
-                else if (token->type == TT_assign) {
+                }
+                if (token->type == TT_assign) {
                     // id.id = ........;
                     // reading till ';' or 'eof' read
                     while ( token->type != TT_semicolon && token->type != TT_eof) {
@@ -812,18 +813,11 @@ int parse()
     // return value
     int res = INTERNAL_ERROR;
 
-    // filling global symbol table with built-in class ifj
-    T_symbol *ifj_class = calloc(1, sizeof(T_symbol));
-    if (!ifj_class) {
-        goto errors;
+    if (fill_ifj16()) {
+        token_free(&token);
+        table_remove(&symbol_tab);
+        return INTERNAL_ERROR;
     }
-    // 4 - size of literal "ifj"
-    if (!(ifj_class->id = calloc(1, strlen("ifj16")))) {
-        free(ifj_class);
-        goto errors;
-    }
-    strcpy((void*)ifj_class->id, "ifj16");
-    table_insert(symbol_tab, ifj_class);
 
     /*
        lexical + syntax analysis
@@ -875,6 +869,7 @@ int parse()
     else
         fprintf(stderr, "Success\n");
 
+    remove_ifj16();
     table_remove(&symbol_tab);
     token_free(&token);
     return res;
