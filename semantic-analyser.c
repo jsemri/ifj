@@ -200,7 +200,8 @@ static int fbody(T_symbol_table *local_tab)
 // ST_LIST -> ε
 // ST_LIST -> {STLIST} STLIST
 // ST_LIST -> STAT STLIST
-static int st_list(T_symbol_table *local_tab) {{{
+static int st_list(T_symbol_table *local_tab)
+{{{
     enter(__func__);
     // read only if '{' or ';'
     if (token->type == TT_lCurlBracket || token->type == TT_rCurlBracket ||
@@ -215,10 +216,6 @@ static int st_list(T_symbol_table *local_tab) {{{
         if (res)
             return leave(__func__, res);
 
-        return st_list(local_tab)+leave(__func__, 0);
-    }
-    // empty statement
-    else if (token->type == TT_semicolon) {
         return st_list(local_tab)+leave(__func__, 0);
     }
     else if (token->type == TT_rCurlBracket) {

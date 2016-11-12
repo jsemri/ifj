@@ -457,10 +457,6 @@ static int st_list()
 
         return st_list()+leave(__func__, 0);
     }
-    // empty statement
-    else if (token->type == TT_semicolon) {
-        return st_list()+leave(__func__, 0);
-    }
     else if (token->type == TT_rCurlBracket) {
         return leave(__func__, 0);
     }
