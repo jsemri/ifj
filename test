@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NOCLR='\033[0m'
+
+
+# syntax tests
+echo "Syntax error detection tests:"
+SYNTAX_ERROR=2
+DIR=testsuites/errors/syntax_errors/*
+
+for sample in $DIR
+do
+    ./ifj $sample 2> /dev/null
+    result="`echo $?`"
+    if [ $result -eq $SYNTAX_ERROR ]; then
+        printf "${GREEN}OK${NOCLR}\n"
+    else
+        printf "${RED}Wrong${NOCLR}\n"
+    fi
+done
+
+# lexical tests
+echo "Lexical error detection tests:"
+LEX_ERROR=1
+DIR=testsuites/errors/lexical_errors/*
+
+for sample in $DIR
+do
+    ./ifj $sample 2> /dev/null
+    result="`echo $?`"
+    if [ $result -eq $LEX_ERROR ]; then
+        printf "${GREEN}OK${NOCLR}\n"
+    else
+        printf "${RED}Wrong${NOCLR} - $sample\n"
+    fi
+done
+
+# semantic tests
+
+# definition tests
+echo "Definition error detection tests:"
+DEFINITION_ERROR=3
+DIR=testsuites/errors/definition_errors/*
+
+for sample in $DIR
+do
+    ./ifj $sample 2> /dev/null
+    result="`echo $?`"
+    if [ $result -eq $DEFINITION_ERROR ]; then
+        printf "${GREEN}OK${NOCLR}\n"
+    else
+        printf "${RED}Wrong${NOCLR}\n"
+    fi
+done
+
