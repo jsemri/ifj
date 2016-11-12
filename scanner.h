@@ -21,7 +21,7 @@ typedef enum {
     S_string,
     S_stringBackSlash,
     S_int,
-    S_double,  // unused
+    S_double,
     S_double2,
     S_doubleExp,
     S_doubleExp2,

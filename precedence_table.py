@@ -142,7 +142,7 @@ def end_row(last):
 
 def print_footer():
     if mode == 'c':
-        print('}')
+        print('};')
 
 print_header()
 

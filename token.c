@@ -13,7 +13,7 @@ void token_clear(T_token *t) {
             str_free(t->attr.str);
             t->attr.str = NULL;
         }
-        t->type = 0;
+        t->type = TT_empty;
     }
 }
 
