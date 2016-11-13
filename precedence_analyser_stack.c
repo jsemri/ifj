@@ -3,12 +3,12 @@
  */
 
 #include "precedence_analyser_stack.h"
-#include "token.h"
 #include "globals.h"
-#include "ial.h"
 #include <stdlib.h>
-#include <stdio.h>
+
 #define INIT_CAPACITY 20
+
+static bool prec_stack_resize_if_needed(T_prec_stack *s);
 
 /**
  * Inicializes an empty stack
@@ -34,7 +34,7 @@ T_prec_stack *prec_stack_new() {
  * @param s A pointer to the resized stack
  * @return True, if the operation was succesful
  */
-bool prec_stack_resize_if_needed(T_prec_stack *s) {
+static bool prec_stack_resize_if_needed(T_prec_stack *s) {
     if (s->last < s->capacity)
         // No need to resize the stack
         return true;
@@ -112,7 +112,6 @@ T_tokenType prec_stack_get_top_token_type(T_prec_stack *s) {
     }
     return TT_eof;
 }
-
 
 /**
  * Removes all elements from the topmost handle to the top from the stack.
