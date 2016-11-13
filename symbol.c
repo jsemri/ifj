@@ -124,6 +124,7 @@ void remove_ifj16() {
     }
     free(sym_arr);
 }
+
 // deletes whole local table
 void local_table_remove(struct T_Hash_symbol_table **stab) {
     if (*stab != NULL) {

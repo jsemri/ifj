@@ -1,54 +1,23 @@
 #include "instruction.h"
+#include "ilist.h"
+#include "globals.h"
 #include <stdlib.h>
 
-// initialization of instruction list
-ilist* list_init() {
-    return calloc(1, sizeof(ilist));
+void create_instr(ilist *L, T_instr_type itype, T_instr_mode imode,
+                        void *op1, void *op2, void *dest)
+{
+
+    T_instr *ins = calloc(1, sizeof(T_instr));
+
+    if (!ins)
+        terminate(INTERNAL_ERROR);
+
+    ins->imode = imode;
+    ins->itype = itype;
+    ins->op1 = op1;
+    ins->op2 = op2;
+    ins->dest = dest;
+    list_insert_last(L, ins);
 }
 
-// inserting instruction as first
-void list_insert_first(ilist *L, T_instr *ins) {
-
-    if (L->first) {
-        ins->next = L->first;
-    }
-    else {
-        L->last = ins;
-    }
-    L->first = ins;
-}
-
-// pushing instruction back
-void list_insert_last(ilist *L, T_instr *ins) {
-
-    if (L->last) {
-        L->last->next = ins;
-    }
-    else {
-        L->first = ins;
-    }
-    L->last = ins;
-}
-
-// deleting whole instruction list
-void list_delete(ilist *L) {
-
-    T_instr *ptr;
-    while (L->first) {
-        ptr = L->first;
-        L->first = L->first->next;
-        free(ptr);
-    }
-    L->last = NULL;
-}
-
-void list_free(ilist **L) {
-    list_delete(*L);
-    free(*L);
-    *L = NULL;
-}
-
-void list_first(ilist *L) {
-    L->act = L->first;
-}
 
