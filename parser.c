@@ -476,6 +476,8 @@ static int stat()
            case TK_while:
            case TK_if:
                 {
+                    // while or if
+                    T_keyword keyword = token->attr.keyword;
                     // ST -> if ( EXPR ) { ST_LIST } ELSE
                     if (get_token()) {
                         return LEX_ERROR;
@@ -515,8 +517,9 @@ static int stat()
                         return res;
 
                     // end while
-                    if (token->attr.keyword == TK_while)
+                    if (keyword == TK_while) {
                         return 0;
+                    }
 
                     // if next word is else do call st_else()
                     if (get_token())
