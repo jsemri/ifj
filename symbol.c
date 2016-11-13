@@ -22,16 +22,29 @@ T_func_symbol *create_func(T_data_type dtype) {
         T_func_symbol *func = calloc(1, sizeof(T_func_symbol));
 
         if (!func) {
-            return NULL;
+            terminate(INTERNAL_ERROR);
         }
         func->data_type = dtype;
 
         if (!(func->local_table = table_init(RANGE))) {
             free(func);
-            return NULL;
+            terminate(INTERNAL_ERROR);
         }
 
         return func;
+}
+
+T_symbol *create_symbol(char *id, T_symbol_type stype) {
+
+        T_symbol *sym = calloc(1, sizeof(T_symbol));
+
+        if (!sym) {
+            terminate(INTERNAL_ERROR);
+        }
+        sym->symbol_type = stype;
+        sym->id = id;
+
+        return sym;
 }
 
 T_var_symbol *create_var(T_data_type dtype) {
@@ -39,7 +52,7 @@ T_var_symbol *create_var(T_data_type dtype) {
         T_var_symbol *var = calloc(1, sizeof(T_var_symbol));
 
         if (!var) {
-            return NULL;
+            terminate(INTERNAL_ERROR);
         }
         var->data_type = dtype;
 
@@ -47,7 +60,7 @@ T_var_symbol *create_var(T_data_type dtype) {
         if (dtype == is_str) {
             if ( !(var->value.str = str_init()) ) {
                 free(var);
-                return NULL;
+                terminate(INTERNAL_ERROR);
             }
         }
         return var;
@@ -111,6 +124,7 @@ void remove_ifj16() {
     }
     free(sym_arr);
 }
+
 // deletes whole local table
 void local_table_remove(struct T_Hash_symbol_table **stab) {
     if (*stab != NULL) {

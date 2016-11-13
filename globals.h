@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "ial.h"
 #include "instruction.h"
+#include "symbol.h"
 
 // error codes
 #define LEX_ERROR 1
@@ -32,5 +33,7 @@ extern ilist *instr_list;
 extern T_symbol_table *symbol_tab;
 extern FILE *source;
 extern T_token *token;
+
+void terminate(int err_code);
 
 #endif

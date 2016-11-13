@@ -7,6 +7,12 @@
 
 struct T_Hash_symbol_table;
 
+typedef enum {
+    is_class,
+    is_func,
+    is_var
+} T_symbol_type;
+
 // data types
 typedef enum {
     is_void,
@@ -18,7 +24,7 @@ typedef enum {
 /// Function attributes.
 /// Variable attributes.
 typedef struct {
-    T_data_type data_type;         // data type
+    T_data_type data_type;          // data type
     bool is_initialized;
     bool is_const;                  // 0 if constant
     union {
@@ -30,7 +36,7 @@ typedef struct {
 
 /// Function attributes.
 typedef struct {
-    T_data_type data_type;     // return data type
+    T_data_type data_type;      // return data type
     T_var_symbol return_var;    // return variable
     ilist *func_ilist;          // instruction list
     unsigned par_count;         // number of parameters
@@ -41,12 +47,8 @@ typedef struct {
 
 /// Structure of symbol.
 typedef struct T_symbol {
-    const char *id;                 // symbol identifier, first key
-    enum {
-        is_class,
-        is_func,
-        is_var
-    } symbol_type;                  // symbol type
+    const char *id;                // symbol identifier, first key
+    T_symbol_type symbol_type;     // symbol type
     T_data_type data_type;         // symbol data type
     union {
         T_var_symbol *var;
@@ -56,28 +58,48 @@ typedef struct T_symbol {
     struct T_symbol *next;          // next symbol in list
 } T_symbol;
 
+/**
+ * @brief Creates a symbol without variable or function attributes.
+ *
+ * @param iden symbol identifier
+ * @param stype symbol type - class, variable or function
+ * @return valid pointer on success
+ */
+T_symbol *create_symbol(char *id, T_symbol_type stype);
 
+/**
+ * @brief Creates a variable.
+ *
+ * @param dtype data type
+ * @return valid pointer on success
+ */
 T_var_symbol *create_var(T_data_type dtype);
 
+/**
+ * @brief Creates a function.
+ *
+ * @param dtype data type
+ * @return valid pointer on success
+ */
 T_func_symbol *create_func(T_data_type dtype);
 
 /**
-  * @brief Search for variable with specific name and data type.
-  *
-  * @param iden variable identifier
-  * @param local_tab local table of function, body of actual class
-  * @param actual_class body of actual class
-  * @param dtype data type
-  * @return 0 in success or specific error
-  */
+ * @brief Search for variable with specific name and data type.
+ *
+ * @param iden variable identifier
+ * @param local_tab local table of function, body of actual class
+ * @param actual_class body of actual class
+ * @param dtype data type
+ * @return 0 in success or specific error
+ */
 int find_var(const char *iden, struct T_Hash_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype);
 /**
-  * @brief Copies symbol table and puts it on stack.
-  *
-  * @param sym_tab source symbol table
-  * @return pointer to new symbol table
-  */
+ * @brief Copies symbol table and puts it on stack.
+ *
+ * @param sym_tab source symbol table
+ * @return pointer to new symbol table
+ */
 struct T_Hash_symbol_table *table_copy(const struct T_Hash_symbol_table *sym_tab);
 
 /**

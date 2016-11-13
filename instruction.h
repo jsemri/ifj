@@ -6,9 +6,10 @@
 #ifndef INSTR_H
 #define INSTR_H
 
+
 // instruction type
 typedef enum {
-    TI_nop,         // no operation
+    TI_stop,
     TI_mov,         // assignment
     TI_add,         // arithmetic
     TI_sub,
@@ -64,14 +65,18 @@ typedef struct T_ilist {
     T_instr *act;   // active item
 } ilist;
 
-// TODO Add functions
-ilist *list_init();
-void list_insert_first(ilist *L, T_instr *ins);
-void list_insert_last(ilist *L, T_instr *ins);
-void list_delete(ilist *L);
-void list_free(ilist **L);
 
-int create_inst( ilist *L, T_instr_type itype, T_instr_mode imode,
+/**
+ * @brief Creates and inserts instruction to a instruction list.
+ *
+ * @param L instruction list
+ * @param itype instruction type
+ * @param imode instruction mode
+ * @param op1 first operand
+ * @param op2 second operand
+ * @param dest destination where result will be stored
+ */
+void create_instr( ilist *L, T_instr_type itype, T_instr_mode imode,
                         void *op1, void *op2, void *dest);
 
 #endif
