@@ -23,6 +23,9 @@
 #define OTHER_ERROR 10
 #define INTERNAL_ERROR 99
 
+// symbol table array length
+#define RANGE 8
+
 // FIXME Put here all global variables which are used across most of the modules
 
 extern ilist *instr_list;

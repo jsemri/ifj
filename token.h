@@ -48,7 +48,7 @@ typedef enum {
     TT_semicolon,       // ;
     TT_assign,          // =
     TT_comma,           // ,
-    TT_dot,             // .
+    TT_dot,             // .    - will be deleted soon
     TT_lBracket,        // (
     TT_rBracket,        // )
     TT_lCurlBracket,    // {
@@ -61,6 +61,7 @@ typedef enum {
     TT_int,             // int constant
     TT_string,          // string literal
     TT_double,          // double constant
+    TT_fullid,          // id.id
     TT_eof              // end of file
 } T_tokenType;
 

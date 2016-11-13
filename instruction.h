@@ -8,14 +8,36 @@
 
 // instruction type
 typedef enum {
-    TI_nop,
-    TI_add,     // arithmetic
+    TI_nop,         // no operation
+    TI_mov,         // assignment
+    TI_add,         // arithmetic
     TI_sub,
     TI_mul,
     TI_div,
-    TI_jmp,     // jumps
-    TI_lab,
-    // more instructions
+    TI_concat,      // string concatenation
+    TI_and,         // comparison/relational
+    TI_or,
+    TI_not,
+    TI_equal,
+    TI_notequal,
+    TI_less,
+    TI_lessEq,
+    TI_greater,
+    TI_greaterEq,
+    TI_jmp,         // jumps
+    TI_jmpz,        // jump if zero
+    TI_return,
+    TI_call,        // calling function
+    TI_push_params, // pushing parameters to stack
+    TI_readInt,     // built-ins
+    TI_readDouble,
+    TI_readString,
+    TI_print,
+    TI_length,
+    TI_substr,
+    TI_compare,
+    TI_find,
+    TI_sort,
 } T_instr_type;
 
 // instruction mode

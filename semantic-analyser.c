@@ -7,6 +7,7 @@
 #include "token.h"
 #include <stdio.h>
 #include "string.h"
+#include <string.h>
 #include "globals.h"
 #include "scanner.h"
 #include "token_vector.h"
@@ -15,6 +16,7 @@
 #include "debug.h"
 #include "instruction.h"
 #include "ial.h"
+#include "symbol.h"
 
 // unget token
 static bool get_token_flag = false;
@@ -41,6 +43,7 @@ static int st_list(T_symbol_table *local_tab);
 static int stat(T_symbol_table *local_tab);
 static int st_else(T_symbol_table *local_tab);
 static int st_else2(T_symbol_table *local_tab);
+
 
 // PROG -> BODY eof
 static int prog()
@@ -200,7 +203,8 @@ static int fbody(T_symbol_table *local_tab)
 // ST_LIST -> ε
 // ST_LIST -> {STLIST} STLIST
 // ST_LIST -> STAT STLIST
-static int st_list(T_symbol_table *local_tab) {{{
+static int st_list(T_symbol_table *local_tab)
+{{{
     enter(__func__);
     // read only if '{' or ';'
     if (token->type == TT_lCurlBracket || token->type == TT_rCurlBracket ||
@@ -215,10 +219,6 @@ static int st_list(T_symbol_table *local_tab) {{{
         if (res)
             return leave(__func__, res);
 
-        return st_list(local_tab)+leave(__func__, 0);
-    }
-    // empty statement
-    else if (token->type == TT_semicolon) {
         return st_list(local_tab)+leave(__func__, 0);
     }
     else if (token->type == TT_rCurlBracket) {
@@ -246,26 +246,9 @@ static int stat(T_symbol_table *local_tab) {
                 {{{
                     // rule: STAT -> TYPE id ;| = EXPR ;
 
-                    // allocate space for new symbol
-                    T_symbol *symbol = calloc(1, sizeof(T_symbol));
-                    if (!symbol) {
-                        return leave(__func__, INTERNAL_ERROR);
-                    }
-
-                    // allocate space for variable
-                    symbol->attr.var = calloc(1, sizeof(T_var_symbol));
-                    if (!symbol->attr.var) {
-                         return leave(__func__, INTERNAL_ERROR);
-                    }
-
-                    // initialize string variable
-                    if (symbol->data_type == is_str) {
-                        if ( !(symbol->attr.var->value.str = str_init()) )
-                            return leave(__func__, INTERNAL_ERROR);
-                    }
-
-                    symbol->data_type = token->attr.keyword; // set data type
-                    symbol->symbol_type = is_var;   // set symbol type
+                    unsigned dtype = token->attr.keyword;   // data type
+                    // increasing local variable count
+                    actual_func->attr.func->local_count++;
 
                     // id in token
                     get_token();
@@ -273,6 +256,18 @@ static int stat(T_symbol_table *local_tab) {
                         // redefinition
                         return leave(__func__, DEFINITION_ERROR);
                     }
+
+                    // creating a new symbol
+                    T_symbol *symbol = calloc(1, sizeof(T_symbol));
+                    if (!symbol) {
+                        return leave(__func__, INTERNAL_ERROR);
+                    }
+
+                    if (!(symbol->attr.var = create_var(dtype))) {
+                        free(symbol);
+                        return leave(__func__, INTERNAL_ERROR);
+                    }
+                    symbol->symbol_type = is_var;   // set symbol type
                     symbol->id = token->attr.str->buf;  // set var name
                     token->attr.str->buf = NULL;        // discredit free call
                     table_insert(local_tab, symbol);    // insert to table
@@ -413,9 +408,10 @@ static int stat(T_symbol_table *local_tab) {
         }
     }
     // id = exp
-    else {
-        T_symbol *loc_sym, *glob_sym, *class_sym;    // local and global symbol
+    else
+    {{{
         char *iden = token->attr.str->buf;           // identifier name
+        T_symbol *loc_sym, *glob_sym, *class_sym;    // local and global symbol
 
         // checking whether it was defined
         loc_sym = table_find(local_tab, iden, NULL);    // local var
@@ -437,23 +433,16 @@ static int stat(T_symbol_table *local_tab) {
 
             get_token();
             iden = token->attr.str->buf;        // identifier
-            // is member of class
+            // looking for symbol
             T_symbol *sym = table_find(symbol_tab, iden, class_sym);
-            if (!sym) {
-                return DEFINITION_ERROR;
-            }
 
             // id.id -> `(` or ` = ` or `;`
             get_token();
-            // ; - dead code
-            if (token->type == TT_semicolon) {
-                return leave(__func__, 0);
-            }
-            else if (token->type == TT_assign) {
+            if (token->type == TT_assign) {
 
                 // id . id = ....;
-                // if assignment goes to function
-                if (sym->symbol_type != is_var) {
+                // if assignment goes to function or symbol is not found
+                if ( !sym || sym->symbol_type != is_var) {
                     return DEFINITION_ERROR;
                 }
 
@@ -474,25 +463,27 @@ static int stat(T_symbol_table *local_tab) {
             }
             else {
                 // id.id()
-                // calling goes to variable
-                if (sym->symbol_type != is_func) {
+                // calling goes to variable or symbol not found
+                if (!sym || sym->symbol_type != is_func) {
                     return DEFINITION_ERROR;
                 }
-                // reading whole expression
-                // reading till ';' or 'eof' read
+
+                // reading till ';'
                 // TODO handle simple function call
-                bc = 0; // bracket counter
-                do {
+                token_vector tvect = token_vec_init();  // creating vector
+                if (!tvect) {
+                    return INTERNAL_ERROR;
+                }
+                // reading till ';'
+                while ( token->type != TT_semicolon) {
                     get_token();
-                    if (token->type == TT_lBracket)
-                        bc++;
-                    if (token->type == TT_rBracket)
-                        bc--;
-                } while ( bc != -1);
+                    if (token_push_back(tvect, token)) {
+                        token_vec_delete(tvect);
+                        return INTERNAL_ERROR;
+                    }
+                }
 
-                // ;
-                get_token();
-
+                // ; was last
                 return leave(__func__, 0);
             }
         }}}
@@ -528,24 +519,22 @@ static int stat(T_symbol_table *local_tab) {
             }
             // TODO proceed simple function call
             // id();
-            // reading whole expression
-            // reading till ';' or 'eof' read
-            bc = 0; // bracket counter
-            do {
+            // reading till ';'
+            token_vector tvect = token_vec_init();  // creating vector
+            if (!tvect) {
+                return INTERNAL_ERROR;
+            }
+            while ( token->type != TT_semicolon) {
                 get_token();
-                // TODO expression
-                if (token->type == TT_lBracket)
-                    bc++;
-                if (token->type == TT_rBracket)
-                    bc--;
-            } while ( bc != -1);
-
+                if (token_push_back(tvect, token)) {
+                    token_vec_delete(tvect);
+                    return INTERNAL_ERROR;
+                }
+            }
             // ;
-            get_token();
-
             return leave(__func__, 0);
         }}}
-    }
+    }}}
 }
 
 // ELSE -> .
