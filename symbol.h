@@ -7,6 +7,12 @@
 
 struct T_Hash_symbol_table;
 
+typedef enum {
+    is_class,
+    is_func,
+    is_var
+} T_symbol_type;
+
 // data types
 typedef enum {
     is_void,
@@ -18,7 +24,7 @@ typedef enum {
 /// Function attributes.
 /// Variable attributes.
 typedef struct {
-    T_data_type data_type;         // data type
+    T_data_type data_type;          // data type
     bool is_initialized;
     bool is_const;                  // 0 if constant
     union {
@@ -30,7 +36,7 @@ typedef struct {
 
 /// Function attributes.
 typedef struct {
-    T_data_type data_type;     // return data type
+    T_data_type data_type;      // return data type
     T_var_symbol return_var;    // return variable
     ilist *func_ilist;          // instruction list
     unsigned par_count;         // number of parameters
@@ -41,12 +47,8 @@ typedef struct {
 
 /// Structure of symbol.
 typedef struct T_symbol {
-    const char *id;                 // symbol identifier, first key
-    enum {
-        is_class,
-        is_func,
-        is_var
-    } symbol_type;                  // symbol type
+    const char *id;                // symbol identifier, first key
+    T_symbol_type symbol_type;     // symbol type
     T_data_type data_type;         // symbol data type
     union {
         T_var_symbol *var;
@@ -56,6 +58,8 @@ typedef struct T_symbol {
     struct T_symbol *next;          // next symbol in list
 } T_symbol;
 
+
+T_symbol *create_symbol(char *id, T_symbol_type stype);
 
 T_var_symbol *create_var(T_data_type dtype);
 

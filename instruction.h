@@ -8,7 +8,7 @@
 
 // instruction type
 typedef enum {
-    TI_nop,         // no operation
+    TI_stop,
     TI_mov,         // assignment
     TI_add,         // arithmetic
     TI_sub,
@@ -70,6 +70,7 @@ void list_insert_first(ilist *L, T_instr *ins);
 void list_insert_last(ilist *L, T_instr *ins);
 void list_delete(ilist *L);
 void list_free(ilist **L);
+void list_first(ilist *L);
 
 int create_inst( ilist *L, T_instr_type itype, T_instr_mode imode,
                         void *op1, void *op2, void *dest);

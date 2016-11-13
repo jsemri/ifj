@@ -48,3 +48,7 @@ void list_free(ilist **L) {
     *L = NULL;
 }
 
+void list_first(ilist *L) {
+    L->act = L->first;
+}
+
