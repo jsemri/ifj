@@ -45,9 +45,10 @@ T_var_symbol *create_var(T_data_type dtype) {
 
         // initialize string variable
         if (dtype == is_str) {
-            if ( !(var->value.str = str_init()) )
+            if ( !(var->value.str = str_init()) ) {
                 free(var);
                 return NULL;
+            }
         }
         return var;
 }
