@@ -246,26 +246,9 @@ static int stat(T_symbol_table *local_tab) {
                 {{{
                     // rule: STAT -> TYPE id ;| = EXPR ;
 
-                    // allocate space for new symbol
-                    T_symbol *symbol = calloc(1, sizeof(T_symbol));
-                    if (!symbol) {
-                        return leave(__func__, INTERNAL_ERROR);
-                    }
-
-                    // allocate space for variable
-                    symbol->attr.var = calloc(1, sizeof(T_var_symbol));
-                    if (!symbol->attr.var) {
-                         return leave(__func__, INTERNAL_ERROR);
-                    }
-
-                    // initialize string variable
-                    if (symbol->data_type == is_str) {
-                        if ( !(symbol->attr.var->value.str = str_init()) )
-                            return leave(__func__, INTERNAL_ERROR);
-                    }
-
-                    symbol->data_type = token->attr.keyword; // set data type
-                    symbol->symbol_type = is_var;   // set symbol type
+                    unsigned dtype = token->attr.keyword;   // data type
+                    // increasing local variable count
+                    actual_func->attr.func->local_count++;
 
                     // id in token
                     get_token();
@@ -273,6 +256,18 @@ static int stat(T_symbol_table *local_tab) {
                         // redefinition
                         return leave(__func__, DEFINITION_ERROR);
                     }
+
+                    // creating a new symbol
+                    T_symbol *symbol = calloc(1, sizeof(T_symbol));
+                    if (!symbol) {
+                        return leave(__func__, INTERNAL_ERROR);
+                    }
+
+                    if (!(symbol->attr.var = create_var(dtype))) {
+                        free(symbol);
+                        return leave(__func__, INTERNAL_ERROR);
+                    }
+                    symbol->symbol_type = is_var;   // set symbol type
                     symbol->id = token->attr.str->buf;  // set var name
                     token->attr.str->buf = NULL;        // discredit free call
                     table_insert(local_tab, symbol);    // insert to table

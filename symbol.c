@@ -17,8 +17,43 @@ char *arr_ifj16[] = {
 static T_symbol **sym_arr;
 T_symbol_table *symbol_tab;
 
+T_func_symbol *create_func(T_data_type dtype) {
+
+        T_func_symbol *func = calloc(1, sizeof(T_func_symbol));
+
+        if (!func) {
+            return NULL;
+        }
+        func->data_type = dtype;
+
+        if (!(func->local_table = table_init(RANGE))) {
+            free(func);
+            return NULL;
+        }
+
+        return func;
+}
+
+T_var_symbol *create_var(T_data_type dtype) {
+
+        T_var_symbol *var = calloc(1, sizeof(T_var_symbol));
+
+        if (!var) {
+            return NULL;
+        }
+        var->data_type = dtype;
+
+        // initialize string variable
+        if (dtype == is_str) {
+            if ( !(var->value.str = str_init()) )
+                free(var);
+                return NULL;
+        }
+        return var;
+}
+
 int find_var(const char *iden, T_symbol_table *local_tab,
-             T_symbol *actual_class, T_data_types dtype)
+             T_symbol *actual_class, T_data_type dtype)
 {
     T_symbol *sym;
     // finding variable in local table
@@ -35,7 +70,7 @@ int find_var(const char *iden, T_symbol_table *local_tab,
     }
 
     // checking data type
-    if (sym->data_type != dtype) {
+    if (sym->attr.var->data_type != dtype) {
         return TYPE_ERROR;
     }
     return 0;
@@ -86,7 +121,8 @@ void local_table_remove(struct T_Hash_symbol_table **stab) {
                 (*stab)->arr[i] = s->next;
                 free((void*)s->id);
 
-                if (s->data_type == is_str && s->attr.var->value.str) {
+                if (s->attr.var->data_type == is_str &&
+                    s->attr.var->value.str) {
                         str_free(s->attr.var->value.str);
                 }
                 free(s->attr.var);

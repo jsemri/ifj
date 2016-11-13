@@ -19,8 +19,6 @@
 #include "semantic-analyser.h"
 #include "symbol.h"
 
-// symbol table size
-#define RANGE 8
 // unget token
 static bool get_token_flag = false;
 #define get_token()  (get_token_flag ? (get_token_flag = false) : get_token())
@@ -39,8 +37,8 @@ static int prog();
 static int body();
 static int class();
 static int cbody();
-static int cbody2(T_symbol *symbol);
-static int func(T_symbol *symbol);
+static int cbody2(T_symbol *symbol, T_data_type dtype);
+static int func(T_symbol *symbol, T_data_type dtype);
 static int fbody();
 static int par(T_symbol *symbol);
 static int st_list();
@@ -140,7 +138,7 @@ static int cbody()
 {{{
     enter(__func__);
     int res;
-    unsigned data_type;
+    unsigned dtype;
     // static or '}'
     if (get_token())
         return leave(__func__, LEX_ERROR);
@@ -153,7 +151,7 @@ static int cbody()
 
         // 'data type' expected
         if (token->type == TT_keyword && token->attr.keyword < TK_boolean) {
-            data_type = token->attr.keyword;
+            dtype = token->attr.keyword;
         }
         else
             return leave(__func__, SYNTAX_ERROR);
@@ -180,11 +178,10 @@ static int cbody()
         }
         symbol->id = token->attr.str->buf;
         token->attr.str->buf = 0;
-        symbol->data_type = data_type;
         symbol->member_class = actual_class;
         table_insert(symbol_tab, symbol);
 
-        res = cbody2(symbol);
+        res = cbody2(symbol, dtype);
         if (res)
             return leave(__func__, res);
 
@@ -202,7 +199,7 @@ static int cbody()
    CBODY2 -> '=' ';' '('
     setting variable or function
 */
-static int cbody2(T_symbol *symbol)
+static int cbody2(T_symbol *symbol, T_data_type dtype)
 {{{
     enter(__func__);
     // '=' or ';' or '(' expected
@@ -212,23 +209,19 @@ static int cbody2(T_symbol *symbol)
     // variable
     if (token->type == TT_assign || token->type == TT_semicolon) {
 
-        if (symbol->data_type == is_void) {
+        if (dtype == is_void) {
             return leave(__func__, TYPE_ERROR);
         }
+        if (!(symbol->attr.var = create_var(dtype))) {
+            return INTERNAL_ERROR;
+        }
         // setting symbol as variable
-        symbol->symbol_type = is_var;
-        symbol->attr.var = calloc(1, sizeof(T_var_symbol));
-
-        if (!(symbol->attr.var)) {
+        if (!(symbol->attr.var = create_var(dtype))) {
             return leave(__func__, INTERNAL_ERROR);
         }
+        symbol->symbol_type = is_var;
 
-        // initialize string variable
-        if (symbol->data_type == is_str) {
-            if ( !(symbol->attr.var->value.str = str_init()) )
-                return leave(__func__, INTERNAL_ERROR);
-        }
-
+        // initialization
         // just reading everything till `;`
         while (token->type != TT_semicolon && token->type != TT_eof) {
             if (get_token()) {
@@ -241,14 +234,8 @@ static int cbody2(T_symbol *symbol)
         return leave(__func__, SYNTAX_ERROR);
     }
     else if (token->type == TT_lBracket) {
-        symbol->symbol_type = is_func;
-        symbol->attr.func = calloc(1, sizeof(T_func_symbol));
-
-        if (!(symbol->attr.func)) {
-            return leave(__func__, INTERNAL_ERROR);
-        }
-
-        return func(symbol)+leave(__func__, 0);
+        // function
+        return func(symbol, dtype)+leave(__func__, 0);
     }
     else
         return leave(__func__, SYNTAX_ERROR);
@@ -259,17 +246,16 @@ static int cbody2(T_symbol *symbol)
 /* FUNC -> ( PAR ) FBODY
  '(' has been read
 */
-static int func(T_symbol *symbol)
+static int func(T_symbol *symbol, T_data_type dtype)
 {{{
     enter(__func__);
     int res = 0;
 
-    // creating local symbol table
-    symbol->attr.func->local_table = table_init(RANGE);
-
-    if (!(symbol->attr.func->local_table)) {
-        return leave(__func__, INTERNAL_ERROR);
+    // creating a function
+    if (!(symbol->attr.func = create_func(dtype))) {
+        return INTERNAL_ERROR;
     }
+    symbol->symbol_type = is_func;
 
     res = par(symbol);
     if (res)
@@ -388,10 +374,13 @@ static int par(T_symbol *symbol)
             goto free_args;
         }
 
+        if (!(arg_var->attr.var = create_var(dtype))) {
+            rc = INTERNAL_ERROR;
+            goto free_args;
+        }
         arg_var->symbol_type = is_var;      // is variable
         arg_var->id = tptr->attr.str->buf;  // name of variable
         tptr->attr.str->buf = NULL;         // discredit token buffer
-        arg_var->data_type = dtype;         // data type
         arguments[i++] = arg_var;
 
         // inserting variable
@@ -854,24 +843,10 @@ int parse()
 
 
     errors:
-    if (res == LEX_ERROR)
-        fprintf(stderr, "Lexical error\n");
-    else if (res == SYNTAX_ERROR)
-        fprintf(stderr, "Syntax error\n");
-    else if (res == DEFINITION_ERROR)
-        fprintf(stderr, "Definition error\n");
-    else if (res == INTERNAL_ERROR)
-        fprintf(stderr, "Internal error\n");
-    else if (res == TYPE_ERROR)
-        fprintf(stderr, "Type error\n");
-    else if (res == SEMANTIC_ERROR)
-        fprintf(stderr, "Semantic error\n");
-    else
-        fprintf(stderr, "Success\n");
-
     remove_ifj16();
     table_remove(&symbol_tab);
     token_free(&token);
     return res;
 }}}
+
 

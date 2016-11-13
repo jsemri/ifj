@@ -3,6 +3,7 @@
 
 #include "token.h"
 #include "token_vector.h"
+#include <stdbool.h>
 
 struct T_Hash_symbol_table;
 
@@ -12,25 +13,31 @@ typedef enum {
     is_int,
     is_double,
     is_str
-} T_data_types;
+} T_data_type;
+
+/// Function attributes.
+/// Variable attributes.
+typedef struct {
+    T_data_type data_type;         // data type
+    bool is_initialized;
+    bool is_const;                  // 0 if constant
+    union {
+        T_string *str;
+        int num;
+        double d;
+    } value;                        // value of variable
+} T_var_symbol;
 
 /// Function attributes.
 typedef struct {
+    T_data_type data_type;     // return data type
+    T_var_symbol return_var;    // return variable
     ilist *func_ilist;          // instruction list
     unsigned par_count;         // number of parameters
     void **arguments;           // pointer to parameters in local table
     unsigned local_count;                       // local variable count
     struct T_Hash_symbol_table *local_table;    // local symbol table
 } T_func_symbol;
-
-/// Variable attributes.
-typedef struct {
-    union {
-        T_string *str;
-        int num;
-        double d;
-    } value;                         // value of variable
-} T_var_symbol;
 
 /// Structure of symbol.
 typedef struct T_symbol {
@@ -40,7 +47,7 @@ typedef struct T_symbol {
         is_func,
         is_var
     } symbol_type;                  // symbol type
-    T_data_types data_type;         // symbol data type
+    T_data_type data_type;         // symbol data type
     union {
         T_var_symbol *var;
         T_func_symbol *func;
@@ -48,6 +55,11 @@ typedef struct T_symbol {
     struct T_symbol *member_class;  // member class, second key
     struct T_symbol *next;          // next symbol in list
 } T_symbol;
+
+
+T_var_symbol *create_var(T_data_type dtype);
+
+T_func_symbol *create_func(T_data_type dtype);
 
 /**
   * @brief Search for variable with specific name and data type.
@@ -59,7 +71,7 @@ typedef struct T_symbol {
   * @return 0 in success or specific error
   */
 int find_var(const char *iden, struct T_Hash_symbol_table *local_tab,
-             T_symbol *actual_class, T_data_types dtype);
+             T_symbol *actual_class, T_data_type dtype);
 /**
   * @brief Copies symbol table and puts it on stack.
   *
