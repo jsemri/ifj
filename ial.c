@@ -80,7 +80,7 @@ void table_remove(T_symbol_table **stab) {
                     }
                 }
                 else if (s->symbol_type == is_func && s->attr.func) {
-                    table_remove(&s->attr.func->local_table);
+                    local_table_remove(&s->attr.func->local_table);
                     if (s->attr.func->arguments)
                         free(s->attr.func->arguments);
                     free(s->attr.func);

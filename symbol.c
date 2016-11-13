@@ -17,7 +17,6 @@ char *arr_ifj16[] = {
 static T_symbol **sym_arr;
 T_symbol_table *symbol_tab;
 
-
 int find_var(const char *iden, T_symbol_table *local_tab,
              T_symbol *actual_class, T_data_types dtype)
 {
@@ -76,4 +75,25 @@ void remove_ifj16() {
     }
     free(sym_arr);
 }
+// deletes whole local table
+void local_table_remove(struct T_Hash_symbol_table **stab) {
+    if (*stab != NULL) {
+        T_symbol* s;
 
+        for (unsigned i = 0; i < (*stab)->size; i++) {
+            while ((s = (*stab)->arr[i]) != NULL) {
+
+                (*stab)->arr[i] = s->next;
+                free((void*)s->id);
+
+                if (s->data_type == is_str && s->attr.var->value.str) {
+                        str_free(s->attr.var->value.str);
+                }
+                free(s->attr.var);
+                free(s);
+            }
+        }
+        free(*stab);
+        *stab = NULL;
+    }
+}
