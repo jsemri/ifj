@@ -10,6 +10,7 @@
 #include "globals.h"
 #include "string.h"
 #include "symbol.h"
+#include "ilist.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -139,6 +140,7 @@ T_symbol *rule_arith(T_prec_stack_entry terms[3], int *errcode,
     }
     return symbol;
 }
+
 
 T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3], int *errcode,
                         T_func_symbol *act_func, T_symbol *act_class,

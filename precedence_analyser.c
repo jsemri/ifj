@@ -7,6 +7,7 @@
 #include "precedence_table.h"
 #include "precedence_rules.h"
 #include "token.h"
+#include "ilist.h"
 #include <stdio.h>
 
 #define MAX_TERMS_IN_RULE 3
