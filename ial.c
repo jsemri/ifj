@@ -125,7 +125,7 @@ int heap_sort(T_string *src, T_string *dest);
         sift_down(dest, 0, right - 1);
     }
 
-    return HEAPSORT_OP_OK;
+    return HEAPSORT_OK;
 }
 
 /**
