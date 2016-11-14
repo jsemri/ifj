@@ -38,6 +38,7 @@ typedef enum {
     TI_compare,
     TI_find,
     TI_sort,
+    TI_castIntDouble, // casts an int to double
 } T_instr_type;
 
 // instruction mode

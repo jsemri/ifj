@@ -39,14 +39,16 @@ typedef struct {
     struct T_Hash_symbol_table *local_table;    // local symbol table
 } T_func_symbol;
 
+typedef enum {
+    is_class,
+    is_func,
+    is_var
+} T_symbol_type;
+
 /// Structure of symbol.
 typedef struct T_symbol {
     const char *id;                 // symbol identifier, first key
-    enum {
-        is_class,
-        is_func,
-        is_var
-    } symbol_type;                  // symbol type
+    T_symbol_type symbol_type;                  // symbol type
     T_data_type data_type;         // symbol data type
     union {
         T_var_symbol *var;
@@ -89,5 +91,8 @@ void local_table_remove(struct T_Hash_symbol_table **loc_stab);
 
 int fill_ifj16();
 void remove_ifj16();
+
+T_symbol *find_symbol(T_token *token, T_func_symbol *act_func,
+                      T_symbol *act_class);
 
 #endif

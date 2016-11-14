@@ -4,14 +4,16 @@
 #include "token.h"
 #include "token_vector.h"
 #include "scanner.h"
+#include "string.h"
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #define BI_COUNT 9
 char *arr_ifj16[] = {
-    "readInt",  "readDouble", "readString", "print",
+    "readInt", "readDouble", "readString", "print",
     "length", "substr", "compare", "find", "sort", "ifj16"
-    };
+};
 
 // temporary pointer for build-in symbols
 static T_symbol **sym_arr;
@@ -133,4 +135,20 @@ void local_table_remove(struct T_Hash_symbol_table **stab) {
         free(*stab);
         *stab = NULL;
     }
+}
+
+T_symbol *find_symbol(T_token *token, T_func_symbol *act_func,
+                      T_symbol *act_class) {
+    assert(token != NULL);
+    assert(act_class != NULL);
+
+    // TODO Přidat podporu plných identifikátorů (třída.funkce, třída.proměnná)
+
+    if (act_func != NULL) {
+        T_symbol *symbol = table_find(act_func->local_table,
+                                      token->attr.str->buf, NULL);
+        if (symbol != NULL)
+            return symbol;
+    }
+    return table_find(symbol_tab, token->attr.str->buf, act_class);
 }
