@@ -6,8 +6,6 @@
 #include "precedence_analyser_stack.h"
 #include "precedence_table.h"
 #include "precedence_rules.h"
-#include "token.h"
-#include "ilist.h"
 #include <stdio.h>
 
 #define MAX_TERMS_IN_RULE 3
@@ -22,9 +20,10 @@
 
 static T_token* get_next_token(token_vector v);
 
+
 int precedence_analyser(token_vector v, T_symbol *lvalue,
                         T_func_symbol *act_func, T_symbol *act_class,
-                        ilist *ilist) {
+                        struct T_ilist *ilist) {
     T_prec_stack *stack = prec_stack_new();
     if (stack == NULL)
         return 99;
@@ -140,8 +139,8 @@ int main() {
     add_token(v, TT_mul);
     add_int(v, 2);
 
-    ilist *ilist = list_init();
-    int r = precedence_analyser(v, NULL, NULL, NULL, ilist);
+    ilist *list = list_init();
+    int r = precedence_analyser(v, NULL, NULL, NULL, list);
 
     printf("%% Návratový kód: %d\n", r);
 
