@@ -131,11 +131,31 @@ T_symbol *rule_arith(T_prec_stack_entry terms[3], int *errcode,
 
     //printf("[INST] Arithm. oper.\n");
     if (out_type == is_double) {
-        ADD_INSTR(TI_add, symbol, &s1->attr.var->value.d,
+        T_instr_type type;
+        if (terms[1].ptr.token->type == TT_plus) {
+            type = TI_add;
+        } else if (terms[1].ptr.token->type == TT_minus) {
+            type = TI_sub;
+        } else if (terms[1].ptr.token->type == TT_mul) {
+            type = TI_mul;
+        } else {
+            type = TI_div;
+        }
+        ADD_INSTR(type, symbol, &s1->attr.var->value.d,
                   &s2->attr.var->value.d);
     }
     else {
-        ADD_INSTR(TI_add, symbol, &s1->attr.var->value.num,
+        T_instr_type type;
+        if (terms[1].ptr.token->type == TT_plus) {
+            type = TI_add_dbl;
+        } else if (terms[1].ptr.token->type == TT_minus) {
+            type = TI_sub_dbl;
+        } else if (terms[1].ptr.token->type == TT_mul) {
+            type = TI_mul_dbl;
+        } else {
+            type = TI_div_dbl;
+        }
+        ADD_INSTR(type, symbol, &s1->attr.var->value.num,
                   &s2->attr.var->value.num);
     }
     return symbol;
