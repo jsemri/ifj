@@ -11,6 +11,11 @@
 #include "string.h"
 #include "symbol.h"
 
+enum heapsort_op {
+    HEAPSORT_OK,
+    HEAPSORT_FAIL,
+};
+
 typedef struct T_Hash_symbol_table {
     unsigned size;      // hash table size
     T_symbol *arr[];    // array of lists
@@ -51,5 +56,36 @@ T_symbol *table_insert(T_symbol_table *stab, T_symbol *s);
  * @param stab pointer to symbol table
  */
 void table_remove(T_symbol_table **stab);
+
+/**
+ * \brief Functions sorts strings.
+ *
+ * @param   src    			Pointer to string.
+ * @param   dest   			Pointer to string, where sorted string will be stored.
+ *
+ * @return  HEAPSORT_OK     If success.
+ * @return  HEAPSORT_FAIL   If duplication of new new string failed.
+ */
+int heap_sort(T_string *src, T_string *dest);
+
+/**
+ * \brief Function for heapsort, reeastablishment of heap.
+ * @param   string   Pointer to string.
+ * @param   left     Index of the most left node.
+ * @param   right    Index of the most righ node.
+ */
+void sift_down(T_string *string, int left, int right)
+
+/**
+ * \brief Function finds substring in string using Knuth-Morris-Pratt algorithm
+ *		  and returns its position.
+ *        If substring is not found, function returns -1.
+ *
+ * @param   string      Pointer to string.
+ * @param   pattern     Pointer to substring.
+ *
+ * @return  Index of first occurrence substring in string.
+ */
+int find_kmp(T_string *string, T_string *pattern)
 
 #endif

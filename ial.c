@@ -95,3 +95,77 @@ void table_remove(T_symbol_table **stab) {
     }
 }
 
+/**
+ * \brief Functions sorts strings.
+ *
+ * @param   src    Pointer to string.
+ * @param   dest   Pointer to string, where sorted string will be stored.
+ *
+ * @return  HEAPSORT_OK     If success.
+ * @return  HEAPSORT_FAIL   If duplication of new new string failed.
+ */
+int heap_sort(T_string *src, T_string *dest);
+{
+
+	//FAIL of HEAPSORT - doplnit
+
+	int n = dest->length - 1;
+	int left = n / 2;
+	int right = n;
+	char tmp;
+    //establishment of heap   
+    for (int i = left; i >= 0; i--) {
+        sift_down(dest, i, right);
+    }
+    //heap-sort
+    for (right = n; right >= 1; right--) {
+        tmp = dest->string[0];
+        dest->string[0] = dest->string[right];
+        dest->string[right] = tmp;
+        sift_down(dest, 0, right - 1);
+    }
+
+    return HEAPSORT_OP_OK;
+}
+
+/**
+ * \brief Function for heapsort, reeastablishment of heap.
+ * @param   string   Pointer to string.
+ * @param   left     Index of the most left node.
+ * @param   right    Index of the most righ node.
+ */
+void sift_down(T_string *string, int left, int right)
+{   
+    int i = left;
+    int j = 2 * i; //left son index
+    char tmp = string->string[i];
+    bool cont = j <= right;
+    
+    while (cont) {
+        if (j < right)
+            if (string->string[j] < string->string[j + 1]) {
+                j = j + 1;
+            } // if
+        if (tmp >= string->string[j])
+            cont = false;
+        else {
+            string->string[i] = string->string[j];
+            i = j;
+            j = 2 * i;
+            cont = j <= right;
+        }
+    }
+    string->string[i] = tmp;
+}
+
+/**
+ * \brief Function finds substring in string using Knuth-Morris-Pratt algorithm
+ *		  and returns its position.
+ *        If substring is not found, function returns -1.
+ *
+ * @param   string      Pointer to string.
+ * @param   pattern   Pointer to substring.
+ *
+ * @return  Index of first occurrence substring in string.
+ */
+int find_kmp(T_string *string, T_string *pattern)
