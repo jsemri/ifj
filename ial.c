@@ -163,9 +163,37 @@ void sift_down(T_string *string, int left, int right)
  *		  and returns its position.
  *        If substring is not found, function returns -1.
  *
- * @param   string      Pointer to string.
+ * @param   string    Pointer to string.
  * @param   pattern   Pointer to substring.
  *
  * @return  Index of first occurrence substring in string.
  */
 int find_kmp(T_string *string, T_string *pattern)
+{
+    int k, r;
+    int fail_vector[pattern->length];
+    
+    fail_vector[1] = 0;
+    for (k = 2; k  < pattern->length; k++) {
+        r = fail_vector[k-1];
+        while ((r > 0) && (pattern->string[r] != pattern->string[k-1]))
+            r = fail_vector[r];
+        fail_vector[k] = r + 1;
+    }
+
+    int string_index = 0;
+    int pattern_index = 0;
+
+    while ((string_index < string->length) && (pattern_index < pattern->length)) {
+        if ((pattern_index == 0) || (string->string[string_index] == pattern->string[substring_index])) {
+            string_index++;
+            pattern_index++;
+        }
+        else 
+            pattern_index = fail_vector[pattern_index];
+    }
+    if (pattern_index == pattern->length)
+        return string_index - pattern->length;
+    else
+        return -1;
+}
