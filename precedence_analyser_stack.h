@@ -10,10 +10,10 @@
 #include <stdbool.h>
 
 typedef enum {
-    PREC_EXP,   // E
-    PREC_TOKEN, // Token
-    PREC_HANDLE,// Start of handle (<)
-    PREC_TOP    // Top of the stack ($)
+    PREC_EXP,       // E
+    PREC_TOKEN,     // Token
+    PREC_HANDLE,    // Start of handle (<)
+    PREC_TOP        // Top of the stack ($)
 } T_prec_stack_type;
 
 typedef struct {
@@ -36,15 +36,6 @@ typedef struct {
  * @return A pointer to inicialized stack or NULL if the allocation fails
  */
 T_prec_stack *prec_stack_new();
-
-/**
- * Resizes the stack to fit one more item. If the stack is already big enough,
- * does nothing
- * @param s A pointer to the resized stack
- * @return True, if the operation was succesful
- */
-bool prec_stack_resize_if_needed(T_prec_stack *s);
-
 
 /**
  * Adds token to the top of the stack

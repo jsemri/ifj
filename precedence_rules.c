@@ -7,6 +7,8 @@
 #include "token_vector.h"
 #include "token.h"
 #include "ial.h"
+#include "globals.h"
+#include "string.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -61,7 +63,7 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count, int *errcode) {
         return rules[i].func(terms, errcode);
     }
     // No rule can be applied:
-    printf("-- Nic nevyhovuje\n");
+    //printf("-- Nic nevyhovuje\n");
     FAIL_RULE(2);
 }
 
@@ -76,7 +78,7 @@ static T_symbol *conv_int_to_double(T_symbol *in, int *errcode) {
 T_symbol *rule_arith(T_prec_stack_entry terms[3], int *errcode) {
     T_symbol *s1 = terms[0].ptr.symbol;
     T_symbol *s2 = terms[2].ptr.symbol;
-    T_data_types out_type;
+    T_data_type out_type;
     if (s1->data_type == is_int && s2->data_type == is_int)
         // Both operands are int, result will be int
         out_type = is_int;
@@ -108,8 +110,14 @@ T_symbol *rule_arith(T_prec_stack_entry terms[3], int *errcode) {
 }
 
 T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3], int *errcode) {
+    if (terms[0].ptr.token->type == TT_id) {
+        // TODO Co, když "i" bude přímo symbol v tabulce?
 
-    // TODO Co, když "i" bude přímo symbol v tabulce?
+        // table_find(symbol_tab, terms[0].ptr.token->attr.str->buf, );
+
+        // The identifier was not defined:
+        FAIL_RULE(3);
+    }
 
     MAKE_NEW_SYMBOL(symbol, is_void);
 
@@ -117,9 +125,13 @@ T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3], int *errcode) {
         symbol->attr.var->value.num = terms[0].ptr.token->attr.n;
         symbol->data_type = is_int;
     }
-    else if (terms[0].ptr.token->type == TT_double){
+    else if (terms[0].ptr.token->type == TT_double) {
         symbol->attr.var->value.d = terms[0].ptr.token->attr.d;
         symbol->data_type = is_double;
+    }
+    else {
+        // Unexpected token
+        FAIL_RULE(2);
     }
 
     return symbol;

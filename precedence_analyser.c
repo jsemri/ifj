@@ -19,7 +19,11 @@
 #define PUSH_EXP(t) if (!prec_stack_push_exp(stack, t)) FAIL_PREC(99)
 #define ADD_HANDLE() if (!prec_stack_add_handle(stack)) FAIL_PREC(99)
 
-int precedence_analyser(token_vector v) {
+static T_token* get_next_token(token_vector v);
+
+int precedence_analyser(token_vector v, T_symbol *lvalue,
+                        T_func_symbol *act_func, T_symbol *act_class,
+                        ilist *expr_ilist) {
     T_prec_stack *stack = prec_stack_new();
     if (stack == NULL)
         return 99;
@@ -70,17 +74,34 @@ int precedence_analyser(token_vector v) {
         if (steps++ == max)
             break;
     }
+
+    if (lvalue != NULL) {
+        // TODO Ulož výsledek do lValue
+        printf("[INST] Ulož výsledek do lValue\n");
+    }
     prec_stack_print(stack);
     prec_stack_free(stack);
     return 0;
 }
 
-T_token* get_next_token(token_vector v) {
+/**
+ * TODO Document me
+ * @param v
+ * @return
+ */
+static T_token* get_next_token(token_vector v) {
     static int read_tokens = 0;
+    static int brackets = 0;
     if (read_tokens == v->last) {
         return NULL;
     }
-    return &v->arr[read_tokens++];
+    T_token *out = &v->arr[read_tokens++];
+    if (out->type == TT_lBracket)
+        brackets++;
+    if (out->type == TT_comma || out->type == TT_rBracket && brackets-- == 0)
+        // TODO Nekontroluje se, jestli výraz končí tím, čím má
+        return NULL;
+    return out;
 }
 
 /*
@@ -117,7 +138,7 @@ int main() {
     add_token(v, TT_mul);
     add_int(v, 2);
 
-    int r = precedence_analyser(v);
+    int r = precedence_analyser(v, NULL, NULL, NULL, NULL);
 
     printf("%% Návratový kód: %d\n", r);
 
