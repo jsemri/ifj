@@ -5,54 +5,28 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NOCLR='\033[0m'
 
+# testing error detections
 
+COUNT=3
+TEST[1]=lexical_errors
+TEST[2]=syntax_errors
+TEST[3]=definition_errors
 # syntax tests
-echo "Syntax error detection tests:"
-SYNTAX_ERROR=2
-DIR=testsuites/errors/syntax_errors/*
 
-for sample in $DIR
-do
-    ./ifj $sample 2> /dev/null
-    result="`echo $?`"
-    if [ $result -eq $SYNTAX_ERROR ]; then
-        printf "${GREEN}OK${NOCLR}\n"
-    else
-        printf "${RED}Wrong${NOCLR}\n"
-    fi
-done
+for ((i=1; i <= COUNT ; i++));do
 
-# lexical tests
-echo "Lexical error detection tests:"
-LEX_ERROR=1
-DIR=testsuites/errors/lexical_errors/*
+    echo "${TEST[$i]}:"|sed 's/_/ /g'|awk '{print toupper($0)}'
+    DIR=testsuites/errors/${TEST[$i]}/*
 
-for sample in $DIR
-do
-    ./ifj $sample 2> /dev/null
-    result="`echo $?`"
-    if [ $result -eq $LEX_ERROR ]; then
-        printf "${GREEN}OK${NOCLR}\n"
-    else
-        printf "${RED}Wrong${NOCLR} - $sample\n"
-    fi
-done
+    for sample in $DIR;do
 
-# semantic tests
-
-# definition tests
-echo "Definition error detection tests:"
-DEFINITION_ERROR=3
-DIR=testsuites/errors/definition_errors/*
-
-for sample in $DIR
-do
-    ./ifj $sample 2> /dev/null
-    result="`echo $?`"
-    if [ $result -eq $DEFINITION_ERROR ]; then
-        printf "${GREEN}OK${NOCLR}\n"
-    else
-        printf "${RED}Wrong${NOCLR}\n"
-    fi
+        ./ifj $sample 2> /dev/null
+        result="`echo $?`"
+        if [ $result -eq $i ]; then
+            printf "${GREEN}OK${NOCLR}\n"
+        else
+            printf "${RED}Wrong${NOCLR} - $sample\n"
+        fi
+    done
 done
 
