@@ -52,6 +52,7 @@ typedef enum {
 typedef enum {
     TM_noconst,     // no constant
     TM_const1,      // first operand is constant
+    TM_const2,      // second constant
     TM_const_all,   // first and second...
 } T_instr_mode;
 
