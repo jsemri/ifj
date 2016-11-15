@@ -47,7 +47,7 @@ typedef struct {
 
 /// Structure of symbol.
 typedef struct T_symbol {
-    const char *id;                // symbol identifier, first key
+    char *id;                // symbol identifier, first key
     T_symbol_type symbol_type;     // symbol type
     T_data_type data_type;         // symbol data type
     union {
@@ -83,17 +83,36 @@ T_var_symbol *create_var(T_data_type dtype);
  */
 T_func_symbol *create_func(T_data_type dtype);
 
+
+
+// XXX PETER POUZI TUTO FUNKCIU, ale nepouzi to na konstantu
 /**
- * @brief Search for variable with specific name and data type.
+ * Searches for variable with specific name and data type. Just for
+ * type and definition control.
  *
  * @param iden variable identifier
- * @param local_tab local table of function, body of actual class
+ * @param local_tab local table of function, body of actual function
  * @param actual_class body of actual class
  * @param dtype data type
  * @return 0 in success or specific error
  */
-int find_var(const char *iden, struct T_Hash_symbol_table *local_tab,
+int is_defined(const char *iden, struct T_Hash_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype);
+
+
+// FIXME move to interpret
+// XXX THIS FUNCTION WILL BE USING ONLY INTERPRET
+/**
+ * Search for variable on stack in local table, or in global table.
+ *
+ * @param iden variable identifier
+ * @param stack_ptr pointer to a local table
+ * @param actual_class body of actual class
+ * @returns always returns pointer to the variable
+ */
+T_symbol *find_var(const char *iden, void *stack_ptr,
+             T_symbol *actual_class);
+
 /**
  * @brief Copies symbol table and puts it on stack.
  *
@@ -111,8 +130,5 @@ void local_table_remove(struct T_Hash_symbol_table **loc_stab);
 
 int fill_ifj16();
 void remove_ifj16();
-
-T_symbol *find_symbol(T_token *token, T_func_symbol *act_func,
-                      T_symbol *act_class);
 
 #endif

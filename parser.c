@@ -742,11 +742,8 @@ int parse()
     // return value
     int res = INTERNAL_ERROR;
 
-    if (fill_ifj16()) {
-        token_free(&token);
-        table_remove(&symbol_tab);
-        return INTERNAL_ERROR;
-    }
+    // insert ifj16
+    fill_ifj16();
 
     /*
        lexical + syntax analysis
@@ -783,7 +780,6 @@ int parse()
 
 
     errors:
-    remove_ifj16();
     table_remove(&symbol_tab);
     token_free(&token);
     return res;

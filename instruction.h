@@ -8,10 +8,12 @@
 
 
 // instruction type
+// id - variable
+// v - constant
 typedef enum {
     TI_stop,
-    TI_mov,         // assignment
-    TI_add,         // arithmetic
+    TI_mov,         // id id/v -
+    TI_add,
     TI_sub,
     TI_mul,
     TI_div,
@@ -28,24 +30,24 @@ typedef enum {
     TI_jmp,         // jumps
     TI_jmpz,        // jump if zero
     TI_return,
-    TI_call,        // calling function
-    TI_push_params, // pushing parameters to stack
-    TI_readInt,     // built-ins
+    TI_call,        // id - - | all pars on stack
+    TI_push_param,  // pushing parameter to stack
+    TI_readInt,     // id/- - -
     TI_readDouble,
     TI_readString,
-    TI_print,
-    TI_length,
-    TI_substr,
-    TI_compare,
-    TI_find,
-    TI_sort,
+    TI_print,       // count - - | all pars in stack including their count
+    TI_length,      // id/- id/v -
+    TI_substr,      // id/- id/v id/v id/v | one par on stack
+    TI_compare,     // id/- id/v id/v
+    TI_find,        // id/- id/v id/v
+    TI_sort,        // id/- id/v -
     TI_castIntDouble, // casts an int to double
 } T_instr_type;
 
-// instruction mode
+// instruction mode, may be it won't be used
 typedef enum {
+    TM_noconst,     // no constant
     TM_const1,      // first operand is constant
-    TM_const2,      // second...
     TM_const_all,   // first and second...
 } T_instr_mode;
 
