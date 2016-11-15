@@ -31,7 +31,6 @@ void *alloc(size_t size) {
     void *new = calloc(1, size);
     if (new == NULL)
         terminate(99);
-    printf("Init %d\n", pool.size);
     pool.last[pool.size] = new;
     pool.size++;
     return new;
