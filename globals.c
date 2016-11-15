@@ -53,6 +53,7 @@ void *ralloc(void *ptr, size_t size) {
     }
     // The code should never get here, something muse be terribly wrong:
     terminate(99);
+    return NULL;
 }
 
 void terminate(int err_code) {
