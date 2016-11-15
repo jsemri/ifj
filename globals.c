@@ -69,7 +69,6 @@ void terminate(int err_code) {
     token_free(&token);
     fclose(source);
     list_free(&instr_list);
-    remove_ifj16();
     table_remove(&symbol_tab);
 
     exit(err_code);

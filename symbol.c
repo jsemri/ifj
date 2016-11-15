@@ -8,69 +8,65 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
 
-#define BI_COUNT 9
-char *arr_ifj16[] = {
-    "readInt", "readDouble", "readString", "print",
-    "length", "substr", "compare", "find", "sort", "ifj16"
-};
-
-// temporary pointer for build-in symbols
-static T_symbol **sym_arr;
 T_symbol_table *symbol_tab;
 
-T_func_symbol *create_func(T_data_type dtype) {
+T_func_symbol *create_func(T_data_type dtype)
+{{{
 
-        T_func_symbol *func = calloc(1, sizeof(T_func_symbol));
+    T_func_symbol *func = calloc(1, sizeof(T_func_symbol));
 
-        if (!func) {
+    if (!func) {
+        terminate(INTERNAL_ERROR);
+    }
+    func->data_type = dtype;
+
+    if (!(func->local_table = table_init(RANGE))) {
+        free(func);
+        terminate(INTERNAL_ERROR);
+    }
+
+    return func;
+}}}
+
+T_symbol *create_symbol(char *id, T_symbol_type stype)
+{{{
+
+    T_symbol *sym = calloc(1, sizeof(T_symbol));
+
+    if (!sym) {
+        terminate(INTERNAL_ERROR);
+    }
+    sym->symbol_type = stype;
+    sym->id = id;
+
+    return sym;
+}}}
+
+T_var_symbol *create_var(T_data_type dtype)
+{{{
+
+    T_var_symbol *var = calloc(1, sizeof(T_var_symbol));
+
+    if (!var) {
+        terminate(INTERNAL_ERROR);
+    }
+    var->data_type = dtype;
+
+    // initialize string variable
+    if (dtype == is_str) {
+        if ( !(var->value.str = str_init()) ) {
+            free(var);
             terminate(INTERNAL_ERROR);
         }
-        func->data_type = dtype;
+    }
+    return var;
+}}}
 
-        if (!(func->local_table = table_init(RANGE))) {
-            free(func);
-            terminate(INTERNAL_ERROR);
-        }
-
-        return func;
-}
-
-T_symbol *create_symbol(char *id, T_symbol_type stype) {
-
-        T_symbol *sym = calloc(1, sizeof(T_symbol));
-
-        if (!sym) {
-            terminate(INTERNAL_ERROR);
-        }
-        sym->symbol_type = stype;
-        sym->id = id;
-
-        return sym;
-}
-
-T_var_symbol *create_var(T_data_type dtype) {
-
-        T_var_symbol *var = calloc(1, sizeof(T_var_symbol));
-
-        if (!var) {
-            terminate(INTERNAL_ERROR);
-        }
-        var->data_type = dtype;
-
-        // initialize string variable
-        if (dtype == is_str) {
-            if ( !(var->value.str = str_init()) ) {
-                free(var);
-                terminate(INTERNAL_ERROR);
-            }
-        }
-        return var;
-}
-
-int find_var(const char *iden, T_symbol_table *local_tab,
+int is_defined(const char *iden, T_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype)
-{
+{{{
     T_symbol *sym;
     // finding variable in local table
     sym = table_find(local_tab, iden, NULL);
@@ -86,49 +82,31 @@ int find_var(const char *iden, T_symbol_table *local_tab,
     }
 
     // checking data type
+    // int to double accepted
+    if (sym->attr.var->data_type == is_int && dtype == is_double)
+        return 0;
+
     if (sym->attr.var->data_type != dtype) {
         return TYPE_ERROR;
     }
     return 0;
-}
+}}}
 
-
+// will be deleted soon
 // filling global symbol table with built-in class ifj
-int fill_ifj16() {
-    sym_arr = calloc(BI_COUNT+1, sizeof(T_symbol*));
-    if (!sym_arr)
-        return INTERNAL_ERROR;
-
-    for (unsigned i = 0;i <= BI_COUNT;i++) {
-        T_symbol *s = calloc(1, sizeof(T_symbol));
-        if (!s) {
-            for (unsigned j = 0; j < i; j++)
-                free(sym_arr[j]);
-            free(sym_arr);
-        }
-        s->id = arr_ifj16[i];
-        sym_arr[i] = s;
-    }
-    table_insert(symbol_tab, sym_arr[BI_COUNT]);
-    for (unsigned i = 0; i < BI_COUNT;i++) {
-        sym_arr[i]->member_class = sym_arr[BI_COUNT];
-        sym_arr[i]->symbol_type = is_func;
-        table_insert(symbol_tab, sym_arr[i]);
-    }
-
+int fill_ifj16()
+{{{
+    char *ptr = malloc(4);
+    if (!ptr)
+        terminate(INTERNAL_ERROR);
+    strcpy(ptr, "ifj");             // creates id ifj
+    table_insert(symbol_tab, create_symbol(ptr, is_class)); // insert class ifj
     return 0;
-}
-
-// just sets pointers to null
-void remove_ifj16() {
-    for (unsigned i = 0; i <= BI_COUNT;i++) {
-        sym_arr[i]->id = NULL;
-    }
-    free(sym_arr);
-}
+}}}
 
 // deletes whole local table
-void local_table_remove(struct T_Hash_symbol_table **stab) {
+void local_table_remove(struct T_Hash_symbol_table **stab)
+{{{
     if (*stab != NULL) {
         T_symbol* s;
 
@@ -149,20 +127,5 @@ void local_table_remove(struct T_Hash_symbol_table **stab) {
         free(*stab);
         *stab = NULL;
     }
-}
+}}}
 
-T_symbol *find_symbol(T_token *token, T_func_symbol *act_func,
-                      T_symbol *act_class) {
-    assert(token != NULL);
-    assert(act_class != NULL);
-
-    // TODO Přidat podporu plných identifikátorů (třída.funkce, třída.proměnná)
-
-    if (act_func != NULL) {
-        T_symbol *symbol = table_find(act_func->local_table,
-                                      token->attr.str->buf, NULL);
-        if (symbol != NULL)
-            return symbol;
-    }
-    return table_find(symbol_tab, token->attr.str->buf, act_class);
-}
