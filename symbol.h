@@ -28,7 +28,7 @@ typedef struct {
     bool is_initialized;
     bool is_const;                  // 0 if constant
     union {
-        T_string *str;
+        char *str;
         int num;
         double d;
     } value;                        // value of variable
@@ -107,19 +107,16 @@ T_func_symbol *create_func(T_data_type dtype);
 int is_defined(char *iden, struct T_Hash_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype);
 
-
-// FIXME move to interpret
-// XXX THIS FUNCTION WILL BE USING ONLY INTERPRET
 /**
- * Search for variable on stack in local table, or in global table.
+ * Creates a variable, a constant, and inserts it to symbol table.
+ * Variable name is also it's value.
  *
- * @param iden variable identifier
- * @param stack_ptr pointer to a local table
- * @param actual_class body of actual class
- * @returns always returns pointer to the variable
+ * @param iden variable identifier and it's value
+ * @param global symbol table
+ * @param dtype data type
+ * @return 0 in success or specific error
  */
-T_symbol *find_var(const char *iden, void *stack_ptr,
-             T_symbol *actual_class);
+T_symbol *add_constant(char *iden, struct T_Hash_symbol_table*, T_data_type dtype);
 
 /**
  * @brief Copies symbol table and puts it on stack.

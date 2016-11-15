@@ -54,28 +54,9 @@ T_var_symbol *create_var(T_data_type dtype)
     }
     var->data_type = dtype;
 
-    // initialize string variable
-    if (dtype == is_str) {
-        if ( !(var->value.str = str_init()) ) {
-            free(var);
-            terminate(INTERNAL_ERROR);
-        }
-    }
     return var;
 }}}
 
-T_var_symbol *create_var_no_strinit(T_data_type dtype)
-{{{
-
-    T_var_symbol *var = calloc(1, sizeof(T_var_symbol));
-
-    if (!var) {
-        terminate(INTERNAL_ERROR);
-    }
-    var->data_type = dtype;
-
-    return var;
-}}}
 
 int is_defined(char *iden, T_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype)
@@ -101,14 +82,14 @@ int is_defined(char *iden, T_symbol_table *local_tab,
             sym = table_find(symbol_tab, iden, actual_class);
             // variable not found in global table
             if (!sym || sym->symbol_type != is_var) {
-                return DEFINITION_ERROR;
+                terminate(DEFINITION_ERROR);
             }
         }
     }
 
     // symbol is not variable or was not found
     if (!sym || sym->symbol_type != is_var) {
-        return DEFINITION_ERROR;
+        terminate(DEFINITION_ERROR);
     }
 
     // checking data type
@@ -117,9 +98,25 @@ int is_defined(char *iden, T_symbol_table *local_tab,
         return 0;
 
     if (sym->attr.var->data_type != dtype) {
-        return TYPE_ERROR;
+        terminate(TYPE_ERROR);
     }
     return 0;
+}}}
+
+T_symbol *add_constant(char *id, struct T_Hash_symbol_table *symbol_tab,
+                       T_data_type dtype)
+{{{
+    T_symbol *sym = create_symbol(id, is_var);
+    sym->attr.var = create_var(dtype);
+    if (dtype == is_int)
+        sym->attr.var->value.num = atoi(id);
+    else if (dtype == is_double)
+        sym->attr.var->value.d = strtod(id, NULL);
+    // string value is in identifier
+    // setting constant flag
+    sym->attr.var->is_const = true;
+    table_insert(symbol_tab, sym);
+    return sym;
 }}}
 
 // will be deleted soon
@@ -148,7 +145,7 @@ void local_table_remove(struct T_Hash_symbol_table **stab)
 
                 if (s->attr.var->data_type == is_str &&
                     s->attr.var->value.str) {
-                        str_free(s->attr.var->value.str);
+                        free(s->attr.var->value.str);
                 }
                 free(s->attr.var);
                 free(s);

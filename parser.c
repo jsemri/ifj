@@ -105,13 +105,13 @@ static int class()
         return SYNTAX_ERROR;
     T_symbol *symbol;
     // finding a symbol
-    if ((symbol = table_find(symbol_tab, token->attr.str->buf, NULL))) {
+    if ((symbol = table_find(symbol_tab, token->attr.str, NULL))) {
         // class with same name found - definition error
         return DEFINITION_ERROR;
     }
 
-    symbol = create_symbol(token->attr.str->buf, is_class);
-    token->attr.str->buf = NULL;        // no deep copy of char*
+    symbol = create_symbol(token->attr.str, is_class);
+    token->attr.str = NULL;        // no deep copy of char*
     table_insert(symbol_tab, symbol);
 
     actual_class = symbol;
@@ -165,7 +165,7 @@ static int cbody()
 
         // finding a symbol
         T_symbol *symbol;
-        symbol = table_find(symbol_tab, token->attr.str->buf, actual_class);
+        symbol = table_find(symbol_tab, token->attr.str, actual_class);
 
         if ( symbol ){
             // id in class with same name found - definition error
@@ -173,8 +173,8 @@ static int cbody()
         }
 
         // creating a symbol
-        symbol = create_symbol(token->attr.str->buf, 0);
-        token->attr.str->buf = 0;
+        symbol = create_symbol(token->attr.str, 0);
+        token->attr.str = 0;
         symbol->member_class = actual_class;
         table_insert(symbol_tab, symbol);
 
@@ -207,13 +207,8 @@ static int cbody2(T_symbol *symbol, T_data_type dtype)
         if (dtype == is_void) {
             return TYPE_ERROR;
         }
-        if (!(symbol->attr.var = create_var(dtype))) {
-            return INTERNAL_ERROR;
-        }
         // setting symbol as variable
-        if (!(symbol->attr.var = create_var(dtype))) {
-            return INTERNAL_ERROR;
-        }
+        symbol->attr.var = create_var(dtype);
         symbol->symbol_type = is_var;
 
         // initialization
@@ -338,14 +333,14 @@ static int par(T_symbol *symbol)
             goto free_args;
         }
         // argument names must differ
-        if (table_find(fptr->local_table, tptr->attr.str->buf, NULL)) {
+        if (table_find(fptr->local_table, tptr->attr.str, NULL)) {
             rc = DEFINITION_ERROR;
             goto free_args;
         }
 
         // create and insert symbol
-        T_symbol *arg_var = create_symbol(tptr->attr.str->buf, is_var);
-        tptr->attr.str->buf = NULL;         // discredit token buffer
+        T_symbol *arg_var = create_symbol(tptr->attr.str, is_var);
+        tptr->attr.str = NULL;         // discredit token buffer
 
         // creating variable
         arg_var->attr.var = create_var(dtype);

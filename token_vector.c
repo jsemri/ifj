@@ -1,6 +1,7 @@
 #include "token_vector.h"
 #include <stdlib.h>
 #include "globals.h"
+#include <string.h> 
 
 #define INITIAL_VECTOR_SIZE 16
 
@@ -27,7 +28,7 @@ void token_vec_delete(token_vector tvect) {
     for (unsigned i = 0;i < tvect->last;i++) {
         T_token *t = &tvect->arr[i];
         if (t->type == TT_id || t->type == TT_string)
-            str_free(t->attr.str);
+            free(t->attr.str);
     }
     // deleting token array
     free(tvect->arr);
@@ -40,9 +41,6 @@ int token_push_back(token_vector tvect, const T_token *token) {
     // reallocation if needed
     if (tvect->size == tvect->last) {
         void *p = realloc(tvect->arr, 2*tvect->size*sizeof(T_token));
-        if (!p) {
-            return 1;
-        }
         // changing allocated space
         tvect->arr = p;
         tvect->size *= 2;
@@ -52,22 +50,16 @@ int token_push_back(token_vector tvect, const T_token *token) {
     T_token *p = &tvect->arr[tvect->last];
     if (token->type == TT_id ||token->type == TT_string) {
         // checking string initialization and string copying
-        if (!(p->attr.str = str_init())) {
+        if (!(p->attr.str = calloc(1, strlen(token->attr.str) + 1))) {
             token_vec_delete(tvect);
             terminate(INTERNAL_ERROR);
         }
-
-        if (-1 == str_copy(p->attr.str,token->attr.str)) {
-            str_free(p->attr.str);
-            token_vec_delete(tvect);
-            terminate(INTERNAL_ERROR);
-        }
-
+        strcpy(p->attr.str, token->attr.str);
     }
     else {
-        p->attr =token->attr;
+        p->attr = token->attr;
     }
-    p->type =token->type;
+    p->type = token->type;
 
     tvect->last++;
     return 0;

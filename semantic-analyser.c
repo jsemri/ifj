@@ -49,7 +49,238 @@ static int stat(T_symbol_table *local_tab);
 static int st_else(T_symbol_table *local_tab);
 static int st_else2(T_symbol_table *local_tab);
 
+/*******************************************************
+ * function handling helper functions
+ *
+ */
 
+#define BI_COUNT 9
+
+
+// built-ins
+typedef enum {
+    b_readI,
+    b_readD,
+    b_readS,
+    b_print,
+    b_length,
+    b_substr,
+    b_compare,
+    b_find,
+    b_sort
+} T_builtins;
+
+
+// built-ins
+static char *arr_ifj16[] = {
+    "readInt", "readDouble", "readString", "print",
+    "length",  "substr", "compare", "find", "sort"
+};
+
+/**
+ *
+ * Proceed a build-in functions.
+ *
+ * @param func_id function name
+ * @param tv vector of tokens
+ * @param L instruction list
+ * @param dest pointer to a symbol in local table on stack, or in global table
+ * @return 0 on success, TYPE_ERROR or DEFINITION_ERROR
+ *
+ */
+int handle_builtins(const char *func_id, token_vector tv, ilist *L, T_symbol *dest,
+                    T_symbol_table *local_tab)
+{{{
+    int i;
+    // loop over all ifj.*
+    for (i = 0; i < BI_COUNT && strcmp(func_id, arr_ifj16[i]);i++);
+    T_token *it = tv->arr;     // token vector iterator
+    switch (i) {
+        case b_readI:
+        case b_readD:
+        case b_readS:
+            {{{
+                // no parameters
+                if (it->type != TT_rBracket) {
+                    return TYPE_ERROR;
+                }
+                // a = readInt();
+                T_data_type dtype = dest->attr.var->data_type;
+                // XXX double a = readInt
+                if (i == b_readI && (dtype == is_int || dtype == is_double )) {
+                    create_instr(L, TI_readInt, 0, dest->id, NULL, NULL);
+                }
+                else if (i == b_readD && dtype == is_double) {
+                    create_instr(L, TI_readDouble, 0, dest->id, NULL, NULL);
+                }
+                else if (i == b_readD && dtype == is_str) {
+                    create_instr(L, TI_readString, 0, dest->id, NULL, NULL);
+                }
+                else
+                    return TYPE_ERROR;
+                break;
+            }}}
+        case b_print:
+            // TODO push push push ...
+            break;
+
+
+        case b_length:
+        case b_sort:
+            // str (str) | int (str)
+            {{{
+                T_instr_type ins = i == b_sort ? TI_sort : TI_length;
+                // checking destination data type
+                T_data_type dtype = dest->attr.var->data_type;
+                if ((i == b_sort && dtype != is_str ) || (i == b_length &&
+                            (dtype == is_int || dtype == is_double) ))
+                {
+                    return TYPE_ERROR;
+                }
+                // checking string variable
+                if (it->type == TT_id || it->type == TT_fullid) {
+                    // checking type and if it was defined
+                    is_defined(it->attr.str, local_tab,
+                               actual_class, is_str);
+                    create_instr(L, ins, TM_const_all, dest->id,
+                                 it->attr.str, NULL);
+                }
+                else if (it->type == TT_string) {
+                    create_instr(L, ins, TM_const_all, dest->id,
+                                 it->attr.str, NULL);
+                }
+                else
+                    return TYPE_ERROR;
+                break;
+            }}}
+        case b_find:
+        case b_compare:
+            // int (str, str)
+            {{{
+                // checking data type
+                T_data_type dtype = dest->attr.var->data_type;
+                if (dtype == is_int || dtype == is_double)
+                {
+                    return TYPE_ERROR;
+                }
+
+                // four tokens required
+                if (tv->last != 3) {
+                    return TYPE_ERROR;
+                }
+                // second argument
+                T_token *it2 = it + 2;
+                // setting instruction
+                T_instr_type ins = (i == b_find ? b_find : b_compare);
+                T_instr_mode mode = TM_noconst;
+                // determining constant or identifier
+                if (it->type == TT_id || it->type == TT_fullid) {
+                    is_defined(it->attr.str, local_tab, actual_class ,is_str);
+                }
+                else if (it->type == TT_string) {
+                    // first is constant
+                    mode = TM_const1;
+                }
+                if (it2->type == TT_id || it2->type == TT_fullid) {
+                    is_defined(it2->attr.str, local_tab, actual_class ,is_str);
+                }
+                else if (it2->type == TT_string) {
+                    // second or both are constant
+                    mode = mode == TM_const1 ? TM_const_all : TM_const2;
+                }
+
+                // creating instruction
+                create_instr(L, ins, mode, dest->id, it->attr.str, it2->attr.str);
+                it = it2; // last argument
+                break;
+            }}}
+        case b_substr:
+            // TODO I need stack
+            {{{
+
+
+                break;
+            }}}
+        default:
+            return DEFINITION_ERROR;
+    }
+    // too many parameters TODO check id next is id or constant
+    it++; // moving to ')'
+    if (it->type == TT_comma)
+        return TYPE_ERROR;
+    // no bracket found - syntax errors
+    return it->type == TT_rBracket ? 0: SYNTAX_ERROR;
+}}}
+/**
+ *
+ * Proceed a function.
+ *
+ * @param func_id function name
+ * @param tv vector of tokens
+ * @param L instruction list
+ * @return 0 on success, TYPE_ERROR or DEFINITION_ERROR
+ *
+ */
+int handle_function(T_symbol *func, token_vector tv, ilist *L, T_symbol_table
+                    *local_tab)
+{{{
+    T_token *it = tv->arr;
+    T_symbol **pars = (T_symbol**)func->attr.func->arguments;
+    // handling parameters
+    for (unsigned j = 0; j < func->attr.func->par_count;j++) {
+        // data type of each parameter
+        T_data_type dtype = pars[j]->attr.var->data_type;
+
+        if (token->type == TT_id || token->type == TT_fullid) {
+            // check the identifier
+            is_defined(it->attr.str, local_tab, actual_class, dtype);
+            // push identifier on stack
+        }
+        else if (token->type == TT_string && dtype == is_str) {
+            // push just value or variable-const
+        }
+        else if (token->type == TT_int && dtype == is_int) {
+            // push value or variable-const
+        }
+        else if ((token->type == TT_double || token->type == TT_double)
+                  && dtype == is_double)
+        {
+            // push value or variable-const
+        }
+        else {
+            return SYNTAX_ERROR; // XXX or another error code ?
+        }
+        // going for comma
+        it++;
+        if (it->type != TT_comma) {
+            return SYNTAX_ERROR;
+        }
+        // next parameter or right bracket
+        it++;
+    }
+    // function call must end with ')'
+    if (it->type != TT_rBracket)
+        return SYNTAX_ERROR;
+    // insert instruction CALL
+    return 0;
+}}}
+
+bool is_function(token_vector tv)
+{{{
+    if (tv->last > 2) {
+        T_token *it = tv->arr;
+        // id (
+        // id.id (
+        return ((it->type == TT_id || it->type == TT_fullid) &&
+                (it+1)->type == TT_rBracket);
+    }
+    return false;
+}}}
+
+/******************************************************
+ * semantic analysis
+ *
+ */
 // PROG -> BODY eof
 static int prog()
 {{{
@@ -90,7 +321,7 @@ static int class()
     get_token();
 
     // already tested in by first throughpass
-    actual_class = table_find(symbol_tab, token->attr.str->buf, NULL);
+    actual_class = table_find(symbol_tab, token->attr.str, NULL);
 
     // going for '{'
     get_token();
@@ -118,7 +349,7 @@ static int cbody()
 
 
         // in case that symbol is function local symbol table is set
-        T_symbol *s = table_find(symbol_tab,token->attr.str->buf, actual_class);
+        T_symbol *s = table_find(symbol_tab,token->attr.str, actual_class);
         if (s->symbol_type == is_func) {
             // updating actual function
             actual_func = s;
@@ -151,6 +382,7 @@ static int cbody2(T_symbol_table *local_tab)
     // variable
     if (token->type == TT_assign || token->type == TT_semicolon) {
 
+        // cannot be called function XXX
         // just reading everything till `;`
         while (token->type != TT_semicolon) {
             // TODO fill token vector, handle expression
@@ -259,14 +491,14 @@ static int stat(T_symbol_table *local_tab) {
 
                     // id in token
                     get_token();
-                    if (table_find(local_tab, token->attr.str->buf, NULL)) {
+                    if (table_find(local_tab, token->attr.str, NULL)) {
                         // redefinition
                         return DEFINITION_ERROR;
                     }
 
                     // creating a new symbol
-                    T_symbol *symbol = create_symbol(token->attr.str->buf, 0);
-                    token->attr.str->buf = NULL;        // discredit free call
+                    T_symbol *symbol = create_symbol(token->attr.str, 0);
+                    token->attr.str = NULL;        // discredit free call
 
                     // creating variable
                     symbol->attr.var = create_var(dtype);
@@ -289,10 +521,11 @@ static int stat(T_symbol_table *local_tab) {
                         while (token->type != TT_semicolon) {
                             get_token();
                             // pushing token
-                            token_push_back(tvect, token); 
+                            token_push_back(tvect, token);
                         }
                         // TODO send tvect to precedence analyser
                         // XXX last tvect item is ';'
+                        // TODO check if it is function
                         return 0;
                     }
                 }}}
@@ -361,75 +594,22 @@ static int stat(T_symbol_table *local_tab) {
         }
     }
     // id = exp
-    else
+    else if (token->type == TT_id)
     {{{
-        char *iden = token->attr.str->buf;           // identifier name
-        T_symbol *loc_sym, *glob_sym, *class_sym;    // local and global symbol
+        char *iden = token->attr.str;           // identifier name
+        T_symbol *loc_sym, *glob_sym;    // local and global symbol
 
         // checking whether it was defined
         loc_sym = table_find(local_tab, iden, NULL);    // local var
         glob_sym = table_find(symbol_tab, iden, actual_class); // static
-        class_sym = table_find(symbol_tab, iden, NULL); // class
 
-        if (!loc_sym && !glob_sym && !class_sym) {
+        if (!loc_sym && !glob_sym ) {
            return DEFINITION_ERROR;
         }
 
         get_token();
 
-        if (token->type == TT_dot)
-        {{{
-            // selector used to identifier which is not class
-            if (!class_sym) {
-                return DEFINITION_ERROR;
-            }
-
-            get_token();
-            iden = token->attr.str->buf;        // identifier
-            // looking for symbol
-            T_symbol *sym = table_find(symbol_tab, iden, class_sym);
-
-            // id.id -> `(` or ` = ` or `;`
-            get_token();
-            if (token->type == TT_assign) {
-
-                // id . id = ....;
-                // if assignment goes to function or symbol is not found
-                if ( !sym || sym->symbol_type != is_var) {
-                    return DEFINITION_ERROR;
-                }
-
-                // reading till ';'
-                token_vector tvect = token_vec_init();  // creating vector
-
-                while ( token->type != TT_semicolon) {
-                    get_token();
-                    token_push_back(tvect, token);
-                }
-                // TODO send vector
-                return 0;
-            }
-            else {
-                // id.id()
-                // calling goes to variable or symbol not found
-                if (!sym || sym->symbol_type != is_func) {
-                    return DEFINITION_ERROR;
-                }
-
-                // reading till ';'
-                // TODO handle simple function call
-                token_vector tvect = token_vec_init();  // creating vector
-                // reading till ';'
-                while ( token->type != TT_semicolon) {
-                    get_token();
-                    token_push_back(tvect, token);
-                }
-
-                // ; was last
-                return 0;
-            }
-        }}}
-        else if (token->type == TT_assign)
+        if (token->type == TT_assign)
         {{{
             // id = ....;
             T_symbol *sym = loc_sym ? loc_sym : glob_sym;
@@ -454,7 +634,6 @@ static int stat(T_symbol_table *local_tab) {
             if (!glob_sym || glob_sym->symbol_type != is_func) {
                 return DEFINITION_ERROR;
             }
-            // TODO proceed simple function call
             // id();
             // reading till ';'
             token_vector tvect = token_vec_init();  // creating vector
@@ -463,9 +642,15 @@ static int stat(T_symbol_table *local_tab) {
                 get_token();
                 token_push_back(tvect, token);
             }
+            // TODO handle function
             // ;
             return 0;
         }}}
+    }}}
+    else
+    {{{
+
+        return 0;
     }}}
 }
 
