@@ -64,21 +64,51 @@ T_var_symbol *create_var(T_data_type dtype)
     return var;
 }}}
 
-int is_defined(const char *iden, T_symbol_table *local_tab,
+T_var_symbol *create_var_no_strinit(T_data_type dtype)
+{{{
+
+    T_var_symbol *var = calloc(1, sizeof(T_var_symbol));
+
+    if (!var) {
+        terminate(INTERNAL_ERROR);
+    }
+    var->data_type = dtype;
+
+    return var;
+}}}
+
+int is_defined(char *iden, T_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype)
 {{{
+
     T_symbol *sym;
-    // finding variable in local table
-    sym = table_find(local_tab, iden, NULL);
-    if (!sym || sym->symbol_type != is_var) {
-
-        // variable not found in local table
-        sym = table_find(symbol_tab, iden, actual_class);
-        // variable not found in global table
+    char *dotptr = strchr(iden, '.');
+    // if full identifier
+    if (dotptr) {
+        dotptr = 0;  //
+        char *mclass = iden;
+        char *inst = dotptr + 1;
+        // finding full identifier
+        sym = table_find(symbol_tab, inst, table_find(symbol_tab, mclass, NULL));
+        *dotptr = '.'; // returning dot back
+    }
+    else {
+        // finding variable in local table
+        sym = table_find(local_tab, iden, NULL);
         if (!sym || sym->symbol_type != is_var) {
-            return DEFINITION_ERROR;
-        }
 
+            // variable not found in local table
+            sym = table_find(symbol_tab, iden, actual_class);
+            // variable not found in global table
+            if (!sym || sym->symbol_type != is_var) {
+                return DEFINITION_ERROR;
+            }
+        }
+    }
+
+    // symbol is not variable or was not found
+    if (!sym || sym->symbol_type != is_var) {
+        return DEFINITION_ERROR;
     }
 
     // checking data type
@@ -96,10 +126,10 @@ int is_defined(const char *iden, T_symbol_table *local_tab,
 // filling global symbol table with built-in class ifj
 int fill_ifj16()
 {{{
-    char *ptr = malloc(4);
+    char *ptr = malloc(6); // size of "ifj16"
     if (!ptr)
         terminate(INTERNAL_ERROR);
-    strcpy(ptr, "ifj");             // creates id ifj
+    strcpy(ptr, "ifj16");             // creates id ifj
     table_insert(symbol_tab, create_symbol(ptr, is_class)); // insert class ifj
     return 0;
 }}}
