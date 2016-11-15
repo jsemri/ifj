@@ -76,6 +76,14 @@ T_symbol *create_symbol(char *id, T_symbol_type stype);
 T_var_symbol *create_var(T_data_type dtype);
 
 /**
+ * @brief Creates a variable, but do not initializes string value.
+ *
+ * @param dtype data type
+ * @return valid pointer on success
+ */
+T_var_symbol *create_var_no_strinit(T_data_type dtype);
+
+/**
  * @brief Creates a function.
  *
  * @param dtype data type
@@ -87,8 +95,8 @@ T_func_symbol *create_func(T_data_type dtype);
 
 // XXX PETER POUZI TUTO FUNKCIU, ale nepouzi to na konstantu
 /**
- * Searches for variable with specific name and data type. Just for
- * type and definition control.
+ * Searches for variable(also full identifier possible)with specific
+ * name and data type. Just for type and definition control.
  *
  * @param iden variable identifier
  * @param local_tab local table of function, body of actual function
@@ -96,7 +104,7 @@ T_func_symbol *create_func(T_data_type dtype);
  * @param dtype data type
  * @return 0 in success or specific error
  */
-int is_defined(const char *iden, struct T_Hash_symbol_table *local_tab,
+int is_defined(char *iden, struct T_Hash_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype);
 
 
@@ -129,6 +137,5 @@ struct T_Hash_symbol_table *table_copy(const struct T_Hash_symbol_table *sym_tab
 void local_table_remove(struct T_Hash_symbol_table **loc_stab);
 
 int fill_ifj16();
-void remove_ifj16();
 
 #endif
