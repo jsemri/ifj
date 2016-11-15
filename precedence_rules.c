@@ -36,7 +36,7 @@ T_prec_rule rules[RULES_COUNT] = {
 #define FAIL_RULE(code) do{*errcode = code; return NULL;} while (0)
 
 #define ADD_INSTR(type, dst, s1, s2) do { \
-                    T_instr *instr = malloc(sizeof(instr)); \
+                    T_instr *instr = alloc(sizeof(instr)); \
                     if (instr == NULL) FAIL_RULE(99); \
                     instr->itype = type; \
                     instr->imode = TM_const_all; \

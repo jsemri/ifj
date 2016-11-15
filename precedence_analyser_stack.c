@@ -15,7 +15,7 @@ static bool prec_stack_resize_if_needed(T_prec_stack *s);
  * @return A pointer to inicialized stack or NULL if the allocation fails
  */
 T_prec_stack *prec_stack_new() {
-    T_prec_stack *t = malloc(sizeof(T_prec_stack));
+    T_prec_stack *t = alloc(sizeof(T_prec_stack));
     if (t == NULL)
         return NULL;
     t->last = 0;

@@ -34,6 +34,14 @@ extern T_symbol_table *symbol_tab;
 extern FILE *source;
 extern T_token *token;
 
+struct T_pool {
+    void **first;
+    void **last;
+    int size;
+};
+
+void *alloc(size_t size);
+void *ralloc(void *ptr, size_t size);
 void terminate(int err_code);
 
 #endif
