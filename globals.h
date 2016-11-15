@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "ial.h"
 #include "instruction.h"
+#include "stack.h"
 #include "symbol.h"
 
 // error codes
@@ -29,6 +30,8 @@
 
 // FIXME Put here all global variables which are used across most of the modules
 
+extern T_stack *tables_stack;   // local tables will be copied here
+extern T_stack *stack;
 extern ilist *instr_list;
 extern T_symbol_table *symbol_tab;
 extern FILE *source;
