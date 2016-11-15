@@ -8,7 +8,6 @@
 #include "token.h"
 #include "ial.h"
 #include "globals.h"
-#include "string.h"
 #include "symbol.h"
 #include "ilist.h"
 #include <stdio.h>
@@ -92,7 +91,7 @@ static T_symbol *conv_int_to_double(T_symbol *in, int *errcode,
     //out->attr.var->value.d = (double) in->attr.var->value.num;
     ADD_INSTR(TI_castIntDouble, &out->attr.var->value.d,
               &in->attr.var->value.num, NULL);
-    //printf("[INST] Přetypování int->float\n");
+    printf("[INST] Přetypování int->float\n");
     return out;
 }
 
@@ -129,7 +128,7 @@ T_symbol *rule_arith(T_prec_stack_entry terms[3], int *errcode,
 
     MAKE_NEW_SYMBOL(symbol, out_type);
 
-    //printf("[INST] Arithm. oper.\n");
+    printf("[INST] Arithm. oper.\n");
     if (out_type == is_double) {
         T_instr_type type;
         if (terms[1].ptr.token->type == TT_plus) {
@@ -167,9 +166,10 @@ T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3], int *errcode,
                         ilist *expr_ilist) {
     if (terms[0].ptr.token->type == TT_id) {
         // TODO Untested!
-        T_symbol *out = find_symbol(terms[0].ptr.token, act_func, act_class);
+        //is_defined()
+        /*T_symbol *out = find_symbol(terms[0].ptr.token, act_func, act_class);
         if (out != NULL)
-            return out;
+            return out;*/
 
         // The identifier was not defined:
         FAIL_RULE(3);
@@ -180,10 +180,12 @@ T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3], int *errcode,
     if (terms[0].ptr.token->type == TT_int) {
         symbol->attr.var->value.num = terms[0].ptr.token->attr.n;
         symbol->data_type = is_int;
+        printf("[SYM.] Nový symbol: int=%d\n", terms[0].ptr.token->attr.n);
     }
     else if (terms[0].ptr.token->type == TT_double) {
         symbol->attr.var->value.d = terms[0].ptr.token->attr.d;
         symbol->data_type = is_double;
+        printf("[SYM.] Nový symbol: double=%g\n", terms[0].ptr.token->attr.d);
     }
     else {
         // Unexpected token

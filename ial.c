@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "string.h"
 #include "ial.h"
 
 // initialization of symbol table
@@ -76,7 +75,7 @@ void table_remove(T_symbol_table **stab) {
                     if (s->attr.var) {
                         if(s->attr.var->data_type == is_str &&
                                 s->attr.var->value.str) {
-                            str_free(s->attr.var->value.str);
+                            free(s->attr.var->value.str);
                         }
                         free(s->attr.var);
                     }
