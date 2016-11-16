@@ -18,6 +18,7 @@
 #include "ial.h"
 #include "semantic-analyser.h"
 #include "symbol.h"
+#include "ilist.h"
 
 
 #ifdef DEBUG
@@ -30,6 +31,7 @@ static bool get_token_flag = false;
 #define unget_token() get_token_flag = true
 
 // global variables
+ilist *instr_list;
 T_symbol_table *symbol_tab;
 T_token *token;
 FILE *source;
@@ -208,7 +210,7 @@ static int cbody2(T_symbol *symbol, T_data_type dtype)
             return TYPE_ERROR;
         }
         // setting symbol as variable
-        symbol->attr.var = create_var(dtype);
+        symbol->attr.var = create_var_from_symbol(dtype);
         symbol->symbol_type = is_var;
 
         // initialization
@@ -240,9 +242,7 @@ static int func(T_symbol *symbol, T_data_type dtype)
     int res = 0;
 
     // creating a function
-    if (!(symbol->attr.func = create_func(dtype))) {
-        return INTERNAL_ERROR;
-    }
+    symbol->attr.func = create_func(dtype);
     symbol->symbol_type = is_func;
 
     res = par(symbol);
@@ -250,9 +250,6 @@ static int func(T_symbol *symbol, T_data_type dtype)
         return res;
 
     res = fbody(symbol);
-
-    // printing local table - just for debug
-    print_table(symbol->attr.func->local_table);
 
     if (res)
         return res;
@@ -338,12 +335,9 @@ static int par(T_symbol *symbol)
             goto free_args;
         }
 
-        // create and insert symbol
-        T_symbol *arg_var = create_symbol(tptr->attr.str, is_var);
+        // create and insert variable symbol
+        T_symbol *arg_var = create_var(tptr->attr.str, dtype);
         tptr->attr.str = NULL;         // discredit token buffer
-
-        // creating variable
-        arg_var->attr.var = create_var(dtype);
 
         arguments[i++] = arg_var;
 
@@ -678,13 +672,18 @@ static int st_else2()
 int parse()
 {{{
 
+    if (!(instr_list = list_init()))
+        return INTERNAL_ERROR;
+
     if (!(token = token_new()) ) {
+        list_free(&instr_list);
         return INTERNAL_ERROR;
     }
 
     // create global symbol table
     if (!(symbol_tab = table_init(RANGE))) {
         token_free(&token);
+        list_free(&instr_list);
         return INTERNAL_ERROR;
     }
 
@@ -721,10 +720,10 @@ int parse()
         res = INTERNAL_ERROR;
         goto errors;
     } else {
-        #ifdef DEBUG
+        #ifdef REC_DEBUG
         puts("_____________________________________________\n\n\n");
         #endif
-//        res = second_throughpass();
+        res = second_throughpass();
     }
 
 

@@ -11,8 +11,6 @@
 
 #define KEYW_COUNT 17
 
-#define return return show_token(0) +
-
 FILE *source;
 T_token *token;
 const char *KEYWORDS[KEYW_COUNT] = {
@@ -42,6 +40,7 @@ static char *get_str(const char *src) {
     return ptr;
 }
 
+#define return return show_token(0) + 
 #define SIZE 1024
 int get_token() {
     T_state state = S_start;
