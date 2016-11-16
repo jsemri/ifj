@@ -44,7 +44,7 @@ T_symbol *create_symbol(char *id, T_symbol_type stype)
     return sym;
 }}}
 
-T_var_symbol *create_var(T_data_type dtype)
+T_var_symbol *create_var_from_symbol(T_data_type dtype)
 {{{
 
     T_var_symbol *var = calloc(1, sizeof(T_var_symbol));
@@ -57,34 +57,23 @@ T_var_symbol *create_var(T_data_type dtype)
     return var;
 }}}
 
+T_symbol *create_var(char *id, T_data_type dtype)
+{{{
+    T_symbol *sym = create_symbol(id, is_var);
+    sym->attr.var = create_var_from_symbol(dtype);
+    return sym;
+}}}
+
 
 int is_defined(char *iden, T_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype)
 {{{
 
-    T_symbol *sym;
-    char *dotptr = strchr(iden, '.');
-    // if full identifier
-    if (dotptr) {
-        dotptr = 0;  //
-        char *mclass = iden;
-        char *inst = dotptr + 1;
-        // finding full identifier
-        sym = table_find(symbol_tab, inst, table_find(symbol_tab, mclass, NULL));
-        *dotptr = '.'; // returning dot back
-    }
-    else {
-        // finding variable in local table
-        sym = table_find(local_tab, iden, NULL);
-        if (!sym || sym->symbol_type != is_var) {
-
-            // variable not found in local table
-            sym = table_find(symbol_tab, iden, actual_class);
-            // variable not found in global table
-            if (!sym || sym->symbol_type != is_var) {
-                terminate(DEFINITION_ERROR);
-            }
-        }
+    // finding variable in local table
+    T_symbol *sym = table_find(local_tab, iden, NULL);
+    if (!sym || sym->symbol_type != is_var) {
+        // variable not found in local table
+        sym = table_find(symbol_tab, iden, actual_class);
     }
 
     // symbol is not variable or was not found
@@ -106,12 +95,19 @@ int is_defined(char *iden, T_symbol_table *local_tab,
 T_symbol *add_constant(char *id, struct T_Hash_symbol_table *symbol_tab,
                        T_data_type dtype)
 {{{
-    T_symbol *sym = create_symbol(id, is_var);
-    sym->attr.var = create_var(dtype);
+
+    T_symbol *sym = table_find(symbol_tab, id, NULL);
+    // constant already in table, return pointer on it
+    if (sym && sym->attr.var->data_type == dtype)
+        return sym;
+
+    sym = create_var(id, dtype);
+
     if (dtype == is_int)
         sym->attr.var->value.num = atoi(id);
     else if (dtype == is_double)
         sym->attr.var->value.d = strtod(id, NULL);
+
     // string value is in identifier
     // setting constant flag
     sym->attr.var->is_const = true;

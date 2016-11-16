@@ -15,10 +15,10 @@ typedef enum {
 
 // data types
 typedef enum {
-    is_void,
-    is_int,
-    is_double,
-    is_str
+    is_void = 0,
+    is_int = 1,
+    is_double = 2,
+    is_str = 3
 } T_data_type;
 
 /// Function attributes.
@@ -68,20 +68,20 @@ typedef struct T_symbol {
 T_symbol *create_symbol(char *id, T_symbol_type stype);
 
 /**
- * @brief Creates a variable.
+ * @brief Creates a symbol - variable.
  *
  * @param dtype data type
  * @return valid pointer on success
  */
-T_var_symbol *create_var(T_data_type dtype);
+T_symbol *create_var(char *id, T_data_type dtype);
 
 /**
- * @brief Creates a variable, but do not initializes string value.
+ * @brief Creates a variable.  
  *
  * @param dtype data type
  * @return valid pointer on success
  */
-T_var_symbol *create_var_no_strinit(T_data_type dtype);
+T_var_symbol *create_var_from_symbol(T_data_type dtype);
 
 /**
  * @brief Creates a function.
@@ -109,7 +109,8 @@ int is_defined(char *iden, struct T_Hash_symbol_table *local_tab,
 
 /**
  * Creates a variable, a constant, and inserts it to symbol table.
- * Variable name is also it's value.
+ * Variable name is also it's value. In attempt to insert existing
+ * constant of same data type, pointer to existing constant is returned.
  *
  * @param iden variable identifier and it's value
  * @param global symbol table
