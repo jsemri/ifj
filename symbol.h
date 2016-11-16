@@ -91,9 +91,6 @@ T_var_symbol *create_var_from_symbol(T_data_type dtype);
  */
 T_func_symbol *create_func(T_data_type dtype);
 
-
-
-// XXX PETER POUZI TUTO FUNKCIU, ale nepouzi to na konstantu
 /**
  * Searches for variable(also full identifier possible)with specific
  * name and data type. Just for type and definition control.

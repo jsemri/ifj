@@ -21,7 +21,7 @@
 // unget token
 static bool get_token_flag = false;
 
-#ifdef DEBUG
+#ifdef REC_DEBUG
 #define return return leave(__func__, 0) +
 #endif
 
@@ -57,6 +57,35 @@ static int st_else2(T_symbol_table *local_tab);
 
 #define BI_COUNT 9
 
+// including actual token
+// excluding ';'
+token_vector read_to_semic()
+{{{
+    token_vector tv = token_vec_init();
+    while (token->type != TT_semicolon) {
+        token_push_back(tv, token);
+        get_token();
+    }
+    return tv;
+}}}
+
+// excluding actual token
+// including ')'
+token_vector read_to_rbrac()
+{{{
+    token_vector tv = token_vec_init();
+    int bc = 0; // bracket counter
+    do {
+        get_token();
+        // pushing token
+        token_push_back(tv, token);
+        if (token->type == TT_lBracket)
+            bc++;
+        if (token->type == TT_rBracket)
+            bc--;
+    } while ( bc != -1);
+    return tv;
+}}}
 
 // built-ins
 typedef enum {
@@ -92,10 +121,9 @@ static char *arr_ifj16[] = {
 int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     T_symbol_table *local_tab)
 {{{
-    #if 1
-    printf("%d %s\n", tcount, it->attr.str);
-    #endif
+//    printf("%d %s\n", tcount, it->attr.str);
     char *result = dest ? dest->id : NULL;
+    // magic constant 3 - minimal count of tokens
     if (tcount < 3)
         terminate(SYNTAX_ERROR);
     // getting function name
@@ -170,7 +198,8 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     it->attr.str = NULL;
                 }
                 else
-                    return TYPE_ERROR;
+                    terminate(TYPE_ERROR);
+
                 break;
             }}}
         case b_find:
@@ -202,6 +231,8 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 else if (it->type == TT_string) {
                     add_constant(it->attr.str, symbol_tab, is_str);
                 }
+                else
+                    terminate(TYPE_ERROR);
 
                 if (it2->type == TT_id || it2->type == TT_fullid) {
                     is_defined(it2->attr.str, local_tab, actual_class ,is_str);
@@ -209,6 +240,8 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 else if (it2->type == TT_string) {
                     add_constant(it2->attr.str, symbol_tab, is_str);
                 }
+                else
+                    terminate(TYPE_ERROR);
 
                 // creating instruction
                 create_instr(L, ins, result, it->attr.str, it2->attr.str);
@@ -228,74 +261,101 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
     // too many parameters TODO check id next is id or constant
     it++; // moving to ')'
     if (it->type == TT_comma)
-        return TYPE_ERROR;
+        terminate(TYPE_ERROR);
     // no bracket found - syntax errors
-    return it->type == TT_rBracket ? 0: SYNTAX_ERROR;
+    return it->type == TT_rBracket ? 0: (terminate(SYNTAX_ERROR), 1);
 }}}
+
 /**
  *
  * Proceed a function.
  *
- * @param func_id function name
- * @param tv vector of tokens
+ * @param it token array from identifier to right bracket.
+ * @param tcount number of tokens, should be at least 3
  * @param L instruction list
+ * @param dest variable where return value will be stored
+ * @param local_tab local symbol table of function
  * @return 0 on success, TYPE_ERROR or DEFINITION_ERROR
  *
  */
-int handle_function(T_symbol *func, token_vector tv, ilist *L, T_symbol_table
-                    *local_tab)
+int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
+                    T_symbol_table *local_tab)
 {{{
-    T_token *it = tv->arr;
-    T_symbol **pars = (T_symbol**)func->attr.func->arguments;
+    // table_find is able to derive from ifj16.readInt pointer to class ifj16
+    T_symbol *sym = table_find(symbol_tab, it->attr.str, actual_class);
+
+    // found ifj16
+    if (!strcmp(sym->id, "ifj16")) {
+        // handle builtins
+        handle_builtins(it, tcount, instr_list, dest, local_tab);
+        return 0;
+    }
+    // no such function found
+    if (!sym || sym->symbol_type != is_func)
+        terminate(DEFINITION_ERROR);
+
+    // function found
+
+    unsigned pcount = sym->attr.func->par_count;
+
+    // id ( 2*par-1  )
+    // number of parameters must fit
+    if ( (pcount == 0 && tcount != 3) ||
+         (tcount != (3 + pcount*2 - 1)) ) {
+        terminate(TYPE_ERROR);
+    }
+
+    T_symbol **pars = (T_symbol**)sym->attr.func->arguments;
     // handling parameters
-    for (unsigned j = 0; j < func->attr.func->par_count;j++) {
+    for (unsigned j = 0; j < pcount;j++) {
         // data type of each parameter
         T_data_type dtype = pars[j]->attr.var->data_type;
 
-        if (token->type == TT_id || token->type == TT_fullid) {
+        if (it->type == TT_id || it->type == TT_fullid) {
             // check the identifier
             is_defined(it->attr.str, local_tab, actual_class, dtype);
             // push identifier on stack
         }
-        else if (token->type == TT_string && dtype == is_str) {
-            // push just value or variable-const
+        else if (it->type == TT_string && dtype == is_str) {
+            add_constant(it->attr.str, symbol_tab, is_str);
         }
-        else if (token->type == TT_int && dtype == is_int) {
-            // push value or variable-const
+        else if (it->type == TT_int && dtype == is_int) {
+            add_constant(it->attr.str, symbol_tab, is_int);
         }
-        else if ((token->type == TT_double || token->type == TT_double)
+        else if ((it->type == TT_int || it->type == TT_double)
                   && dtype == is_double)
         {
-            // push value or variable-const
+            add_constant(it->attr.str, symbol_tab, is_double);
         }
         else {
-            return SYNTAX_ERROR; // XXX or another error code ?
+            terminate(SYNTAX_ERROR); // XXX or another error code ?
         }
-        // going for comma
+        // TODO insert instruction push_param
+        // going for comma or ')'
         it++;
-        if (it->type != TT_comma) {
-            return SYNTAX_ERROR;
+        // ')' and last parameter
+        if (it->type == TT_rBracket && (j + 1) != pcount) {
+            terminate(TYPE_ERROR);
         }
-        // next parameter or right bracket
-        it++;
+        else if (it->type != TT_comma) {
+            terminate(SYNTAX_ERROR);
+        }
+        else {
+            // next parameter or right bracket
+            it++;
+        }
     }
     // function call must end with ')'
     if (it->type != TT_rBracket)
         return SYNTAX_ERROR;
-    // insert instruction CALL
+    // TODO insert instruction CALL
     return 0;
 }}}
 
-bool is_function(token_vector tv)
+bool check_if_func(T_token *it)
 {{{
-    if (tv->last > 2) {
-        T_token *it = tv->arr;
-        // id (
-        // id.id (
-        return ((it->type == TT_id || it->type == TT_fullid) &&
+    return ((it->type == TT_id || it->type == TT_fullid) &&
                 (it+1)->type == TT_rBracket);
-    }
-    return false;
 }}}
 
 /******************************************************
@@ -404,12 +464,9 @@ static int cbody2(T_symbol_table *local_tab)
     if (token->type == TT_assign || token->type == TT_semicolon) {
 
         // cannot be called function XXX
-        // just reading everything till `;`
-        while (token->type != TT_semicolon) {
-            // TODO fill token vector, handle expression
-            get_token();
-        }
-
+        token_vector tv = read_to_semic();
+        // call precedence
+        token_vec_delete(tv);
         return 0;
     }
     else {
@@ -496,9 +553,9 @@ static int st_list(T_symbol_table *local_tab)
 }}}
 
 // STAT -> many...
-static int stat(T_symbol_table *local_tab) {
+static int stat(T_symbol_table *local_tab)
+{{{
     enter(__func__);
-    int bc = 0;
     // while|for|if|return|continue|break|types
     if (token->type == TT_keyword) {
         switch(token->attr.keyword) {
@@ -520,11 +577,12 @@ static int stat(T_symbol_table *local_tab) {
                     }
 
                     // creating a new variable symbol
-                    T_symbol *symbol = create_var(token->attr.str, dtype);
-                    token->attr.str = NULL;        // discredit free call
+                    T_symbol *sym = create_var(token->attr.str, dtype);
+                    // discredit free call on token
+                    token->attr.str = NULL;
 
                     // inserting to table
-                    table_insert(local_tab, symbol);
+                    table_insert(local_tab, sym);
 
                     // ';' or '='
                     get_token();
@@ -536,16 +594,19 @@ static int stat(T_symbol_table *local_tab) {
                         // assign '='
 
                         // creating token vector
-                        token_vector tvect = token_vec_init();
-
-                        while (token->type != TT_semicolon) {
-                            get_token();
-                            // pushing token
-                            token_push_back(tvect, token);
+                        get_token();   // necessary, will be included in vector
+                        token_vector tv = read_to_semic();
+                        // id ( )
+                        if (tv->last > 3 && check_if_func(tv->arr) ) {
+                            // handling function
+                            handle_function(tv->arr, tv->last, instr_list, sym,
+                                            local_tab);
                         }
-                        // TODO send tvect to precedence analyser
-                        // XXX last tvect item is ';'
-                        // TODO check if it is function
+                        else {
+                            // TODO precedence analysis
+                        }
+
+                        token_vec_delete(tv);
                         return 0;
                     }
                 }}}
@@ -557,22 +618,13 @@ static int stat(T_symbol_table *local_tab) {
                     get_token();
 
                     // reading till `)`
-                    bc = 0;             // bracket counter
-                    token_vector tvect = token_vec_init();
-
-                    do {
-                        get_token();
-                        // pushing token
-                        token_push_back(tvect, token);
-                        if (token->type == TT_lBracket)
-                            bc++;
-                        if (token->type == TT_rBracket)
-                            bc--;
-                    } while ( bc != -1);
+                    // '(' is not included
+                    token_vector tv = read_to_rbrac();
                     // TODO send tvect to precedence analyser
                     // XXX last token in tvect is ')'
 
-                    get_token();
+                    token_vec_delete(tv);
+                    get_token();    // '{'
                     // if (..) { ....
                     // beginning new statement list
                     int res;
@@ -597,16 +649,19 @@ static int stat(T_symbol_table *local_tab) {
                     // RET return EXPR;
                     // RET return;
                     // reading whole expression
-                    token_vector tvect = token_vec_init();
-
-                    // reading till ';' or 'eof' read
-                    while ( token->type != TT_semicolon) {
-                        get_token();
-                        // pushing token
-                        token_push_back(tvect, token);
+                    get_token();
+                    // excluding return
+                    token_vector tv = read_to_semic();
+                    T_data_type dtype = actual_func->attr.func->data_type;
+                    // return expression in void function or vice versa
+                    if ( (tv->last == 0 && dtype != is_void) ||
+                         (tv->last != 0 && dtype == is_void) )
+                    {
+                        return TYPE_ERROR;
                     }
-                    // TODO call expression handeler
-                    // XXX ';' in tvect
+                    // TODO call expression handler
+
+                    token_vec_delete(tv);
                     return 0;
                 }}}
             default:
@@ -617,17 +672,14 @@ static int stat(T_symbol_table *local_tab) {
     else
     {{{
         // reading all tokens till ';', ';' is not included in vector
-        token_vector tvect = token_vec_init();
-        while ( token->type != TT_semicolon) {
-            token_push_back(tvect, token);
-            get_token();
-        }
+        token_vector tv = read_to_semic();
         // id = expr
         // id ( pars )
-        if (tvect->size < 3)
+        // minimal count of tokens
+        if (tv->last < 3)
             return SYNTAX_ERROR;
         // token iterator
-        T_token *it = tvect->arr;
+        T_token *it = tv->arr;
 
         char *iden = it->attr.str;       // identifier name
         T_symbol *loc_sym, *glob_sym;    // local and global symbol
@@ -651,33 +703,28 @@ static int stat(T_symbol_table *local_tab) {
             if (!sym || sym->symbol_type != is_var) {
                 return DEFINITION_ERROR;
             }
-
-            // TODO send vector
-            // check if is it function call
-            // if is not call precedence
-            token_vec_delete(tvect);
+            // go after expression or function
+            it++;
+            // id = id ( )
+            if (tv->last > 5 && check_if_func(it) ) {
+                // token count
+                unsigned tcount = tv->last - 2;
+                handle_function(it, tcount, instr_list, sym, local_tab);
+            }
+            else {
+                // TODO precedence analysis
+            }
+            token_vec_delete(tv);
             return 0;
         }}}
         else
         {{{
-            if (!strcmp(glob_sym->id, "ifj16")) {
-                // handle builtins
-                int tcount = tvect->last - (it -1 - tvect->arr);
-                handle_builtins(it - 1, tcount, instr_list, NULL, local_tab);
-                return 0;
-            }
-
-            // calling goes to variable or function does not exist
-            if (!glob_sym || glob_sym->symbol_type != is_func) {
-                return DEFINITION_ERROR;
-            }
-            // TODO handle function
-            // ;
-            token_vec_delete(tvect);
+            handle_function(tv->arr, tv->last, instr_list, NULL, local_tab);
+            token_vec_delete(tv);
             return 0;
         }}}
     }}}
-}
+}}}
 
 // ELSE -> .
 // ELSE -> else ELSE2
@@ -704,24 +751,13 @@ static int st_else2(T_symbol_table *local_tab)
 {{{
     enter(__func__);
 
+    // '(' read
     get_token();
-    // only '('
-    // reading till ')' or 'eof' read
-    int bc = 0; // bracket counter
-    token_vector tvect = token_vec_init();
+    // reading till ')'
+    token_vector tv = read_to_rbrac();
 
-    do {
-        get_token();
-        // pushing token
-        token_push_back(tvect, token);
-        if (token->type == TT_lBracket)
-            bc++;
-        if (token->type == TT_rBracket)
-            bc--;
-    } while ( bc != -1);
     // TODO send tvect to precedence analyser
-    // XXX last token in tvect is ')'
-
+    token_vec_delete(tv);
     // {
     get_token();
     // beginning of statement list
