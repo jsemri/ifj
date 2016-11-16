@@ -55,7 +55,7 @@ static int st_else2(T_symbol_table *local_tab);
  *
  */
 
-#define BI_COUNT 9 
+#define BI_COUNT 9
 
 
 // built-ins
@@ -144,15 +144,18 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
             // str (str) | int (str)
             {{{
                 T_instr_type ins = i == b_sort ? TI_sort : TI_length;
-                // checking destination data type
+                // checking destination data type if any
                 if (dest) {
                     T_data_type dtype = dest->attr.var->data_type;
                     if ((i == b_sort && dtype != is_str ) || (i == b_length &&
                                 (dtype == is_int || dtype == is_double) ))
                     {
-                        return TYPE_ERROR;
+                        terminate(TYPE_ERROR);
                     }
                 }
+                // id ( p1 )
+                if (tcount != 4)
+                    terminate(TYPE_ERROR);
                 // checking string variable
                 if (it->type == TT_id || it->type == TT_fullid) {
                     // checking type and if it was defined
@@ -170,45 +173,46 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     return TYPE_ERROR;
                 break;
             }}}
-/*        case b_find:
+        case b_find:
         case b_compare:
             // int (str, str)
             {{{
                 // checking data type
-                T_data_type dtype = dest->attr.var->data_type;
-                if (dtype == is_int || dtype == is_double)
-                {
-                    return TYPE_ERROR;
+                if (dest) {
+                    T_data_type dtype = dest->attr.var->data_type;
+                    if (dtype == is_int || dtype == is_double)
+                    {
+                        terminate(TYPE_ERROR);
+                    }
                 }
 
                 // four tokens required
-                if (tv->last != 3) {
-                    return TYPE_ERROR;
+                // id ( p1 , p2 )
+                if (tcount != 6) {
+                    terminate(TYPE_ERROR);
                 }
                 // second argument
                 T_token *it2 = it + 2;
                 // setting instruction
                 T_instr_type ins = (i == b_find ? b_find : b_compare);
-                T_instr_mode mode = TM_noconst;
                 // determining constant or identifier
                 if (it->type == TT_id || it->type == TT_fullid) {
                     is_defined(it->attr.str, local_tab, actual_class ,is_str);
                 }
                 else if (it->type == TT_string) {
-                    // first is constant
-                    mode = TM_const1;
+                    add_constant(it->attr.str, symbol_tab, is_str);
                 }
+
                 if (it2->type == TT_id || it2->type == TT_fullid) {
                     is_defined(it2->attr.str, local_tab, actual_class ,is_str);
                 }
                 else if (it2->type == TT_string) {
-                    // second or both are constant
-                    mode = mode == TM_const1 ? TM_const_all : TM_const2;
+                    add_constant(it2->attr.str, symbol_tab, is_str);
                 }
 
                 // creating instruction
-                create_instr(L, ins, mode, dest->id, it->attr.str, it2->attr.str);
-                it = it2; // last argument
+                create_instr(L, ins, result, it->attr.str, it2->attr.str);
+                it = it2; // moving to last argument
                 break;
             }}}
         case b_substr:
@@ -217,7 +221,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
 
 
                 break;
-            }}}*/
+            }}}
         default:
             terminate(DEFINITION_ERROR);
     }
@@ -618,6 +622,10 @@ static int stat(T_symbol_table *local_tab) {
             token_push_back(tvect, token);
             get_token();
         }
+        // id = expr
+        // id ( pars )
+        if (tvect->size < 3)
+            return SYNTAX_ERROR;
         // token iterator
         T_token *it = tvect->arr;
 
@@ -635,8 +643,7 @@ static int stat(T_symbol_table *local_tab) {
 
         // getting '=' or '('
         it++;
-
-        if (token->type == TT_assign)
+        if (it->type == TT_assign)
         {{{
             // id = ....;
             T_symbol *sym = loc_sym ? loc_sym : glob_sym;
