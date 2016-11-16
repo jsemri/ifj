@@ -151,7 +151,18 @@ int leave(const char *fi, int rc) {
     fprintf(stderr, "Leaving a function: %s() %d\n", fi, var);
     return rc;
 }
+#else
+void enter(const char *fi) {
+    (void)fi;
+}
 
+int leave(const char *fi, int rc) {
+    (void)fi;
+    return rc;
+}
+#endif
+
+#ifdef SHOW_TOKEN
 int show_token(int rc) {
     printf("Getting token: ");
     if (token->type != TT_empty) {
@@ -328,15 +339,8 @@ int show_token(int rc) {
     return rc;
 }
 #else
-void enter(const char *fi) {
-    (void)fi;
-}
-
-int leave(const char *fi, int rc) {
-    (void)fi;
-    return rc;
-}
 int show_token(int rc) {
     return rc;
 }
 #endif
+

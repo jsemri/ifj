@@ -7,10 +7,11 @@ NOCLR='\033[0m'
 
 # testing error detections
 
-COUNT=3
+COUNT=4
 TEST[1]=lexical_errors
 TEST[2]=syntax_errors
 TEST[3]=definition_errors
+TEST[4]=type_errors
 # syntax tests
 
 for ((i=1; i <= COUNT ; i++));do

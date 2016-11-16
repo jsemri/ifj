@@ -4,7 +4,8 @@
 #include "ial.h"
 
 // initialization of symbol table
-T_symbol_table *table_init(unsigned size) {
+T_symbol_table *table_init(unsigned size)
+{{{
     T_symbol_table* table = malloc(sizeof(T_symbol_table) +
                                    size * sizeof(T_symbol));
     if (table == NULL)
@@ -18,33 +19,36 @@ T_symbol_table *table_init(unsigned size) {
     }
 
     return table;
-}
+}}}
 
 
 // inserts symbol item to symbol table
 // returns pointer to the inserted symbol
-T_symbol *table_insert(T_symbol_table *stab, T_symbol *s) {
+T_symbol *table_insert(T_symbol_table *stab, T_symbol *s)
+{{{
     unsigned index = hash(s->id, stab->size);
     s->next = stab->arr[index];
     stab->arr[index] = s;
     return s;
-}
+}}}
 
 
 // hash- determines an index to hash table
-unsigned hash(const char *key, unsigned size) {
+unsigned hash(const char *key, unsigned size)
+{{{
     unsigned int h=0;
     const unsigned char *p;
     for (p=(const unsigned char*)key; *p!='\0'; p++)
         h = 65599*h + *p;
     return h % size;
-}
+}}}
 
 
 // search for symbol with `key`
 // returns a pointer to the searched symbol
 // returns NULL if symbol was not found
-T_symbol *table_find(T_symbol_table *stab, char *key, T_symbol *mclass) {
+T_symbol *table_find(T_symbol_table *stab, char *key, T_symbol *mclass)
+{{{
 
     char *dotptr = strchr(key, '.');
 
@@ -78,10 +82,11 @@ T_symbol *table_find(T_symbol_table *stab, char *key, T_symbol *mclass) {
         }
         return item;
     }
-}
+}}}
 
 // deletes whole table
-void table_remove(T_symbol_table **stab) {
+void table_remove(T_symbol_table **stab)
+{{{
     if (*stab != NULL) {
         T_symbol* s;
 
@@ -113,4 +118,4 @@ void table_remove(T_symbol_table **stab) {
         free(*stab);
         *stab = NULL;
     }
-}
+}}}
