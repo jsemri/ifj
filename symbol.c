@@ -92,21 +92,35 @@ int is_defined(char *iden, T_symbol_table *local_tab,
     return 0;
 }}}
 
-T_symbol *add_constant(char *id, struct T_Hash_symbol_table *symbol_tab,
+T_symbol *add_constant(T_value value, struct T_Hash_symbol_table *symbol_tab,
                        T_data_type dtype)
 {{{
 
-    T_symbol *sym = table_find(symbol_tab, id, NULL);
+    // temporary buffer
+    char buf[128] = "";
+
+    // creating a identifier name for constant
+    if (dtype == is_int)
+        sprintf(buf, "127%d", value.n);
+    else if (dtype == is_int)
+        sprintf(buf, "127%g", value.d);
+    else
+        sprintf(buf, "127%s", value.str);
+
+    T_symbol *sym = table_find(symbol_tab, buf, NULL);
     // constant already in table, return pointer on it
     if (sym && sym->attr.var->data_type == dtype)
         return sym;
 
+    // creating deep copy
+    char *id = calloc(strlen(buf) + 1, 1);
+    if (!id)
+        terminate(INTERNAL_ERROR);
+    strcpy(id, buf);
     sym = create_var(id, dtype);
 
-    if (dtype == is_int)
-        sym->attr.var->value.num = atoi(id);
-    else if (dtype == is_double)
-        sym->attr.var->value.d = strtod(id, NULL);
+    if (dtype == is_int || dtype == is_double)
+        sym->attr.var->value = value;
 
     // string value is in identifier
     // setting constant flag
@@ -115,7 +129,6 @@ T_symbol *add_constant(char *id, struct T_Hash_symbol_table *symbol_tab,
     return sym;
 }}}
 
-// will be deleted soon
 // filling global symbol table with built-in class ifj
 int fill_ifj16()
 {{{

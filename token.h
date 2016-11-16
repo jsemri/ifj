@@ -63,15 +63,17 @@ typedef enum {
     TT_eof              // end of file
 } T_tokenType;
 
+typedef struct {
+    double d;           // values double or integer
+    int n;
+    T_keyword keyword;  // keyword
+    char *str;      // POINTER to a T_string
+} T_value;
+
 // structure of token
 typedef struct {
     T_tokenType type;
-    union {
-        double d;           // values double or integer
-        int n;
-        T_keyword keyword;  // keyword
-        char *str;      // POINTER to a T_string
-    }attr;
+    T_value attr;
 } T_token;
 
 // allocates and initializes new token

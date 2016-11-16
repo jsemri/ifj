@@ -27,11 +27,7 @@ typedef struct {
     T_data_type data_type;          // data type
     bool is_initialized;
     bool is_const;                  // 0 if constant
-    union {
-        char *str;
-        int num;
-        double d;
-    } value;                        // value of variable
+    T_value value;                  // value of variable
 } T_var_symbol;
 
 /// Function attributes.
@@ -76,7 +72,7 @@ T_symbol *create_symbol(char *id, T_symbol_type stype);
 T_symbol *create_var(char *id, T_data_type dtype);
 
 /**
- * @brief Creates a variable.  
+ * @brief Creates a variable.
  *
  * @param dtype data type
  * @return valid pointer on success
@@ -109,12 +105,13 @@ int is_defined(char *iden, struct T_Hash_symbol_table *local_tab,
  * Variable name is also it's value. In attempt to insert existing
  * constant of same data type, pointer to existing constant is returned.
  *
- * @param iden variable identifier and it's value
+ * @param value variable identifier and it's value
  * @param global symbol table
  * @param dtype data type
  * @return 0 in success or specific error
  */
-T_symbol *add_constant(char *iden, struct T_Hash_symbol_table*, T_data_type dtype);
+T_symbol *add_constant(T_value value, struct T_Hash_symbol_table*,
+                       T_data_type dtype);
 
 /**
  * @brief Copies symbol table and puts it on stack.
