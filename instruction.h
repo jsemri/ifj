@@ -79,12 +79,11 @@ typedef struct T_ilist {
  *
  * @param L instruction list
  * @param itype instruction type
- * @param imode instruction mode
  * @param op1 first operand
  * @param op2 second operand
  * @param dest destination where result will be stored
  */
-void create_instr( ilist *L, T_instr_type itype, T_instr_mode imode,
-                        void *op1, void *op2, void *dest);
+void create_instr( ilist *L, T_instr_type itype, void *op1, void *op2,
+                   void *dest);
 
 #endif

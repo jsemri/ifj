@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -std=c99 -Wall -Wextra -pedantic -g  #-DDEBUG
+CFLAGS= -std=c99 -Wall -Wextra -pedantic -g  -DDEBUG_TABLES #-DREC_DEBUG
 PROJ=ifj
 
 SRC_FILES=$(wildcard *.c)

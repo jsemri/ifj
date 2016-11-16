@@ -3,8 +3,8 @@
 #include "globals.h"
 #include <stdlib.h>
 
-void create_instr(ilist *L, T_instr_type itype, T_instr_mode imode,
-                        void *op1, void *op2, void *dest)
+void create_instr(ilist *L, T_instr_type itype, void *op1, void *op2,
+                  void *dest)
 {
 
     T_instr *ins = calloc(1, sizeof(T_instr));
@@ -12,7 +12,6 @@ void create_instr(ilist *L, T_instr_type itype, T_instr_mode imode,
     if (!ins)
         terminate(INTERNAL_ERROR);
 
-    ins->imode = imode;
     ins->itype = itype;
     ins->op1 = op1;
     ins->op2 = op2;
