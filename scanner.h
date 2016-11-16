@@ -27,6 +27,7 @@ typedef enum {
     S_doubleExp3,
     S_notOrNotEqual,
     S_ID,
+    S_FULL_ID
 } T_state;
 
 void set_file(FILE *f);

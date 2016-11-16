@@ -27,7 +27,7 @@ void token_vec_delete(token_vector tvect) {
     // deleting all strings
     for (unsigned i = 0;i < tvect->last;i++) {
         T_token *t = &tvect->arr[i];
-        if (t->type == TT_id || t->type == TT_string)
+        if (t->type == TT_id || t->type == TT_string || t->type == TT_fullid)
             free(t->attr.str);
     }
     // deleting token array
@@ -48,7 +48,9 @@ int token_push_back(token_vector tvect, const T_token *token) {
 
     // temporary pointer
     T_token *p = &tvect->arr[tvect->last];
-    if (token->type == TT_id ||token->type == TT_string) {
+    if (token->type == TT_id ||token->type == TT_string ||
+            token->type == TT_fullid)
+    {
         // checking string initialization and string copying
         if (!(p->attr.str = calloc(1, strlen(token->attr.str) + 1))) {
             token_vec_delete(tvect);

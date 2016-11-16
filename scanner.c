@@ -63,9 +63,6 @@ int get_token() {
                 } else if (c == '*') {
                     token->type = TT_mul;
                     return show_token(OK);
-                } else if (c == '.') {
-                    token->type = TT_dot;
-                    return show_token(OK);
                 } else if (c == ',') {
                     token->type = TT_comma;
                     return show_token(OK);
@@ -219,7 +216,20 @@ int get_token() {
             case S_ID:
                 if (isalnum(c) || c == '_' || c == '$') {
                     buf[counter++] = c;     // add char to str, the ID is valid
-                } else {
+                }
+                else if (c == '.') {
+                    int i;
+                    // checking if id is keyword
+                    for (i = 0; i < KEYW_COUNT &&
+                            strcmp(buf, KEYWORDS[i]); i++);
+                    if (i != KEYW_COUNT) {
+                        return LEX_ERROR;
+                    }
+
+                    buf[counter++] = c;
+                    state = S_FULL_ID;
+                }
+                else {
                     ungetc(c, source);            // last char was not valid, end of ID, undo last char
                     for (int i = 0; i < KEYW_COUNT; i++) {
                         if (strcmp(buf, KEYWORDS[i]) == 0) {
@@ -233,7 +243,33 @@ int get_token() {
                     return show_token(OK);
                 }
                 break;
+            /*________FULL ID________*/
+            case S_FULL_ID:
+                if (isalnum(c) || c == '_' || c== '$') {
+                    buf[counter++] = c;
+                }
+                else if (buf[counter-1] == '.' && isspace(c)) {
+                    // space between dot and identifiers
+                    return LEX_ERROR;
+                }
+                else
+                {
+                    ungetc(c, source);
+                    char *ptr = strchr(buf, '.');
+                    ptr++;
+                    int i;
+                    // checking if id is keyword
+                    for (i = 0; i < KEYW_COUNT &&
+                            strcmp(ptr, KEYWORDS[i]); i++);
+                    if (i != KEYW_COUNT) {
+                        return LEX_ERROR;
+                    }
 
+                    token->attr.str = get_str(buf);
+                    token->type = TT_fullid;
+                    return 0;
+                }
+                break;
             /*_________OPERATORS________*/
             case S_lesserOrLesserEqual:
                 if (c == '=') {
