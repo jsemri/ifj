@@ -11,6 +11,8 @@
 
 #define KEYW_COUNT 17
 
+#define return return show_token(0) +
+
 FILE *source;
 T_token *token;
 const char *KEYWORDS[KEYW_COUNT] = {
@@ -56,31 +58,31 @@ int get_token() {
                     ;    // Ignores whitespaces, do nothing
                 } else if (c == '+') {
                     token->type = TT_plus;
-                    return show_token(OK);
+                    return 0;
                 } else if (c == '-') {
                     token->type = TT_minus;
-                    return show_token(OK);
+                    return 0;
                 } else if (c == '*') {
                     token->type = TT_mul;
-                    return show_token(OK);
+                    return 0;
                 } else if (c == ',') {
                     token->type = TT_comma;
-                    return show_token(OK);
+                    return 0;
                 } else if (c == ';') {
                     token->type = TT_semicolon;
-                    return show_token(OK);
+                    return 0;
                 } else if (c == '(') {
                     token->type = TT_lBracket;
-                    return show_token(OK);
+                    return 0;
                 } else if (c == ')') {
                     token->type = TT_rBracket;
-                    return show_token(OK);
+                    return 0;
                 } else if (c == '{') {
                     token->type = TT_lCurlBracket;
-                    return show_token(OK);
+                    return 0;
                 } else if (c == '}') {
                     token->type = TT_rCurlBracket;
-                    return show_token(OK);
+                    return 0;
                 } else if (c == '/') {
                     state = S_commentOrDiv;                 // comment (block, line) or division
                 } else if (c == '<') {
@@ -125,7 +127,7 @@ int get_token() {
                     token->attr.n = (int) strtol(buf, NULL, 10); //return string value in int
 
 
-                    return show_token(OK);
+                    return 0;
                 }
                 break;
 
@@ -150,7 +152,7 @@ int get_token() {
                     token->type = TT_double;
                     token->attr.d = strtod(buf, NULL); //return string value in int
 
-                    return show_token(OK);
+                    return 0;
                 }
                 break;
 
@@ -185,7 +187,7 @@ int get_token() {
                     token->attr.d = strtod(buf, NULL);
 
 
-                    return show_token(OK);
+                    return 0;
                 }
                 break;
 
@@ -196,7 +198,7 @@ int get_token() {
                 } else if (c == '"') {
                     token->type = TT_string;
                     token->attr.str = get_str(buf);
-                    return show_token(OK);
+                    return 0;
                 } else if (c == '\n' || c == EOF) {
                     return LEX_ERROR;
                 } else {
@@ -235,12 +237,12 @@ int get_token() {
                         if (strcmp(buf, KEYWORDS[i]) == 0) {
                             token->type = TT_keyword;
                             token->attr.keyword = i;
-                            return show_token(OK);
+                            return 0;
                         }
                     }
                     token->type = TT_id;
                     token->attr.str = get_str(buf);
-                    return show_token(OK);
+                    return 0;
                 }
                 break;
             /*________FULL ID________*/
@@ -274,51 +276,51 @@ int get_token() {
             case S_lesserOrLesserEqual:
                 if (c == '=') {
                     token->type = TT_lessEq;
-                    return show_token(OK);
+                    return 0;
                 } else {
                     ungetc(c, source);            // It's just <, undo last char read
                     token->type = TT_lesser;
-                    return show_token(OK);
+                    return 0;
                 }
                 break;
 
              case S_greaterOrGreaterEqual:
                 if (c == '=') {
                     token->type = TT_greatEq;
-                    return show_token(OK);
+                    return 0;
                 } else {
                     ungetc(c, source);            // It's just >, undo last char read
                     token->type = TT_greater;
-                    return show_token(OK);
+                    return 0;
                 }
                 break;
 
             case S_assignOrEqual:
                 if (c == '=') {
                     token->type = TT_equal;
-                    return show_token(OK);
+                    return 0;
                 } else {
                     ungetc(c, source);            // Just =, undo last char
                     token->type = TT_assign;
-                    return show_token(OK);
+                    return 0;
                 }
                 break;
 
             case S_notOrNotEqual:
                 if (c == '=') {
                     token->type = TT_notEq;
-                    return show_token(OK);
+                    return 0;
                 } else {
                     ungetc(c, source);            // Just =, undo last char
                     token->type = TT_not;
-                    return show_token(OK);
+                    return 0;
                 }
                 break;
 
             case S_or:
                 if (c == '|') {
                     token->type = TT_or;
-                    return show_token(OK);
+                    return 0;
                 } else {
                     return LEX_ERROR;
                 }
@@ -327,7 +329,7 @@ int get_token() {
             case S_and:
                 if (c == '&') {
                     token->type = TT_and;
-                    return show_token(OK);
+                    return 0;
                 } else {
                     return LEX_ERROR;
                 }
@@ -342,7 +344,7 @@ int get_token() {
                 } else {                    // it is division
                     token->type = TT_div;
                     ungetc(c, source);      // we need to return that one char we checked
-                    return show_token(OK);
+                    return 0;
                 }
                 break;
 
@@ -357,7 +359,7 @@ int get_token() {
                     state = S_commentBlockStar;
                 } else if (is_next_eof()) {
                     token->type = TT_eof;
-                    return show_token(OK);
+                    return 0;
                 }
                 break;
 
@@ -368,7 +370,7 @@ int get_token() {
                     state = S_start;
                 } else if (is_next_eof()) {
                     token->type = TT_eof;
-                    return show_token(OK);
+                    return 0;
                 } else {
                     state = S_commentBlock;
                 }
@@ -377,5 +379,5 @@ int get_token() {
     }
     // Pokud funkce dojde az, sem musel byt nacteny charakter EOF
     token->type = TT_eof;
-    return show_token(OK);
+    return 0;
 }

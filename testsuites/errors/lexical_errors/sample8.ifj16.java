@@ -1,6 +1,6 @@
 class Main {
     static void run() {
-        _ // lex error
+        int abcd?defg; // lex error
     }
 }
 

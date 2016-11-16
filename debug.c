@@ -138,6 +138,9 @@ int show_token(int rc) {
     printf("Getting token: ");
     if (token->type != TT_empty) {
         switch (token->type) {
+            case TT_fullid:
+                printf("full.id\n");
+                break;
             case TT_plus:
                 printf("+\n");
                 break;

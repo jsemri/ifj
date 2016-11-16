@@ -404,7 +404,9 @@ static int st_list()
             return LEX_ERROR;
     }
     // keyword
-    if (token->type == TT_keyword || token->type == TT_id) {
+    if (token->type == TT_keyword || token->type == TT_id ||
+        token->type == TT_fullid)
+    {
 
         int res = stat();
         if (res)
@@ -548,99 +550,51 @@ static int stat()
         }
     }
     // id = exp
-    else if (token->type == TT_id) {
+    else if (token->type == TT_id || token->type == TT_fullid) {
 
         // inline rule
         if (get_token())
-            return LEX_ERROR;
+             return LEX_ERROR;
 
-        if (token->type == TT_dot) {
-            if (get_token())
-                return LEX_ERROR;
-            // id.id -> `(` or ` = ` or `;`
-            if (token->type == TT_id) {
-                if (get_token()) {
-                    return LEX_ERROR;
-                }
-                if (token->type == TT_assign) {
-                    // id.id = ........;
-                    // reading till ';' or 'eof' read
-                    while ( token->type != TT_semicolon && token->type != TT_eof) {
-                        if (get_token()) {
-                            return LEX_ERROR;
-                        }
-                    }
-                    if (token->type == TT_eof) {
-                        return SYNTAX_ERROR;
-                    }
-                    return 0;
-                }
-                else if (token->type == TT_lBracket) {
-                    // reading whole expression
-                    // reading till ';' or 'eof' read
-                    bc = 0; // bracket counter
-                    do {
-                        if (get_token()) {
-                            return LEX_ERROR;
-                        }
-                        if (token->type == TT_lBracket)
-                            bc++;
-                        if (token->type == TT_rBracket)
-                            bc--;
-                    } while ( bc != -1 && token->type != TT_eof);
+        if (token->type == TT_assign) {
+             // reading till ';' or 'eof' read
+             while ( token->type != TT_semicolon && token->type != TT_eof) {
+                 if (get_token()) {
+                     return LEX_ERROR;
+                 }
+             }
+             if (token->type == TT_eof) {
+                 return SYNTAX_ERROR;
+             }
+             return 0;
+         }
+         else if (token->type == TT_lBracket) {
+             // id();
+             // reading whole expression
+             // reading till ';' or 'eof' read
+             bc = 0; // bracket counter
+             do {
+                 if (get_token()) {
+                     return LEX_ERROR;
+                 }
+                 if (token->type == TT_lBracket)
+                     bc++;
+                 if (token->type == TT_rBracket)
+                     bc--;
+             } while ( bc != -1 && token->type != TT_eof);
 
-                    if (token->type == TT_eof) {
-                        return SYNTAX_ERROR;
-                    }
-                    if (get_token())
-                        return LEX_ERROR;
+             if (token->type == TT_eof) {
+                 return SYNTAX_ERROR;
+             }
 
-                    if (token->type == TT_semicolon)
-                        return 0;
-                }
-                return SYNTAX_ERROR;
-            }
-            return SYNTAX_ERROR;
-        }
-        else if (token->type == TT_assign) {
-            // reading till ';' or 'eof' read
-            while ( token->type != TT_semicolon && token->type != TT_eof) {
-                if (get_token()) {
-                    return LEX_ERROR;
-                }
-            }
-            if (token->type == TT_eof) {
-                return SYNTAX_ERROR;
-            }
-            return 0;
-        }
-        else if (token->type == TT_lBracket) {
-            // id();
-            // reading whole expression
-            // reading till ';' or 'eof' read
-            bc = 0; // bracket counter
-            do {
-                if (get_token()) {
-                    return LEX_ERROR;
-                }
-                if (token->type == TT_lBracket)
-                    bc++;
-                if (token->type == TT_rBracket)
-                    bc--;
-            } while ( bc != -1 && token->type != TT_eof);
+             if (get_token())
+                 return LEX_ERROR;
 
-            if (token->type == TT_eof) {
-                return SYNTAX_ERROR;
-            }
+             if (token->type == TT_semicolon)
+                 return 0;
 
-            if (get_token())
-                return LEX_ERROR;
-
-            if (token->type == TT_semicolon)
-                return 0;
-
-            return SYNTAX_ERROR;
-        }
+             return SYNTAX_ERROR;
+         }
     }
         return SYNTAX_ERROR;
 }}}
@@ -770,7 +724,7 @@ int parse()
         #ifdef DEBUG
         puts("_____________________________________________\n\n\n");
         #endif
-        res = second_throughpass();
+//        res = second_throughpass();
     }
 
 
