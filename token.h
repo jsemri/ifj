@@ -11,9 +11,9 @@
 // keywords
 typedef enum {
     TK_void = 0,
-    TK_int,
-    TK_double,
-    TK_String,
+    TK_int = 1,
+    TK_double = 2,
+    TK_String = 3,
     TK_boolean,
     TK_break,
     TK_class,

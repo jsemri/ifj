@@ -7,6 +7,7 @@
 #define GLOB_H
 
 #include "token.h"
+#include "token_vector.h"
 #include <stdio.h>
 #include "ial.h"
 #include "instruction.h"
@@ -36,6 +37,8 @@ extern ilist *instr_list;
 extern T_symbol_table *symbol_tab;
 extern FILE *source;
 extern T_token *token;
+// used when token vector cannot be freed
+extern token_vector global_token_vector;
 
 struct T_pool {
     void **first;

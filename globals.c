@@ -1,5 +1,6 @@
 #include "globals.h"
 #include "token.h"
+#include "token_vector.h"
 #include <stdio.h>
 #include "ial.h"
 #include "instruction.h"
@@ -11,6 +12,7 @@ ilist *instr_list;
 T_symbol_table *symbol_tab;
 FILE *source;
 T_token *token;
+token_vector global_token_vector;
 
 struct T_pool pool = {NULL, NULL, 0};
 #define POOL_SIZE 100
@@ -67,6 +69,8 @@ void terminate(int err_code) {
     }
 
     token_free(&token);
+    if (global_token_vector)
+        token_vec_delete(global_token_vector);
     fclose(source);
     list_free(&instr_list);
     table_remove(&symbol_tab);

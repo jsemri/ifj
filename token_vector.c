@@ -1,9 +1,11 @@
 #include "token_vector.h"
 #include <stdlib.h>
 #include "globals.h"
-#include <string.h> 
+#include <string.h>
 
 #define INITIAL_VECTOR_SIZE 16
+
+token_vector global_token_vector;
 
 token_vector token_vec_init() {
     // initialization of vector
@@ -20,6 +22,7 @@ token_vector token_vec_init() {
     // setting initial parameters
     ptr->size = INITIAL_VECTOR_SIZE;
     ptr->last = 0;
+    global_token_vector = ptr;
     return ptr;
 }
 
@@ -30,6 +33,7 @@ void token_vec_delete(token_vector tvect) {
         if (t->type == TT_id || t->type == TT_string || t->type == TT_fullid)
             free(t->attr.str);
     }
+    global_token_vector = NULL;
     // deleting token array
     free(tvect->arr);
     // deleting vector
