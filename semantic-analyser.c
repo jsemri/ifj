@@ -189,13 +189,11 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     // checking type and if it was defined
                     is_defined(it->attr.str, local_tab,
                                actual_class, is_str);
-                    puts("baff");
                     create_instr(L, ins, result, it->attr.str, NULL);
                 }
                 else if (it->type == TT_string) {
-                    add_constant(it->attr.str, symbol_tab, is_str);
+                    add_constant(it->attr, symbol_tab, is_str);
                     create_instr(L, ins, result, it->attr.str, NULL);
-                    it->attr.str = NULL;
                 }
                 else
                     terminate(TYPE_ERROR);
@@ -229,7 +227,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     is_defined(it->attr.str, local_tab, actual_class ,is_str);
                 }
                 else if (it->type == TT_string) {
-                    add_constant(it->attr.str, symbol_tab, is_str);
+                    add_constant(it->attr, symbol_tab, is_str);
                 }
                 else
                     terminate(TYPE_ERROR);
@@ -238,7 +236,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     is_defined(it2->attr.str, local_tab, actual_class ,is_str);
                 }
                 else if (it2->type == TT_string) {
-                    add_constant(it2->attr.str, symbol_tab, is_str);
+                    add_constant(it2->attr, symbol_tab, is_str);
                 }
                 else
                     terminate(TYPE_ERROR);
@@ -283,7 +281,6 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
 {{{
     // table_find is able to derive from ifj16.readInt pointer to class ifj16
     T_symbol *sym = table_find(symbol_tab, it->attr.str, actual_class);
-
     // found ifj16
     if (!strcmp(sym->id, "ifj16")) {
         // handle builtins
@@ -298,6 +295,14 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
 
     unsigned pcount = sym->attr.func->par_count;
 
+    // type control
+    if (dest) {
+        T_data_type d1 = sym->attr.func->data_type;
+        T_data_type d2 = dest->attr.var->data_type;
+        if ( d1 != d2 && (d1 != is_int || d2 != is_double ))
+            terminate(TYPE_ERROR);
+    }
+
     // id ( 2*par-1  )
     // number of parameters must fit
     if ( (pcount == 0 && tcount != 3) ||
@@ -305,8 +310,12 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
         terminate(TYPE_ERROR);
     }
 
+    // parameters
     T_symbol **pars = (T_symbol**)sym->attr.func->arguments;
+    // constant symbol
+    T_symbol *csym;
     // handling parameters
+    it++;it++;  // skipping function id and '('
     for (unsigned j = 0; j < pcount;j++) {
         // data type of each parameter
         T_data_type dtype = pars[j]->attr.var->data_type;
@@ -317,25 +326,33 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
             // push identifier on stack
         }
         else if (it->type == TT_string && dtype == is_str) {
-            add_constant(it->attr.str, symbol_tab, is_str);
+            add_constant(it->attr, symbol_tab, is_str);
         }
         else if (it->type == TT_int && dtype == is_int) {
-            add_constant(it->attr.str, symbol_tab, is_int);
+            csym = add_constant( it->attr, symbol_tab, is_int);
         }
         else if ((it->type == TT_int || it->type == TT_double)
                   && dtype == is_double)
         {
-            add_constant(it->attr.str, symbol_tab, is_double);
+            csym = add_constant( it->attr, symbol_tab, is_double);
         }
         else {
-            terminate(SYNTAX_ERROR); // XXX or another error code ?
+            terminate(TYPE_ERROR); // XXX or another error code ?
+        }
+
+        if (dtype == is_double || dtype == is_int) {
+            create_instr(L, TI_push_param, csym->id, NULL, NULL);
+        }
+        else {
+            create_instr(L, TI_push_param, it->attr.str, NULL, NULL);
         }
         // TODO insert instruction push_param
         // going for comma or ')'
         it++;
         // ')' and last parameter
-        if (it->type == TT_rBracket && (j + 1) != pcount) {
-            terminate(TYPE_ERROR);
+        // TODO differ syntax and type errors
+        if (it->type == TT_rBracket && (j + 1) == pcount) {
+            break;
         }
         else if (it->type != TT_comma) {
             terminate(SYNTAX_ERROR);
@@ -692,7 +709,6 @@ static int stat(T_symbol_table *local_tab)
         if (!loc_sym && !glob_sym ) {
            return DEFINITION_ERROR;
         }
-
         // getting '=' or '('
         it++;
         if (it->type == TT_assign)
@@ -755,8 +771,7 @@ static int st_else2(T_symbol_table *local_tab)
     get_token();
     // reading till ')'
     token_vector tv = read_to_rbrac();
-
-    // TODO send tvect to precedence analyser
+    // TODO precedence
     token_vec_delete(tv);
     // {
     get_token();
