@@ -3,6 +3,6 @@ class Main {
         int a;
         int b;
         a = a + b;
-        ifj16.find(c, a); // c- undefined
+        c = a + b; // undefined c
     }
 }
