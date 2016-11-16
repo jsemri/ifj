@@ -44,19 +44,40 @@ unsigned hash(const char *key, unsigned size) {
 // search for symbol with `key`
 // returns a pointer to the searched symbol
 // returns NULL if symbol was not found
-T_symbol *table_find(T_symbol_table *stab, const char *key, T_symbol *mclass) {
-    unsigned index = hash(key, stab->size);
-    T_symbol* item = stab->arr[index];
+T_symbol *table_find(T_symbol_table *stab, char *key, T_symbol *mclass) {
 
-    while (item != NULL) {
-        // member class and identifiers have to be same
-        if (strcmp(item->id,key) == 0 && item->member_class == mclass) {
-            return item;
+    char *dotptr = strchr(key, '.');
+
+    // only not NULL if full identifier, thus dot found
+    if (dotptr) {
+        // dividing key to two strings
+        *dotptr = 0;
+        // class identifier
+        char *mclass = key;
+        // instance identifier
+        char *inst = key + strlen(mclass) + 1;
+        // if ifj16 found return class ifj16
+        if (!strcmp(mclass, "ifj16")) {
+            *dotptr = '.';
+            return table_find(stab, "ifj16", NULL);
         }
-        item = item->next;
+        T_symbol *item = table_find(stab, inst, table_find(stab, mclass, NULL));
+        *dotptr = '.';
+        return item;
     }
+    else {
+        unsigned index = hash(key, stab->size);
+        T_symbol* item = stab->arr[index];
 
-    return item;
+        while (item != NULL) {
+            // member class and identifiers have to be same
+            if (strcmp(item->id,key) == 0 && item->member_class == mclass) {
+                return item;
+            }
+            item = item->next;
+        }
+        return item;
+    }
 }
 
 // deletes whole table

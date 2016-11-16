@@ -5,7 +5,51 @@
 #include <stdio.h>
 #include "ial.h"
 
-#ifdef DEBUG
+#ifdef DEBUG_TABLES
+static char *arr[] = {"class", "func", "var"};
+static char *dtypes[] = {"void", "int", "double", "String" };
+
+
+void print_function(T_symbol *func) {
+    // function name
+    puts("======FUNCTION BEGIN======");
+    printf("%s %s()\n", dtypes[func->data_type], func->id);
+    // arguments
+    for (unsigned i = 0;i < func->attr.func->par_count;i++) {
+        T_symbol *s = (T_symbol*)func->attr.func->arguments[i];
+        printf(
+            "%s %s\n",
+            dtypes[s->attr.var->data_type],
+            s->id 
+            );
+    }
+    printf("===LOCAL TABLE===\n");
+    print_table(func->attr.func->local_table);
+    puts("=======FUNCTION END=======");
+}
+
+void print_table(T_symbol_table *st) {
+    for (unsigned i = 0;i < st->size; i++) {
+        for (T_symbol *s = st->arr[i];s;s = s->next) {
+            if (s->symbol_type == is_var)
+                printf("|%s--%s|->", dtypes[s->attr.var->data_type], s->id);
+            else
+                printf("|%s--%s|->", s->id, arr[s->symbol_type]);
+        }
+        printf("||\n");
+    }
+}
+#else
+void print_function(T_symbol *func) {
+    (void)func;
+}
+void print_table(T_symbol_table *st) {
+    (void)st;
+}
+#endif
+
+
+#ifdef REC_DEBUG
 // variables for each function:
 static int prog;
 static int body;
@@ -24,32 +68,6 @@ static int ret;
 static int st_else;
 static int st_else2;
 static int type;
-static char *arr[] = {"class", "func", "var"};
-static char *dtypes[] = {"void", "int", "double", "String" };
-
-void print_function(T_symbol *func) {
-    // function name
-    printf("%s %s()\n", dtypes[func->data_type], func->id);
-    // arguments
-    for (unsigned i = 0;i < func->attr.func->par_count;i++) {
-        T_symbol *s = (T_symbol*)func->attr.func->arguments[i];
-        printf(
-            "%s %s\n",
-            dtypes[s->data_type],
-            s->id 
-            );
-    }
-    printf("===LOCAL TABLE===\n");
-    print_table(func->attr.func->local_table);
-}
-
-void print_table(T_symbol_table *st) {
-    for (unsigned i = 0;i < st->size; i++) {
-        for (T_symbol *s = st->arr[i];s;s = s->next)
-            printf("|%s--%s|->", s->id, arr[s->symbol_type]);
-        printf("||\n");
-    }
-}
 
 void enter(const char *fi) {
 
@@ -139,7 +157,7 @@ int show_token(int rc) {
     if (token->type != TT_empty) {
         switch (token->type) {
             case TT_fullid:
-                printf("full.id\n");
+                printf("full.id %s\n", token->attr.str);
                 break;
             case TT_plus:
                 printf("+\n");
@@ -225,7 +243,7 @@ int show_token(int rc) {
                 break;
 
             case TT_id:
-                printf("identifier\n");
+                printf("identifier %s\n", token->attr.str );
                 break;
 
             case TT_keyword:
@@ -310,12 +328,6 @@ int show_token(int rc) {
     return rc;
 }
 #else
-void print_function(T_symbol *func) {
-    (void)func;
-}
-void print_table(T_symbol_table *st) {
-    (void)st;
-}
 void enter(const char *fi) {
     (void)fi;
 }

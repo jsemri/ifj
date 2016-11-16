@@ -27,14 +27,15 @@ unsigned hash(const char *key, unsigned size);
 T_symbol_table *table_init(unsigned size);
 
 /**
- * @brief search for symbol with `key` and member class `mclass`
+ * Search for symbol with `key` and member class `mclass`, also full
+ * identifier possible.
  *
  * @param stab pointer to symbol table
  * @param key identifier name
  * @param mclass pointer to a member class
  * @return Pointer to the searched symbol, NULL if symbol was not found.
  */
-T_symbol *table_find(T_symbol_table *stab, const char *key, T_symbol *mclass);
+T_symbol *table_find(T_symbol_table *stab, char *key, T_symbol *mclass);
 
 /**
  * @brief Inserts symbol item to symbol table.
