@@ -33,7 +33,7 @@ int is_next_eof() {
 }
 
 static char *get_str(const char *src) {
-    char *ptr = calloc(sizeof(src), 1);
+    char *ptr = calloc(strlen(src) + 1, 1);
     if (!ptr)
         terminate(INTERNAL_ERROR);
     strcpy(ptr, src);
