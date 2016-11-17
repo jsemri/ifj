@@ -36,7 +36,7 @@ T_prec_rule rules[RULES_COUNT] = {
 #define FAIL_RULE(code) do{*errcode = code; return NULL;} while (0)
 
 #define ADD_INSTR(type, dst, s1, s2) create_instr(expr_ilist, type, s1, s2, dst)
-#define CHECK_TYPE(symbol, type) (symbol->attr.var->data_type == type)
+#define CHECK_TYPE(symbol, type) ((symbol)->attr.var->data_type == type)
 
 T_symbol *execute_rule(T_prec_stack_entry terms[3], int count, int *errcode,
                        T_func_symbol *act_func, T_symbol *act_class,
@@ -64,21 +64,21 @@ static T_symbol *conv(T_symbol *in, T_data_type new_type, ilist *expr_ilist) {
     return out;
 }
 
-static T_data_type cast_nums(T_symbol *s1, T_symbol *s2, ilist *expr_ilist) {
-    if (CHECK_TYPE(s1, is_int) && CHECK_TYPE(s2, is_int))
+static T_data_type cast_nums(T_symbol **s1, T_symbol **s2, ilist *expr_ilist) {
+    if (CHECK_TYPE(*s1, is_int) && CHECK_TYPE(*s2, is_int))
         // Both operands are int, result will be int
         return is_int;
-    else if (CHECK_TYPE(s1, is_double) && CHECK_TYPE(s2, is_double))
+    else if (CHECK_TYPE(*s1, is_double) && CHECK_TYPE(*s2, is_double))
         // Both operands are double, result will be double
         return is_double;
-    else if (CHECK_TYPE(s1, is_int) && CHECK_TYPE(s2, is_double)) {
+    else if (CHECK_TYPE(*s1, is_int) && CHECK_TYPE(*s2, is_double)) {
         // First operand need to be casted to double
-        s1 = conv(s1, is_double, expr_ilist);
+        *s1 = conv(*s1, is_double, expr_ilist);
         return is_double;
     }
-    else if (CHECK_TYPE(s1, is_double) && CHECK_TYPE(s2, is_int)) {
+    else if (CHECK_TYPE(*s1, is_double) && CHECK_TYPE(*s2, is_int)) {
         // Second operand need to be casted to double
-        s2 = conv(s2, is_double, expr_ilist);
+        *s2 = conv(*s2, is_double, expr_ilist);
         return is_double;
     }
     else {
@@ -99,7 +99,7 @@ T_symbol *rule_bool(T_prec_stack_entry terms[3], int *errcode,
                     ilist *expr_ilist) {
     T_symbol *s1 = terms[0].ptr.symbol;
     T_symbol *s2 = terms[2].ptr.symbol;
-    T_data_type out_type = cast_nums(s1, s2, expr_ilist);
+    T_data_type out_type = cast_nums(&s1, &s2, expr_ilist);
     if (out_type == is_void) {
         // Input operands are not numbers
         FAIL_RULE(4);
@@ -158,7 +158,7 @@ T_symbol *rule_arith(T_prec_stack_entry terms[3], int *errcode,
                      ilist *expr_ilist) {
     T_symbol *s1 = terms[0].ptr.symbol;
     T_symbol *s2 = terms[2].ptr.symbol;
-    T_data_type out_type = cast_nums(s1, s2, expr_ilist);
+    T_data_type out_type = cast_nums(&s1, &s2, expr_ilist);
     if (out_type == is_void) {
         // Input operands are not numbers
         FAIL_RULE(4);
