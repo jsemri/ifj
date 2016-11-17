@@ -46,7 +46,6 @@ T_symbol *create_symbol(char *id, T_symbol_type stype)
 
 T_var_symbol *create_var_from_symbol(T_data_type dtype)
 {{{
-
     T_var_symbol *var = calloc(1, sizeof(T_var_symbol));
 
     if (!var) {
@@ -65,10 +64,53 @@ T_symbol *create_var(char *id, T_data_type dtype)
 }}}
 
 
+T_symbol *create_var_uniq(T_data_type dtype)
+{
+    static int uniq_var_counter = 0;
+    static int uniq_var_size = 2;
+    static int uniq_var_capacity = 16;
+
+    if (uniq_var_counter == uniq_var_capacity) {
+        uniq_var_counter -= uniq_var_capacity;
+        uniq_var_capacity *= 16;
+        uniq_var_size++;
+    }
+
+    char *str = malloc((size_t) uniq_var_size);
+    int rem = uniq_var_counter;
+    for (int i = uniq_var_size - 2; i >= 0; i--) {
+        str[i] = (char) ('a' + (rem & 15));
+        rem = rem >> 4;
+    }
+    str[uniq_var_size] = 0;
+    uniq_var_counter++;
+
+    return create_var(str, dtype);
+}
+
+
 T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype)
 {{{
 
+    // finding variable in local table
+    T_symbol *sym = is_defined_any(iden, local_tab, actual_class);
+
+    // checking data type
+    // int to double accepted
+    if (sym->attr.var->data_type == is_int && dtype == is_double)
+        return sym;
+
+    if (sym->attr.var->data_type != dtype) {
+        terminate(TYPE_ERROR);
+    }
+    return sym;
+}}}
+
+
+T_symbol *is_defined_any(char *iden, T_symbol_table *local_tab,
+                         T_symbol *actual_class)
+{{{
     // finding variable in local table
     T_symbol *sym = table_find(local_tab, iden, NULL);
     if (!sym || sym->symbol_type != is_var) {
@@ -79,15 +121,6 @@ T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
     // symbol is not variable or was not found
     if (!sym || sym->symbol_type != is_var) {
         terminate(DEFINITION_ERROR);
-    }
-
-    // checking data type
-    // int to double accepted
-    if (sym->attr.var->data_type == is_int && dtype == is_double)
-        return sym;
-
-    if (sym->attr.var->data_type != dtype) {
-        terminate(TYPE_ERROR);
     }
     return sym;
 }}}

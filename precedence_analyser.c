@@ -30,11 +30,6 @@ int precedence_analyser(token_vector v, T_symbol *lvalue,
     PUSH_SYMBOL(PREC_TOP);
     T_token *token = get_next_token(v);
 
-    if (!init_exp_table()) {
-        prec_stack_free(stack);
-        return 99;
-    }
-
     // TODO Vypnout krokování :)
     int steps = 1, max = 99;
     while (token != NULL || !prec_stack_is_empty(stack)) {

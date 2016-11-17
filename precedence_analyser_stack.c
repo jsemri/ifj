@@ -4,6 +4,8 @@
 
 #include "precedence_analyser_stack.h"
 #include "globals.h"
+#include "token.h"
+#include "symbol.h"
 #include <stdlib.h>
 
 #define INIT_CAPACITY 20
@@ -203,10 +205,10 @@ void prec_stack_print(T_prec_stack *stack_ptr) {
         }
         else if (type == PREC_EXP) {
             T_symbol *s = stack_ptr->data[i].ptr.symbol;
-            switch (s->data_type) {
+            switch (s->attr.var->data_type) {
                 case is_int:
                     printf("(%2d) Expression (int=%d)\n", i,
-                           s->attr.var->value.num);
+                           s->attr.var->value.n);
                     break;
                 case is_double:
                     printf("(%2d) Expression (double=%g)\n", i,

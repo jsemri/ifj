@@ -17,10 +17,6 @@ typedef enum {
     TI_sub,
     TI_mul,
     TI_div,
-    TI_add_dbl,     // arithmetic with floating-point numbers
-    TI_sub_dbl,
-    TI_mul_dbl,
-    TI_div_dbl,
     TI_concat,      // string concatenation
     TI_and,         // comparison/relational
     TI_or,
