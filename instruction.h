@@ -41,7 +41,7 @@ typedef enum {
     TI_compare,     // id/- id/v id/v
     TI_find,        // id/- id/v id/v
     TI_sort,        // id/- id/v -
-    TI_castIntDouble, // casts an int to double
+    TI_convert,     // casts int -> double, int/double -> string
 } T_instr_type;
 
 /// Structure of instruction.

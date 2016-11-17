@@ -13,9 +13,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define RULES_COUNT 12
+#define RULES_COUNT 7
 T_prec_rule rules[RULES_COUNT] = {
-    (T_prec_rule) {3, TT_empty, TT_plus, TT_empty, rule_arith},
+    (T_prec_rule) {3, TT_empty, TT_plus, TT_empty, rule_concat},
     (T_prec_rule) {3, TT_empty, TT_minus, TT_empty, rule_arith},
     (T_prec_rule) {3, TT_empty, TT_div, TT_empty, rule_arith},
     (T_prec_rule) {3, TT_empty, TT_mul, TT_empty, rule_arith},
@@ -36,6 +36,7 @@ T_prec_rule rules[RULES_COUNT] = {
 #define FAIL_RULE(code) do{*errcode = code; return NULL;} while (0)
 
 #define ADD_INSTR(type, dst, s1, s2) create_instr(expr_ilist, type, s1, s2, dst)
+#define CHECK_TYPE(symbol, type) (symbol->attr.var->data_type == type)
 
 T_symbol *execute_rule(T_prec_stack_entry terms[3], int count, int *errcode,
                        T_func_symbol *act_func, T_symbol *act_class,
@@ -53,13 +54,37 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count, int *errcode,
     FAIL_RULE(2);
 }
 
-static T_symbol *conv_int_to_double(T_symbol *in, int *errcode,
-                                    ilist *expr_ilist) {
+static T_symbol *conv(T_symbol *in, T_data_type new_type, ilist *expr_ilist) {
     // TODO Udělat všude
-    T_symbol *out = create_var_uniq(is_double);
+    T_symbol *out = create_var_uniq(new_type);
 
-    ADD_INSTR(TI_castIntDouble, out, in, NULL);
-    printf("[INST] Přetypování int->float\n");
+    ADD_INSTR(TI_convert, out, in, NULL);
+    printf("[INST] Přetypování\n");
+
+    return out;
+}
+
+T_symbol *rule_concat(T_prec_stack_entry terms[3], int *errcode,
+                      T_func_symbol *act_func, T_symbol *act_class,
+                      ilist *expr_ilist) {
+    T_symbol *s1 = terms[0].ptr.symbol;
+    T_symbol *s2 = terms[2].ptr.symbol;
+
+    if (!CHECK_TYPE(s1, is_str) && !CHECK_TYPE(s2, is_str))
+        return rule_arith(terms, errcode, act_func, act_class, expr_ilist);
+
+    if (CHECK_TYPE(s1, is_int) || CHECK_TYPE(s1, is_double))
+        s1 = conv(s1, is_str, expr_ilist);
+    if (CHECK_TYPE(s2, is_int) || CHECK_TYPE(s2, is_double))
+        s2 = conv(s2, is_str, expr_ilist);
+
+    if (!CHECK_TYPE(s1, is_str) || !CHECK_TYPE(s2, is_str))
+        // Operands can't be converted to String
+        FAIL_RULE(4);
+
+    T_symbol *out = create_var_uniq(is_str);
+    printf("[INST] Spojení řetězců\n");
+    ADD_INSTR(TI_concat, out, s1, s2);
 
     return out;
 }
@@ -70,28 +95,20 @@ T_symbol *rule_arith(T_prec_stack_entry terms[3], int *errcode,
     T_symbol *s1 = terms[0].ptr.symbol;
     T_symbol *s2 = terms[2].ptr.symbol;
     T_data_type out_type;
-    if (s1->attr.var->data_type == is_int
-            && s2->attr.var->data_type == is_int)
+    if (CHECK_TYPE(s1, is_int) && CHECK_TYPE(s2,is_int))
         // Both operands are int, result will be int
         out_type = is_int;
-    else if (s1->attr.var->data_type == is_double
-             && s2->attr.var->data_type == is_double)
+    else if (CHECK_TYPE(s1, is_double) && CHECK_TYPE(s2,is_double))
         // Both operands are double, result will be double
         out_type = is_double;
-    else if (s1->attr.var->data_type == is_int
-             && s2->attr.var->data_type == is_double) {
+    else if (CHECK_TYPE(s1, is_int) && CHECK_TYPE(s2,is_double)) {
         // First operand need to be casted to double
-        s1 = conv_int_to_double(s1, errcode, expr_ilist);
-        if (s1 == NULL)
-            FAIL_RULE(99);
+        s1 = conv(s1, is_double, expr_ilist);
         out_type = is_double;
     }
-    else if (s1->attr.var->data_type == is_double
-             && s2->attr.var->data_type == is_int) {
+    else if (CHECK_TYPE(s1, is_double) && CHECK_TYPE(s2,is_int)) {
         // Second operand need to be casted to double
-        s2 = conv_int_to_double(s2, errcode, expr_ilist);
-        if (s2 == NULL)
-            FAIL_RULE(99);
+        s2 = conv(s2, is_double, expr_ilist);
         out_type = is_double;
     }
     else {
@@ -123,6 +140,7 @@ T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3], int *errcode,
                         T_func_symbol *act_func, T_symbol *act_class,
                         ilist *expr_ilist) {
     if (terms[0].ptr.token->type == TT_id) {
+        // TODO je i inicializovaná?
         return is_defined(terms[0].ptr.token->attr.str, act_func->local_table,
                           act_class, is_void);
     }
