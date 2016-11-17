@@ -24,6 +24,10 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count, int *errcode,
 
 bool init_exp_table();
 
+T_symbol *rule_brackets(T_prec_stack_entry terms[3], int *errcode,
+                        T_func_symbol *act_func, T_symbol *act_class,
+                        ilist *expr_ilist);
+
 T_symbol *rule_bool(T_prec_stack_entry terms[3], int *errcode,
                     T_func_symbol *act_func, T_symbol *act_class,
                     ilist *expr_ilist);

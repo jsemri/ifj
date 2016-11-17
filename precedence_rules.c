@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define RULES_COUNT 13
+#define RULES_COUNT 14
 T_prec_rule rules[RULES_COUNT] = {
     (T_prec_rule) {3, TT_empty, TT_plus, TT_empty, rule_concat},
     (T_prec_rule) {3, TT_empty, TT_minus, TT_empty, rule_arith},
@@ -25,7 +25,7 @@ T_prec_rule rules[RULES_COUNT] = {
     (T_prec_rule) {3, TT_empty, TT_greater, TT_empty, rule_bool},
     (T_prec_rule) {3, TT_empty, TT_lessEq, TT_empty, rule_bool},
     (T_prec_rule) {3, TT_empty, TT_greatEq, TT_empty, rule_bool},
-    //(T_prec_rule) {3, TT_lBracket, TT_empty, TT_rBracket, rule_add},
+    (T_prec_rule) {3, TT_lBracket, TT_empty, TT_rBracket, rule_brackets},
     (T_prec_rule) {1, TT_id, TT_empty, TT_empty, rule_i_to_exp},
     (T_prec_rule) {1, TT_int, TT_empty, TT_empty, rule_i_to_exp},
     (T_prec_rule) {1, TT_double, TT_empty, TT_empty, rule_i_to_exp},
@@ -86,6 +86,13 @@ static T_data_type cast_nums(T_symbol *s1, T_symbol *s2, ilist *expr_ilist) {
         return is_void;
     }
 }
+
+T_symbol *rule_brackets(T_prec_stack_entry terms[3], int *errcode,
+                        T_func_symbol *act_func, T_symbol *act_class,
+                        ilist *expr_ilist) {
+    return terms[1].ptr.symbol;
+}
+
 
 T_symbol *rule_bool(T_prec_stack_entry terms[3], int *errcode,
                     T_func_symbol *act_func, T_symbol *act_class,
