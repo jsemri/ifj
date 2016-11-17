@@ -47,7 +47,6 @@ T_symbol *create_symbol(char *id, T_symbol_type stype)
 
 T_var_symbol *create_var_from_symbol(T_data_type dtype)
 {{{
-
     T_var_symbol *var = calloc(1, sizeof(T_var_symbol));
 
     if (!var) {
@@ -66,6 +65,30 @@ T_symbol *create_var(char *id, T_data_type dtype)
 }}}
 
 
+T_symbol *create_var_uniq(T_data_type dtype)
+{
+    static int uniq_var_counter = 0;
+    static int uniq_var_size = 2;
+    static int uniq_var_capacity = 16;
+
+    if (uniq_var_counter == uniq_var_capacity) {
+        uniq_var_counter -= uniq_var_capacity;
+        uniq_var_capacity *= 16;
+        uniq_var_size++;
+    }
+
+    char *str = malloc((size_t) uniq_var_size);
+    int rem = uniq_var_counter;
+    for (int i = uniq_var_size - 2; i >= 0; i--) {
+        str[i] = (char) ('a' + (rem & 15));
+        rem = rem >> 4;
+    }
+    str[uniq_var_size] = 0;
+    uniq_var_counter++;
+
+    return create_var(str, dtype);
+}
+
 T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype)
 {{{
@@ -83,7 +106,7 @@ T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
         terminate(DEFINITION_ERROR);
     }
 
-     // XXX variable cannot be void
+    // XXX variable cannot be void
     // this flag is used if we do not care about data type
     if (dtype == is_void)
         return sym;
@@ -109,7 +132,7 @@ T_symbol *add_constant(T_value value, struct T_Hash_symbol_table *symbol_tab,
     // creating a identifier name for constant
     if (dtype == is_int)
         snprintf(buf, 1023, "%d", value.n);
-    else if (dtype == is_int)
+    else if (dtype == is_double)
         snprintf(buf, 1023, "%g", value.d);
     else
         snprintf(buf, 1023, "%s", value.str);      // TODO do it other way

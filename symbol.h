@@ -65,10 +65,19 @@ T_symbol *create_symbol(char *id, T_symbol_type stype);
 /**
  * @brief Creates a symbol - variable.
  *
+ * @param id Name of the variable
  * @param dtype data type
  * @return valid pointer on success
  */
 T_symbol *create_var(char *id, T_data_type dtype);
+
+/**
+ * @brief Creates a symbol - variable with an arbitrary name.
+ *
+ * @param dtype data type
+ * @return valid pointer on success
+ */
+T_symbol *create_var_uniq(T_data_type dtype);
 
 /**
  * @brief Creates a variable.
@@ -87,7 +96,7 @@ T_var_symbol *create_var_from_symbol(T_data_type dtype);
 T_func_symbol *create_func(T_data_type dtype);
 
 /**
- * Searches for variable(also full identifier possible)with specific
+ * Searches for variable (also full identifier is possible) with specific
  * name and data type. Just for type and definition control.
  *
  * @param iden variable identifier
