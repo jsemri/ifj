@@ -107,6 +107,53 @@ static char *arr_ifj16[] = {
     "length",  "substr", "compare", "find", "sort"
 };
 
+
+#define is_par(t) (t->type == TT_id || t->type == TT_fullid ||\
+                   t->type == TT_string || t->type == TT_int || \
+                   t->type == TT_double)
+#define is_comma(t) (t->type == TT_comma)
+#define is_rbrac(t) (t->type == TT_rBracket)
+
+void check_par_syntax(T_token *it, int tcount, int exp_toks)
+{{{
+
+    int state = 0;
+    while (tcount >= 0) {
+        tcount--;
+        exp_toks--;
+        switch (state) {
+            case 0:
+                if (is_par(it))
+                    state = 1;
+                else if (is_rbrac(it))
+                    state = 3;
+                else 
+                    terminate(SYNTAX_ERROR);
+                break;
+            case 1:
+                if (is_comma(it))
+                    state = 2;
+                else if(is_rbrac(it))
+                    state = 3;
+                else
+                    terminate(SYNTAX_ERROR);
+                break;
+            case 2:
+                if (is_par(it))
+                    state = 1;
+                else
+                    terminate(SYNTAX_ERROR);
+                break;
+            case 3:
+                if (tcount != exp_toks)
+                    terminate(TYPE_ERROR);
+                break; 
+        }
+        it++;
+    }
+
+}}}
+
 /**
  *
  * Proceed a build-in functions.
@@ -122,8 +169,8 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     T_symbol_table *local_tab)
 {{{
     // magic constant 3 - minimal count of tokens
-    if (tcount < 3)
-        terminate(SYNTAX_ERROR);
+/*    if (tcount < 3)
+        terminate(SYNTAX_ERROR);*/
     // getting function name
     char *func_id = strchr(it->attr.str, '.') + 1;
     int i;
@@ -137,11 +184,14 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
         case b_readS:
             {{{
                 // no parameters
-                if (tcount != 3 || it->type != TT_rBracket) {
+                check_par_syntax(it, tcount - 2, 1);
+        /*        if (tcount != 3 || it->type != TT_rBracket) {
                     terminate(TYPE_ERROR);
-                }
+                }*/
                 // a = readInt();
                 T_data_type dtype;
+                dtype = i == b_readI ? is_int : is_double;
+                dtype = i == b_readS ? is_str : dtype;
                 if (dest)
                     dtype = dest->attr.var->data_type;
                 // XXX double a = readInt
@@ -156,19 +206,18 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 }
                 else
                     terminate(TYPE_ERROR);
-                return 0;
 
-                break;
+                return 0;
             }}}
         case b_print:
-            // TODO push push push ...
-            break;
 
 
         case b_length:
         case b_sort:
             // str (str) | int (str)
             {{{
+                check_par_syntax(it, tcount - 2, 2);
+
                 T_symbol *sym;
                 T_instr_type ins = i == b_sort ? TI_sort : TI_length;
                 // checking destination data type if any
@@ -180,9 +229,6 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                         terminate(TYPE_ERROR);
                     }
                 }
-                // id ( p1 )
-                if (tcount != 4)
-                    terminate(TYPE_ERROR);
                 // checking string variable
                 if (it->type == TT_id || it->type == TT_fullid) {
                     // checking type and if it was defined
@@ -197,12 +243,14 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 else
                     terminate(TYPE_ERROR);
 
-                break;
+                return 0;
             }}}
         case b_find:
         case b_compare:
             // int (str, str)
             {{{
+
+                check_par_syntax(it, tcount - 2, 4);
                 T_symbol *sym1, *sym2;
                 // checking data type
                 if (dest) {
@@ -213,11 +261,6 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     }
                 }
 
-                // four tokens required
-                // id ( p1 , p2 )
-                if (tcount != 6) {
-                    terminate(TYPE_ERROR);
-                }
                 // second argument
                 T_token *it2 = it + 2;
                 // setting instruction
@@ -245,25 +288,19 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
 
                 // creating instruction
                 create_instr(L, ins, dest, sym1, sym2);
-                it = it2; // moving to last argument
-                break;
+                return 0;
             }}}
         case b_substr:
             // TODO I need stack
             {{{
 
 
-                break;
+                return 0;
             }}}
         default:
             terminate(DEFINITION_ERROR);
     }
-    // too many parameters TODO check id next is id or constant
-    it++; // moving to ')'
-    if (it->type == TT_comma)
-        terminate(TYPE_ERROR);
-    // no bracket found - syntax errors
-    return it->type == TT_rBracket ? 0: (terminate(SYNTAX_ERROR), 1);
+    return 0;
 }}}
 
 /**
@@ -305,17 +342,13 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
             terminate(TYPE_ERROR);
     }
 
-    // id ( 2*par-1  )
-    // number of parameters must fit
-    if ( (pcount == 0 && tcount != 3) ||
-         (tcount != (3 + pcount*2 - 1)) ) {
-        terminate(TYPE_ERROR);
-    }
-
     // parameters
     T_symbol **pars = (T_symbol**)sym->attr.func->arguments;
     // handling parameters
     it++;it++;  // skipping function id and '('
+    unsigned exp_tc = pcount > 1 ? 2*pcount : pcount + 1;
+    check_par_syntax(it, tcount - 2, exp_tc);
+
     for (unsigned j = 0; j < pcount;j++) {
         // parameter
         T_symbol *sym;
@@ -339,30 +372,12 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
             sym = add_constant( it->attr, symbol_tab, is_double);
         }
         else {
-            terminate(TYPE_ERROR); // XXX or another error code ?
+            terminate(TYPE_ERROR);
         }
 
         create_instr(L, TI_push_param, sym, NULL, NULL);
-        // TODO insert instruction push_param
-        // going for comma or ')'
-        it++;
-        // ')' and last parameter
-        // TODO differ syntax and type errors
-        if (it->type == TT_rBracket && (j + 1) == pcount) {
-            break;
-        }
-        else if (it->type != TT_comma) {
-            terminate(SYNTAX_ERROR);
-        }
-        else {
-            // next parameter or right bracket
-            it++;
-        }
-    }
-    // function call must end with ')'
-    if (it->type != TT_rBracket)
-        return SYNTAX_ERROR;
-    // TODO insert instruction CALL
+   }
+   // TODO insert instruction CALL
     return 0;
 }}}
 
