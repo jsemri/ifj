@@ -6,13 +6,17 @@
 #include "instruction.h"
 #include "symbol.h"
 #include "ilist.h"
+#include "stack.h"
 #include <stdlib.h>
+#include <stdbool.h>
 
 ilist *instr_list;
 T_symbol_table *symbol_tab;
 FILE *source;
 T_token *token;
 token_vector global_token_vector;
+T_stack *frame_stack;
+T_stack *main_stack;
 
 struct T_pool pool = {NULL, NULL, 0};
 #define POOL_SIZE 100
@@ -71,6 +75,8 @@ void terminate(int err_code) {
     token_free(&token);
     if (global_token_vector)
         token_vec_delete(global_token_vector);
+    stack_remove(&frame_stack, true);
+    stack_remove(&main_stack, false);
     fclose(source);
     list_free(&instr_list);
     table_remove(&symbol_tab);
