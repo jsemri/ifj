@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ial.h"
+#include "debug.h"
 
 // initialization of symbol table
 T_symbol_table *table_init(unsigned size)
@@ -44,6 +45,22 @@ unsigned hash(const char *key, unsigned size)
 }}}
 
 
+T_symbol *table_find_simple(T_symbol_table *stab, char *key, T_symbol *mclass)
+{{{
+    unsigned index = hash(key, stab->size);
+    T_symbol* item = stab->arr[index];
+
+    while (item != NULL) {
+        // member class and identifiers have to be same
+        if (strcmp(item->id,key) == 0 && item->member_class == mclass) {
+            return item;
+        }
+        item = item->next;
+    }
+    return item;
+}}}
+
+
 // search for symbol with `key`
 // returns a pointer to the searched symbol
 // returns NULL if symbol was not found
@@ -57,30 +74,28 @@ T_symbol *table_find(T_symbol_table *stab, char *key, T_symbol *mclass)
         // dividing key to two strings
         *dotptr = 0;
         // class identifier
-        char *mclass = key;
+        char *str_class = key;
         // instance identifier
-        char *inst = key + strlen(mclass) + 1;
+        char *str_inst = key + strlen(str_class) + 1;
         // if ifj16 found return class ifj16
-        if (!strcmp(mclass, "ifj16")) {
+        if (!strcmp(str_class, "ifj16")) {
             *dotptr = '.';
-            return table_find(stab, "ifj16", NULL);
+            return table_find_simple(stab, "ifj16", NULL);
         }
-        T_symbol *item = table_find(stab, inst, table_find(stab, mclass, NULL));
+        // searching for class, id = mclass
+        T_symbol *sym_class = table_find_simple(stab, str_class, NULL);
+        // class not found
+        if (!sym_class) {
+            *dotptr = '.';
+            return NULL;
+        }
+        // searching for variable in class `sym_class`
+        T_symbol *item = table_find_simple(stab, str_inst, sym_class);
         *dotptr = '.';
         return item;
     }
     else {
-        unsigned index = hash(key, stab->size);
-        T_symbol* item = stab->arr[index];
-
-        while (item != NULL) {
-            // member class and identifiers have to be same
-            if (strcmp(item->id,key) == 0 && item->member_class == mclass) {
-                return item;
-            }
-            item = item->next;
-        }
-        return item;
+        return table_find_simple(stab, key, mclass);
     }
 }}}
 
