@@ -37,6 +37,8 @@ T_symbol_table *table_init(unsigned size);
  */
 T_symbol *table_find(T_symbol_table *stab, char *key, T_symbol *mclass);
 
+T_symbol *table_find_simple(T_symbol_table *stab, char *key, T_symbol *mclass);
+
 /**
  * @brief Inserts symbol item to symbol table.
  *

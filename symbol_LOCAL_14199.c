@@ -9,8 +9,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
-#include "debug.h"
-// global symbol table
+
 T_symbol_table *symbol_tab;
 
 T_func_symbol *create_func(T_data_type dtype)
@@ -89,27 +88,13 @@ T_symbol *create_var_uniq(T_data_type dtype)
     return create_var(str, dtype);
 }
 
+
 T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype)
 {{{
 
     // finding variable in local table
-    T_symbol *sym = table_find_simple(local_tab, iden, NULL);
-
-    if (!sym || sym->symbol_type != is_var) {
-        // variable not found in local table
-        sym = table_find(symbol_tab, iden, actual_class);
-    }
-
-    // symbol is not variable or was not found
-    if (!sym || sym->symbol_type != is_var) {
-        terminate(DEFINITION_ERROR);
-    }
-
-    // XXX variable cannot be void
-    // this flag is used if we do not care about data type
-    if (dtype == is_void)
-        return sym;
+    T_symbol *sym = is_defined_any(iden, local_tab, actual_class);
 
     // checking data type
     // int to double accepted
@@ -118,6 +103,24 @@ T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
 
     if (sym->attr.var->data_type != dtype) {
         terminate(TYPE_ERROR);
+    }
+    return sym;
+}}}
+
+
+T_symbol *is_defined_any(char *iden, T_symbol_table *local_tab,
+                         T_symbol *actual_class)
+{{{
+    // finding variable in local table
+    T_symbol *sym = table_find(local_tab, iden, NULL);
+    if (!sym || sym->symbol_type != is_var) {
+        // variable not found in local table
+        sym = table_find(symbol_tab, iden, actual_class);
+    }
+
+    // symbol is not variable or was not found
+    if (!sym || sym->symbol_type != is_var) {
+        terminate(DEFINITION_ERROR);
     }
     return sym;
 }}}
@@ -131,13 +134,13 @@ T_symbol *add_constant(T_value value, struct T_Hash_symbol_table *symbol_tab,
 
     // creating a identifier name for constant
     if (dtype == is_int)
-        snprintf(buf, 1023, "%d", value.n);
+        sprintf(buf, "127%d", value.n);
     else if (dtype == is_int)
-        snprintf(buf, 1023, "%g", value.d);
+        sprintf(buf, "127%g", value.d);
     else
-        snprintf(buf, 1023, "%s", value.str);      // TODO do it other way
+        sprintf(buf, "127%s", value.str);
 
-    T_symbol *sym = table_find_simple(symbol_tab, buf, NULL);
+    T_symbol *sym = table_find(symbol_tab, buf, NULL);
     // constant already in table, return pointer on it
     if (sym && sym->attr.var->data_type == dtype)
         return sym;

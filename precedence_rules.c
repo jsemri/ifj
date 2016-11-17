@@ -123,9 +123,8 @@ T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3], int *errcode,
                         T_func_symbol *act_func, T_symbol *act_class,
                         ilist *expr_ilist) {
     if (terms[0].ptr.token->type == TT_id) {
-        // TODO Untested!
-        return is_defined_any(terms[0].ptr.token->attr.str,
-                              act_func->local_table, act_class);
+        return is_defined(terms[0].ptr.token->attr.str, act_func->local_table,
+                          act_class, is_void);
     }
 
     if (terms[0].ptr.token->type == TT_int) {

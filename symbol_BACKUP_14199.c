@@ -89,13 +89,36 @@ T_symbol *create_var_uniq(T_data_type dtype)
     return create_var(str, dtype);
 }
 
+
 T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype)
 {{{
 
     // finding variable in local table
+<<<<<<< HEAD
+    T_symbol *sym = is_defined_any(iden, local_tab, actual_class);
+
+    // checking data type
+    // int to double accepted
+    if (sym->attr.var->data_type == is_int && dtype == is_double)
+        return sym;
+
+    if (sym->attr.var->data_type != dtype) {
+        terminate(TYPE_ERROR);
+    }
+    return sym;
+}}}
+
+
+T_symbol *is_defined_any(char *iden, T_symbol_table *local_tab,
+                         T_symbol *actual_class)
+{{{
+    // finding variable in local table
+    T_symbol *sym = table_find(local_tab, iden, NULL);
+=======
     T_symbol *sym = table_find_simple(local_tab, iden, NULL);
 
+>>>>>>> a55845cb25c048b0b759df38dad7c6f2754e05c5
     if (!sym || sym->symbol_type != is_var) {
         // variable not found in local table
         sym = table_find(symbol_tab, iden, actual_class);
@@ -105,8 +128,10 @@ T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
     if (!sym || sym->symbol_type != is_var) {
         terminate(DEFINITION_ERROR);
     }
+<<<<<<< HEAD
+=======
 
-    // XXX variable cannot be void
+     // XXX variable cannot be void
     // this flag is used if we do not care about data type
     if (dtype == is_void)
         return sym;
@@ -119,6 +144,7 @@ T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
     if (sym->attr.var->data_type != dtype) {
         terminate(TYPE_ERROR);
     }
+>>>>>>> a55845cb25c048b0b759df38dad7c6f2754e05c5
     return sym;
 }}}
 

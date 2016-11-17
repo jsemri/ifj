@@ -9,8 +9,8 @@
 #define GROWTH      8
 
 T_stack *stack_init() {
-    T_stack *stack = alloc(sizeof(T_stack));
-    stack->data = malloc(INIT_SIZE*sizeof(void*));
+    T_stack *stack = calloc(1, sizeof(T_stack));
+    stack->data = calloc(INIT_SIZE, sizeof(void*));
     stack->used = 0;
     stack->size = INIT_SIZE - 1;
     return stack;
@@ -34,15 +34,19 @@ void stack_pop(T_stack *stack) {
         stack->data[stack->used--] = NULL;
 }
 
+bool is_empty(T_stack *stack) {
+    return !stack->used;
+}
+
 void stack_remove(T_stack **stack, bool is_frame_stack) {
     if (*stack) {
         if (is_frame_stack) {
-            // TODO delete all frames
-            for (unsigned i = 0;i <= (*stack)->used;i++) {
+            while (!is_empty(*stack)) {
                 // remove frame
-                T_func_symbol *frame = (*stack)->data[i];
+                T_func_symbol *frame = stack_top(*stack);
                 local_table_remove(&frame->local_table);
                 free(frame);
+                stack_pop(*stack);
             }
         }
         free((*stack)->data);

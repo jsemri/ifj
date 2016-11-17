@@ -110,18 +110,6 @@ T_symbol *is_defined(char *iden, struct T_Hash_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype);
 
 /**
- * Searches for variable (also full identifier is possible) with specific
- * name. Just for definition control.
- *
- * @param iden variable identifier
- * @param local_tab local table of function, body of actual function
- * @param actual_class body of actual class
- * @return pointer to symbol
- */
-T_symbol *is_defined_any(char *iden, struct T_Hash_symbol_table *local_tab,
-                         T_symbol *actual_class);
-
-/**
  * Creates a variable, a constant, and inserts it to symbol table.
  * Variable name is also it's value. In attempt to insert existing
  * constant of same data type, pointer to existing constant is returned.
