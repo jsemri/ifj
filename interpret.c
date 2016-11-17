@@ -5,9 +5,11 @@
 #include "symbol.h"
 #include <string.h>
 #include <stdlib.h>
+#include "ilist.h"
 
 T_stack *frame_stack;
 T_stack *main_stack;
+ilist *instr_list;
 
 void create_frame(T_symbol *func, T_stack *stack)
 {{{
@@ -55,8 +57,19 @@ T_symbol *find_var(T_symbol *var)
 void interpret_loop()
 {{{
 
+    T_instr *ins = instr_list->first;
+    while (ins != NULL) {
 
+        switch (ins->itype) {
+            case TI_mov:
 
+            case TI_add:
+
+            default:
+                break;
+        }
+        ins = ins->next;
+    }
 
 
 
@@ -65,6 +78,11 @@ void interpret_loop()
 
 void interpret()
 {{{
+    frame_stack = stack_init();
+    main_stack = stack_init();
 
     interpret_loop();
+
+    stack_remove(&frame_stack, true);
+    stack_remove(&main_stack, false);
 }}}

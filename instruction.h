@@ -48,18 +48,9 @@ typedef enum {
     TI_castIntDouble, // casts an int to double
 } T_instr_type;
 
-// instruction mode, may be it won't be used
-typedef enum {
-    TM_noconst,     // no constant
-    TM_const1,      // first operand is constant
-    TM_const2,      // second constant
-    TM_const_all,   // first and second...
-} T_instr_mode;
-
 /// Structure of instruction.
 typedef struct T_instruction {
     T_instr_type itype;          // instruction type
-    T_instr_mode imode;          // instruction mode
     void *op1;                   // first operand
     void *op2;                   // second operand
     void *dest;                  // result destination

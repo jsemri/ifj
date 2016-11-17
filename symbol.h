@@ -114,14 +114,6 @@ T_symbol *add_constant(T_value value, struct T_Hash_symbol_table*,
                        T_data_type dtype);
 
 /**
- * @brief Copies symbol table and puts it on stack.
- *
- * @param sym_tab source symbol table
- * @return pointer to new symbol table
- */
-struct T_Hash_symbol_table *table_copy(const struct T_Hash_symbol_table *sym_tab);
-
-/**
  * @brief Deletes whole table and sets it's pointer to NULL.
  *
  * @param loc_stab pointer to symbol table
