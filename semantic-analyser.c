@@ -121,7 +121,6 @@ static char *arr_ifj16[] = {
 int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     T_symbol_table *local_tab)
 {{{
-//    printf("%d %s\n", tcount, it->attr.str);
     // magic constant 3 - minimal count of tokens
     if (tcount < 3)
         terminate(SYNTAX_ERROR);
@@ -152,11 +151,11 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 else if (i == b_readD && dtype == is_double) {
                     create_instr(L, TI_readDouble, dest, NULL, NULL);
                 }
-                else if (i == b_readD && dtype == is_str) {
+                else if (i == b_readS && dtype == is_str) {
                     create_instr(L, TI_readString, dest, NULL, NULL);
                 }
                 else
-                    return TYPE_ERROR;
+                    terminate(TYPE_ERROR);
                 return 0;
 
                 break;
@@ -370,7 +369,7 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
 bool check_if_func(T_token *it)
 {{{
     return ((it->type == TT_id || it->type == TT_fullid) &&
-                (it+1)->type == TT_rBracket);
+                (it+1)->type == TT_lBracket);
 }}}
 
 /******************************************************
@@ -700,7 +699,7 @@ static int stat(T_symbol_table *local_tab)
         T_symbol *loc_sym, *glob_sym;    // local and global symbol
 
         // checking whether it was defined
-        loc_sym = table_find(local_tab, iden, NULL);    // local var
+        loc_sym = table_find_simple(local_tab, iden, NULL);    // local var
         glob_sym = table_find(symbol_tab, iden, actual_class); // static
 
         // undefined reference
@@ -720,7 +719,7 @@ static int stat(T_symbol_table *local_tab)
             // go after expression or function
             it++;
             // id = id ( )
-            if (tv->last > 5 && check_if_func(it) ) {
+            if (tv->last >= 5 && check_if_func(it) ) {
                 // token count
                 unsigned tcount = tv->last - 2;
                 handle_function(it, tcount, instr_list, sym, local_tab);
