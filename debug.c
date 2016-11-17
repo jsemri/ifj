@@ -4,6 +4,57 @@
 #include <string.h>
 #include <stdio.h>
 #include "ial.h"
+#include "instruction.h"
+
+
+static char *ins_arr[] = {
+        "STOP", "MOV", "ADD", "SUB", "MUL", "DIV",
+        "CONCAT", "AND", "OR", "NOT", "EQUAL", "NOTEQ",
+        "LESS", "LESSEQ", "GREATER", "GREATEREQ", "JMP",
+        "JMPZ", "RET", "CALL", "PUSH_PAR", "READINT", "READDOUBLE",
+        "READSTR", "PRINT", "LENGTH", "SUBSTR", "COMPARE", "FIND",
+        "SORT"
+};
+
+void print_instr(T_instr *ins) {
+    if (ins) {
+        printf("|%s|", ins_arr[ins->itype] );
+        if (ins->dest) {
+            if (((T_symbol*)(ins->dest))->member_class)
+                printf("|%s.%s|", ((T_symbol*)(ins->dest))->member_class->id,
+                                ((T_symbol*)(ins->dest))->id);
+            else
+                printf("|%s|",((T_symbol*)(ins->dest))->id);
+        }
+        else
+            printf(" |-| ");
+
+        if (ins->op1) {
+            if (((T_symbol*)(ins->op1))->member_class)
+                printf("|%s.%s|", ((T_symbol*)(ins->op1))->member_class->id,
+                                ((T_symbol*)(ins->op1))->id);
+            else
+                printf("|%s|",((T_symbol*)(ins->op1))->id);
+
+        }
+        else
+            printf(" |-| ");
+
+        if (ins->op2) {
+            if (((T_symbol*)(ins->op2))->member_class)
+                printf("|%s.%s|\n", ((T_symbol*)(ins->op2))->member_class->id,
+                                ((T_symbol*)(ins->op2))->id);
+            else
+                printf("|%s|\n",((T_symbol*)(ins->op2))->id);
+        }
+        else
+            printf(" |-|\n");
+    }
+    else {
+        printf("NULL\n");
+    }
+}
+
 
 #ifdef DEBUG_TABLES
 static char *arr[] = {"class", "func", "var"};
@@ -20,7 +71,7 @@ void print_function(T_symbol *func) {
         printf(
             "%s %s\n",
             dtypes[s->attr.var->data_type],
-            s->id 
+            s->id
             );
     }
     printf("===LOCAL TABLE===\n");
