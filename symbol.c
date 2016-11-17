@@ -132,7 +132,7 @@ T_symbol *add_constant(T_value value, struct T_Hash_symbol_table *symbol_tab,
     // creating a identifier name for constant
     if (dtype == is_int)
         snprintf(buf, 1023, "%d", value.n);
-    else if (dtype == is_int)
+    else if (dtype == is_double)
         snprintf(buf, 1023, "%g", value.d);
     else
         snprintf(buf, 1023, "%s", value.str);      // TODO do it other way
