@@ -111,8 +111,14 @@ static char *arr_ifj16[] = {
 #define is_par(t) (t->type == TT_id || t->type == TT_fullid ||\
                    t->type == TT_string || t->type == TT_int || \
                    t->type == TT_double)
+
+#define is_const(t) (t->type == TT_string || t->type == TT_int || \
+                     t->type == TT_double)
+
+#define is_iden(t) (t->type == TT_id || t->type == TT_fullid)
 #define is_comma(t) (t->type == TT_comma)
 #define is_rbrac(t) (t->type == TT_rBracket)
+#define is_plus(t) (t->type == TT_plus)
 
 void check_par_syntax(T_token *it, int tcount, int exp_toks)
 {{{
@@ -127,7 +133,7 @@ void check_par_syntax(T_token *it, int tcount, int exp_toks)
                     state = 1;
                 else if (is_rbrac(it))
                     state = 3;
-                else 
+                else
                     terminate(SYNTAX_ERROR);
                 break;
             case 1:
@@ -147,7 +153,7 @@ void check_par_syntax(T_token *it, int tcount, int exp_toks)
             case 3:
                 if (tcount != exp_toks)
                     terminate(TYPE_ERROR);
-                break; 
+                break;
         }
         it++;
     }
@@ -194,15 +200,14 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 dtype = i == b_readS ? is_str : dtype;
                 if (dest)
                     dtype = dest->attr.var->data_type;
-                // XXX double a = readInt
-                if (i == b_readI && (dtype == is_int || dtype == is_double )) {
-                    create_instr(L, TI_readInt, dest, NULL, NULL);
+                if (i == b_readI && dtype != is_str) {
+                    create_instr(L, TI_readString, NULL, NULL, dest);
                 }
                 else if (i == b_readD && dtype == is_double) {
-                    create_instr(L, TI_readDouble, dest, NULL, NULL);
+                    create_instr(L, TI_readString, NULL, NULL, dest);
                 }
                 else if (i == b_readS && dtype == is_str) {
-                    create_instr(L, TI_readString, dest, NULL, NULL);
+                    create_instr(L, TI_readString, NULL, NULL, dest);
                 }
                 else
                     terminate(TYPE_ERROR);
@@ -210,8 +215,46 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 return 0;
             }}}
         case b_print:
+            {{{
+                // token count excluding `id (`
+                tcount -= 2;
+                T_symbol *sym;
+                // print() - no parameters
+                if (is_rbrac(it) || dest)
+                    terminate(TYPE_ERROR);
 
-
+                tcount--;
+                while (tcount > 0 ) {
+                    if (is_iden(it)) {
+                        sym = is_defined(it->attr.str, local_tab,
+                                               actual_class, is_void);
+                    }
+                    else if (is_const(it)) {
+                        sym = add_constant(it->attr, symbol_tab, is_str);
+                    }
+                    else {
+                        terminate(SYNTAX_ERROR);
+                    }
+                    create_instr(L, TI_push_param, sym, NULL, NULL);
+                    it++;
+                    tcount--;
+                    // token = '+' and is not last
+                    if (is_plus(it) && tcount > 1) {
+                        tcount--;
+                        it++;
+                    }
+                    else if (is_rbrac(it) && tcount == 0) {
+                        break;
+                    }
+                    else {
+                        terminate(SYNTAX_ERROR);
+                    }
+                }
+                if (!is_rbrac(it))
+                    terminate(SYNTAX_ERROR);
+                create_instr(L, TI_print, NULL, NULL, NULL);
+                return 0;
+            }}}
         case b_length:
         case b_sort:
             // str (str) | int (str)
@@ -230,19 +273,18 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     }
                 }
                 // checking string variable
-                if (it->type == TT_id || it->type == TT_fullid) {
+                if (is_iden(it)) {
                     // checking type and if it was defined
                     sym = is_defined(it->attr.str, local_tab,
                                                actual_class, is_str);
-                    create_instr(L, ins, dest, sym, NULL);
                 }
                 else if (it->type == TT_string) {
                     sym = add_constant(it->attr, symbol_tab, is_str);
-                    create_instr(L, ins, dest, sym, NULL);
                 }
                 else
                     terminate(TYPE_ERROR);
 
+                create_instr(L, ins, sym, NULL, dest);
                 return 0;
             }}}
         case b_find:
@@ -255,7 +297,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 // checking data type
                 if (dest) {
                     T_data_type dtype = dest->attr.var->data_type;
-                    if (dtype == is_int || dtype == is_double)
+                    if (dtype == is_str)
                     {
                         terminate(TYPE_ERROR);
                     }
@@ -266,7 +308,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 // setting instruction
                 T_instr_type ins = (i == b_find ? b_find : b_compare);
                 // determining constant or identifier
-                if (it->type == TT_id || it->type == TT_fullid) {
+                if (is_iden(it)) {
                     sym1 = is_defined(it->attr.str, local_tab, actual_class,
                                      is_str);
                 }
@@ -276,7 +318,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 else
                     terminate(TYPE_ERROR);
 
-                if (it2->type == TT_id || it2->type == TT_fullid) {
+                if (is_iden(it2)) {
                     sym2 = is_defined(it2->attr.str, local_tab, actual_class,
                                      is_str);
                 }
@@ -287,12 +329,68 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     terminate(TYPE_ERROR);
 
                 // creating instruction
-                create_instr(L, ins, dest, sym1, sym2);
+                create_instr(L, ins, sym1, sym2, dest);
                 return 0;
             }}}
         case b_substr:
-            // TODO I need stack
             {{{
+                // str (str|int|int)
+                check_par_syntax(it, tcount - 2, 6);
+                T_symbol *sym1, *sym2;
+                // checking data type
+                if (dest) {
+                    T_data_type dtype = dest->attr.var->data_type;
+                    if (dtype != is_str)
+                    {
+                        terminate(TYPE_ERROR);
+                    }
+                }
+                // second argument
+                T_token *it2 = it + 2;
+                // third argument
+                T_token *it3 = it + 4;
+
+                // first parameter - must be string
+                // determining constant or identifier
+                if (is_iden(it)) {
+                    sym1 = is_defined(it->attr.str, local_tab, actual_class,
+                                     is_str);
+                }
+                else if (it->type == TT_string) {
+                    sym1 = add_constant(it->attr, symbol_tab, is_str);
+                }
+                else
+                    terminate(TYPE_ERROR);
+
+                // second parameter - must be int
+                if (is_iden(it2)) {
+                    sym2 = is_defined(it2->attr.str, local_tab, actual_class,
+                                     is_int);
+                }
+                else if (it2->type == TT_int) {
+                    sym2 = add_constant(it2->attr, symbol_tab, is_int);
+                }
+                else
+                    terminate(TYPE_ERROR);
+
+                // third parameter - must be int
+                T_symbol *sym3;
+                if (is_iden(it)) {
+                    sym3 = is_defined(it2->attr.str, local_tab, actual_class,
+                                     is_int);
+                }
+                else if (it3->type == TT_int) {
+                    sym3 = add_constant(it2->attr, symbol_tab, is_int);
+                }
+                else
+                    terminate(TYPE_ERROR);
+
+                // pushing last parameter
+                create_instr(L, TI_push_param, sym3, NULL, NULL);
+                // creating instruction
+                create_instr(L, TI_substr, sym1, sym2, dest);
+                return 0;
+
 
 
                 return 0;
