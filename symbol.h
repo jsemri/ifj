@@ -95,9 +95,9 @@ T_func_symbol *create_func(T_data_type dtype);
  * @param local_tab local table of function, body of actual function
  * @param actual_class body of actual class
  * @param dtype data type
- * @return 0 in success or specific error
+ * @return pointer to symbol
  */
-int is_defined(char *iden, struct T_Hash_symbol_table *local_tab,
+T_symbol *is_defined(char *iden, struct T_Hash_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype);
 
 /**
@@ -108,7 +108,7 @@ int is_defined(char *iden, struct T_Hash_symbol_table *local_tab,
  * @param value variable identifier and it's value
  * @param global symbol table
  * @param dtype data type
- * @return 0 in success or specific error
+ * @return pointer to constant variable
  */
 T_symbol *add_constant(T_value value, struct T_Hash_symbol_table*,
                        T_data_type dtype);
@@ -128,6 +128,10 @@ struct T_Hash_symbol_table *table_copy(const struct T_Hash_symbol_table *sym_tab
  */
 void local_table_remove(struct T_Hash_symbol_table **loc_stab);
 
+T_symbol *symbol_copy(T_symbol *sym);
+
 int fill_ifj16();
+
+char *get_str(const char *src);
 
 #endif

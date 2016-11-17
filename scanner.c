@@ -7,6 +7,7 @@
 #include "string.h"
 #include "globals.h"
 #include "debug.h"
+#include "symbol.h"
 #include <stdlib.h>
 
 #define KEYW_COUNT 17
@@ -32,15 +33,7 @@ int is_next_eof() {
     return ret_value;
 }
 
-static char *get_str(const char *src) {
-    char *ptr = calloc(strlen(src) + 1, 1);
-    if (!ptr)
-        terminate(INTERNAL_ERROR);
-    strcpy(ptr, src);
-    return ptr;
-}
-
-#define return return show_token(0) + 
+#define return return show_token(0) +
 #define SIZE 1024
 int get_token() {
     T_state state = S_start;

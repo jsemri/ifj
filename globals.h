@@ -31,8 +31,8 @@
 
 // FIXME Put here all global variables which are used across most of the modules
 
-extern T_stack *tables_stack;   // local tables will be copied here
-extern T_stack *stack;
+extern T_stack *frame_stack;   // local tables will be copied here
+extern T_stack *main_stack;
 extern ilist *instr_list;
 extern T_symbol_table *symbol_tab;
 extern FILE *source;

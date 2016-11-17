@@ -65,7 +65,7 @@ T_symbol *create_var(char *id, T_data_type dtype)
 }}}
 
 
-int is_defined(char *iden, T_symbol_table *local_tab,
+T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
              T_symbol *actual_class, T_data_type dtype)
 {{{
 
@@ -84,12 +84,12 @@ int is_defined(char *iden, T_symbol_table *local_tab,
     // checking data type
     // int to double accepted
     if (sym->attr.var->data_type == is_int && dtype == is_double)
-        return 0;
+        return sym;
 
     if (sym->attr.var->data_type != dtype) {
         terminate(TYPE_ERROR);
     }
-    return 0;
+    return sym;
 }}}
 
 T_symbol *add_constant(T_value value, struct T_Hash_symbol_table *symbol_tab,
@@ -97,7 +97,7 @@ T_symbol *add_constant(T_value value, struct T_Hash_symbol_table *symbol_tab,
 {{{
 
     // temporary buffer
-    char buf[128] = "";
+    char buf[1024] = "";
 
     // creating a identifier name for constant
     if (dtype == is_int)
@@ -113,10 +113,7 @@ T_symbol *add_constant(T_value value, struct T_Hash_symbol_table *symbol_tab,
         return sym;
 
     // creating deep copy
-    char *id = calloc(strlen(buf) + 1, 1);
-    if (!id)
-        terminate(INTERNAL_ERROR);
-    strcpy(id, buf);
+    char *id = get_str(buf);
     sym = create_var(id, dtype);
 
     if (dtype == is_int || dtype == is_double)
@@ -127,6 +124,21 @@ T_symbol *add_constant(T_value value, struct T_Hash_symbol_table *symbol_tab,
     sym->attr.var->is_const = true;
     table_insert(symbol_tab, sym);
     return sym;
+}}}
+
+T_symbol *symbol_copy(T_symbol *sym)
+{{{
+    T_symbol *new_symbol;
+    char *id = get_str(sym->id);
+     // only variable
+    new_symbol = create_var(id, sym->attr.var->data_type);
+    if (new_symbol->attr.var->data_type == is_str) {
+        new_symbol->attr.var->value.str = get_str(sym->attr.var->value.str);
+    }
+    else {
+        new_symbol->attr.var->value = sym->attr.var->value;
+    }
+    return new_symbol;
 }}}
 
 // filling global symbol table with built-in class ifj
@@ -165,3 +177,11 @@ void local_table_remove(struct T_Hash_symbol_table **stab)
     }
 }}}
 
+char *get_str(const char *src)
+{{{
+    char *ptr = calloc(strlen(src) + 1, 1);
+    if (!ptr)
+        terminate(INTERNAL_ERROR);
+    strcpy(ptr, src);
+    return ptr;
+}}}
