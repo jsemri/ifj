@@ -32,7 +32,10 @@ typedef enum {
 
 // token types
 typedef enum {
-    TT_empty,           // just for initialization
+    TT_empty,
+    TT_int,
+    TT_double,
+    TT_string,
     TT_plus,            // +
     TT_minus,           // -
     TT_mul,             // *
@@ -56,9 +59,6 @@ typedef enum {
     TT_not,             // !
     TT_id,              // identifier
     TT_keyword,         // keyword
-    TT_int,             // int constant
-    TT_string,          // string literal
-    TT_double,          // double constant
     TT_fullid,          // id.id
     TT_eof              // end of file
 } T_tokenType;
