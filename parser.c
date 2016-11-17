@@ -19,6 +19,7 @@
 #include "semantic-analyser.h"
 #include "symbol.h"
 #include "ilist.h"
+#include "interpret.h"
 
 
 #ifdef DEBUG
@@ -713,8 +714,6 @@ int parse()
         goto errors;
     }
 
-    // just for debug
-    print_table(symbol_tab);
 
     if (fseek(source, 0, SEEK_SET)) {
         res = INTERNAL_ERROR;
@@ -725,11 +724,13 @@ int parse()
         #endif
         res = second_throughpass();
     }
+    interpret();
 
 
     errors:
     table_remove(&symbol_tab);
     token_free(&token);
+    list_free(&instr_list);
     return res;
 }}}
 
