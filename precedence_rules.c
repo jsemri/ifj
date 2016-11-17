@@ -13,18 +13,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define RULES_COUNT 7
+#define RULES_COUNT 13
 T_prec_rule rules[RULES_COUNT] = {
     (T_prec_rule) {3, TT_empty, TT_plus, TT_empty, rule_concat},
     (T_prec_rule) {3, TT_empty, TT_minus, TT_empty, rule_arith},
     (T_prec_rule) {3, TT_empty, TT_div, TT_empty, rule_arith},
     (T_prec_rule) {3, TT_empty, TT_mul, TT_empty, rule_arith},
-    //(T_prec_rule) {3, TT_empty, TT_equal, TT_empty, rule_add},
-    //(T_prec_rule) {3, TT_empty, TT_notEq, TT_empty, rule_add},
-    //(T_prec_rule) {3, TT_empty, TT_lesser, TT_empty, rule_add},
-    //(T_prec_rule) {3, TT_empty, TT_greater, TT_empty, rule_add},
-    //(T_prec_rule) {3, TT_empty, TT_lessEq, TT_empty, rule_add},
-    //(T_prec_rule) {3, TT_empty, TT_greatEq, TT_empty, rule_add},
+    (T_prec_rule) {3, TT_empty, TT_equal, TT_empty, rule_bool},
+    (T_prec_rule) {3, TT_empty, TT_notEq, TT_empty, rule_bool},
+    (T_prec_rule) {3, TT_empty, TT_lesser, TT_empty, rule_bool},
+    (T_prec_rule) {3, TT_empty, TT_greater, TT_empty, rule_bool},
+    (T_prec_rule) {3, TT_empty, TT_lessEq, TT_empty, rule_bool},
+    (T_prec_rule) {3, TT_empty, TT_greatEq, TT_empty, rule_bool},
     //(T_prec_rule) {3, TT_lBracket, TT_empty, TT_rBracket, rule_add},
     (T_prec_rule) {1, TT_id, TT_empty, TT_empty, rule_i_to_exp},
     (T_prec_rule) {1, TT_int, TT_empty, TT_empty, rule_i_to_exp},
@@ -64,6 +64,63 @@ static T_symbol *conv(T_symbol *in, T_data_type new_type, ilist *expr_ilist) {
     return out;
 }
 
+static T_data_type cast_nums(T_symbol *s1, T_symbol *s2, ilist *expr_ilist) {
+    if (CHECK_TYPE(s1, is_int) && CHECK_TYPE(s2, is_int))
+        // Both operands are int, result will be int
+        return is_int;
+    else if (CHECK_TYPE(s1, is_double) && CHECK_TYPE(s2, is_double))
+        // Both operands are double, result will be double
+        return is_double;
+    else if (CHECK_TYPE(s1, is_int) && CHECK_TYPE(s2, is_double)) {
+        // First operand need to be casted to double
+        s1 = conv(s1, is_double, expr_ilist);
+        return is_double;
+    }
+    else if (CHECK_TYPE(s1, is_double) && CHECK_TYPE(s2, is_int)) {
+        // Second operand need to be casted to double
+        s2 = conv(s2, is_double, expr_ilist);
+        return is_double;
+    }
+    else {
+        // Input numbers can't be converted to a single numeric type.
+        return is_void;
+    }
+}
+
+T_symbol *rule_bool(T_prec_stack_entry terms[3], int *errcode,
+                    T_func_symbol *act_func, T_symbol *act_class,
+                    ilist *expr_ilist) {
+    T_symbol *s1 = terms[0].ptr.symbol;
+    T_symbol *s2 = terms[2].ptr.symbol;
+    T_data_type out_type = cast_nums(s1, s2, expr_ilist);
+    if (out_type == is_void) {
+        // Input operands are not numbers
+        FAIL_RULE(4);
+    }
+
+    T_symbol *symbol = create_var_uniq(is_bool);
+
+    T_instr_type type;
+    if (terms[1].ptr.token->type == TT_equal) {
+        type = TI_equal;
+    } else if (terms[1].ptr.token->type == TT_notEq) {
+        type = TI_notequal;
+    } else if (terms[1].ptr.token->type == TT_lesser) {
+        type = TI_less;
+    } else if (terms[1].ptr.token->type == TT_greater) {
+        type = TI_greater;
+    } else if (terms[1].ptr.token->type == TT_lessEq) {
+        type = TI_lessEq;
+    } else {
+        type = TI_greaterEq;
+    }
+
+    printf("[INST] Arithm. oper.\n");
+    ADD_INSTR(type, symbol, s1, s2);
+
+    return symbol;
+}
+
 T_symbol *rule_concat(T_prec_stack_entry terms[3], int *errcode,
                       T_func_symbol *act_func, T_symbol *act_class,
                       ilist *expr_ilist) {
@@ -94,25 +151,9 @@ T_symbol *rule_arith(T_prec_stack_entry terms[3], int *errcode,
                      ilist *expr_ilist) {
     T_symbol *s1 = terms[0].ptr.symbol;
     T_symbol *s2 = terms[2].ptr.symbol;
-    T_data_type out_type;
-    if (CHECK_TYPE(s1, is_int) && CHECK_TYPE(s2,is_int))
-        // Both operands are int, result will be int
-        out_type = is_int;
-    else if (CHECK_TYPE(s1, is_double) && CHECK_TYPE(s2,is_double))
-        // Both operands are double, result will be double
-        out_type = is_double;
-    else if (CHECK_TYPE(s1, is_int) && CHECK_TYPE(s2,is_double)) {
-        // First operand need to be casted to double
-        s1 = conv(s1, is_double, expr_ilist);
-        out_type = is_double;
-    }
-    else if (CHECK_TYPE(s1, is_double) && CHECK_TYPE(s2,is_int)) {
-        // Second operand need to be casted to double
-        s2 = conv(s2, is_double, expr_ilist);
-        out_type = is_double;
-    }
-    else {
-        // Input numbers can't be converted to a single type.
+    T_data_type out_type = cast_nums(s1, s2, expr_ilist);
+    if (out_type == is_void) {
+        // Input operands are not numbers
         FAIL_RULE(4);
     }
 
