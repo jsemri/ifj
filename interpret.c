@@ -1,0 +1,70 @@
+#include "interpret.h"
+#include "instruction.h"
+#include "stack.h"
+#include "globals.h"
+#include "symbol.h"
+#include <string.h>
+#include <stdlib.h>
+
+T_stack *frame_stack;
+T_stack *main_stack;
+
+void create_frame(T_symbol *func, T_stack *stack)
+{{{
+    // creating function
+    T_func_symbol * frame = create_func(func->attr.func->data_type);
+    // copying all variables
+    for (unsigned i = 0;i < RANGE;i++) {
+        for (T_symbol *sym = func->attr.func->local_table->arr[i];
+             sym != NULL; sym = sym->next)
+        {
+            table_insert(frame->local_table, symbol_copy(sym));
+        }
+    }
+    // TODO initialize parameters - they ought to be in main stack
+    stack_push(frame_stack, stack);
+}}}
+
+void remove_frame(T_stack *stack)
+{{{
+    T_func_symbol *frame = stack_top(stack);
+    stack_pop(stack);
+    local_table_remove(&frame->local_table);
+    free(frame);
+}}}
+
+T_symbol *find_var(T_symbol *var)
+{{{
+    // constant
+    if (var->attr.var->is_const)
+        return var;
+
+    T_symbol *ret_var;
+    // first search in active frame - local table
+    if (frame_stack->used) {
+        T_func_symbol *func = stack_top(frame_stack);
+        ret_var = table_find(func->local_table, var->id, NULL);
+    }
+    // found in actual frame
+    if (ret_var)
+        return ret_var;
+    // variable ought to be static, so will be returned
+    return var;
+}}}
+
+void interpret_loop()
+{{{
+
+
+
+
+
+
+    return;
+}}}
+
+void interpret()
+{{{
+
+    interpret_loop();
+}}}
