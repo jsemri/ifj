@@ -34,7 +34,9 @@ T_prec_rule rules[RULES_COUNT] = {
 #define CONV_TERM_TO_TT(i) (terms[i].type == PREC_TOKEN ? \
                             terms[i].ptr.token->type : TT_empty)
 #define FAIL_RULE(code) do{*errcode = code; return NULL;} while (0)
-
+#define CREATE_SYMBOL(symbol, type) T_symbol *symbol = create_var_uniq(type); \
+                                    /*table_insert(symbol_tab, symbol)*/
+// FIXME Pokus o vložení symbolu do tabulky skončí segfaultem
 #define ADD_INSTR(type, dst, s1, s2) create_instr(expr_ilist, type, s1, s2, dst)
 #define CHECK_TYPE(symbol, type) ((symbol)->attr.var->data_type == type)
 
@@ -56,7 +58,7 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count, int *errcode,
 
 static T_symbol *conv(T_symbol *in, T_data_type new_type, ilist *expr_ilist) {
     // TODO Udělat všude
-    T_symbol *out = create_var_uniq(new_type);
+    CREATE_SYMBOL(out, new_type);
 
     ADD_INSTR(TI_convert, out, in, NULL);
     printf("[INST] Přetypování\n");
@@ -105,7 +107,7 @@ T_symbol *rule_bool(T_prec_stack_entry terms[3], int *errcode,
         FAIL_RULE(4);
     }
 
-    T_symbol *symbol = create_var_uniq(is_bool);
+    CREATE_SYMBOL(symbol, is_bool);
 
     T_instr_type type;
     if (terms[1].ptr.token->type == TT_equal) {
@@ -146,11 +148,12 @@ T_symbol *rule_concat(T_prec_stack_entry terms[3], int *errcode,
         // Operands can't be converted to String
         FAIL_RULE(4);
 
-    T_symbol *out = create_var_uniq(is_str);
     printf("[INST] Spojení řetězců\n");
-    ADD_INSTR(TI_concat, out, s1, s2);
 
-    return out;
+    CREATE_SYMBOL(symbol, is_str);
+    ADD_INSTR(TI_concat, symbol, s1, s2);
+
+    return symbol;
 }
 
 T_symbol *rule_arith(T_prec_stack_entry terms[3], int *errcode,
@@ -164,7 +167,7 @@ T_symbol *rule_arith(T_prec_stack_entry terms[3], int *errcode,
         FAIL_RULE(4);
     }
 
-    T_symbol *symbol = create_var_uniq(out_type);
+    CREATE_SYMBOL(symbol, out_type);
 
     T_instr_type type;
     if (terms[1].ptr.token->type == TT_plus) {
@@ -194,14 +197,16 @@ T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3], int *errcode,
     }
 
     if (terms[0].ptr.token->type == TT_int) {
-        // TODO Přidat instrukci..
         printf("[INST] Nový symbol: int=%d\n", terms[0].ptr.token->attr.n);
-        return create_var_uniq(is_int);
+        CREATE_SYMBOL(symbol, is_int);
+        // TODO Přidat instrukci..
+        return symbol;
     }
     else if (terms[0].ptr.token->type == TT_double) {
-        // TODO Přidat instrukci..
         printf("[INST] Nový symbol: double=%g\n", terms[0].ptr.token->attr.d);
-        return create_var_uniq(is_double);
+        CREATE_SYMBOL(symbol, is_double);
+        // TODO Přidat instrukci..
+        return symbol;
     }
     else {
         // Unexpected token
