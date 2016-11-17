@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ilist.h"
+#include "debug.h"
 
 T_stack *frame_stack;
 T_stack *main_stack;
@@ -60,6 +61,7 @@ void interpret_loop()
     T_instr *ins = instr_list->first;
     while (ins != NULL) {
 
+//        print_instr(ins);
         switch (ins->itype) {
             case TI_mov:
 
@@ -70,8 +72,6 @@ void interpret_loop()
         }
         ins = ins->next;
     }
-
-
 
     return;
 }}}
