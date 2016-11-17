@@ -45,7 +45,6 @@ typedef struct {
 typedef struct T_symbol {
     char *id;                // symbol identifier, first key
     T_symbol_type symbol_type;     // symbol type
-    T_data_type data_type;         // symbol data type
     union {
         T_var_symbol *var;
         T_func_symbol *func;
