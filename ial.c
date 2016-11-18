@@ -106,28 +106,19 @@ void table_remove(T_symbol_table **stab)
         T_symbol* s;
 
         for (unsigned i = 0; i < (*stab)->size; i++) {
-            while ((s = (*stab)->arr[i]) != NULL) {
+            while ( (s = (*stab)->arr[i]) ) {
 
                 (*stab)->arr[i] = s->next;
-                if (s->id)
-                    free((void*)s->id);
-
                 if (s->symbol_type == is_var ) {
-                    if (s->attr.var) {
-                        if(s->attr.var->data_type == is_str &&
-                                s->attr.var->value.str) {
-                            free(s->attr.var->value.str);
-                        }
-                        free(s->attr.var);
-                    }
+                    var_remove(s);
                 }
-                else if (s->symbol_type == is_func && s->attr.func) {
-                    local_table_remove(&s->attr.func->local_table);
-                    if (s->attr.func->arguments)
-                        free(s->attr.func->arguments);
-                    free(s->attr.func);
+                else if (s->symbol_type == is_func) {
+                    func_remove(s);
                 }
-                free(s);
+                else {
+                    free(s->id);
+                    free(s);
+                }
             }
         }
         free(*stab);
