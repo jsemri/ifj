@@ -17,7 +17,8 @@
 #include "instruction.h"
 #include "ial.h"
 #include "symbol.h"
-#include <assert.h> 
+#include "ilist.h"
+#include <assert.h>
 
 // unget token
 static bool get_token_flag = false;
@@ -32,24 +33,23 @@ static bool get_token_flag = false;
 // global variables
 T_symbol_table *symbol_tab;
 T_token *token;
-ilist *instr_list;
 // pointer to actual class
 static T_symbol *actual_class;
 static T_symbol *actual_func;
 
 // each function represents a nonterminal symbol in LL(1) table
-static int prog();
-static int body();
-static int class();
-static int cbody();
-static int cbody2(T_symbol_table *local_tab);
-static int func(T_symbol_table *local_tab);
-static int fbody(T_symbol_table *local_tab);
-static int par();
-static int st_list(T_symbol_table *local_tab);
-static int stat(T_symbol_table *local_tab);
-static int st_else(T_symbol_table *local_tab);
-static int st_else2(T_symbol_table *local_tab);
+static void prog();
+static void body();
+static void class();
+static void cbody();
+static void cbody2();
+static void func();
+static void fbody();
+static void par();
+static void st_list();
+static void stat(T_symbol_table *local_tab, ilist *instr_list);
+static void st_else(T_symbol_table *local_tab, ilist *instr_list);
+static void st_else2(T_symbol_table *local_tab, ilist *instr_list);
 
 
 T_symbol *register_symbol;
@@ -205,10 +205,10 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 if (dest)
                     dtype = dest->attr.var->data_type;
                 if (i == b_readI && dtype != is_str) {
-                    create_instr(L, TI_readString, NULL, NULL, dest);
+                    create_instr(L, TI_readInt, NULL, NULL, dest);
                 }
                 else if (i == b_readD && dtype == is_double) {
-                    create_instr(L, TI_readString, NULL, NULL, dest);
+                    create_instr(L, TI_readDouble, NULL, NULL, dest);
                 }
                 else if (i == b_readS && dtype == is_str) {
                     create_instr(L, TI_readString, NULL, NULL, dest);
@@ -228,6 +228,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     terminate(TYPE_ERROR);   // FIXME DEFINITION_ERROR ???
 
                 tcount--;
+                bool is_atleast_one_str;
                 while (tcount > 0 ) {
                     if (is_iden(it)) {
                         sym = is_defined(it->attr.str, local_tab,
@@ -239,6 +240,11 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     else {
                         terminate(SYNTAX_ERROR);
                     }
+
+                    // at least one parameter has to be string
+                    if (sym->attr.var->data_type == is_str)
+                        is_atleast_one_str = true;
+
                     create_instr(L, TI_push_param, sym, NULL, NULL);
                     it++;
                     tcount--;
@@ -254,6 +260,10 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                         terminate(SYNTAX_ERROR);
                     }
                 }
+                // at least one parameter has to be string
+                if (!is_atleast_one_str)
+                    terminate(TYPE_ERROR);
+
                 if (!is_rbrac(it))
                     terminate(SYNTAX_ERROR);
                 create_instr(L, TI_print, NULL, NULL, NULL);
@@ -425,7 +435,7 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
     // found ifj16
     if (!strcmp(sym->id, "ifj16")) {
         // handle builtins
-        handle_builtins(it, tcount, instr_list, dest, local_tab);
+        handle_builtins(it, tcount, L, dest, local_tab);
         return 0;
     }
     // no such function found
@@ -497,39 +507,30 @@ bool check_if_func(T_token *it)
  *
  */
 // PROG -> BODY eof
-static int prog()
+static void prog()
 {{{
     enter(__func__);
 
-    return  body();
+    body();
 }}}
 
 // BODY -> CLASS BODY
 // BODY -> e
-static int body()
+static void body()
 {{{
     enter(__func__);
-    unsigned res = 0;   // return value
     get_token();
 
     // `class` or `eof` expected
     if (token->type == TT_keyword && token->attr.keyword == TK_class ) {
-        res = class();
-        if (res)
-            return res;
-
-        return body();
+        class();
+        body();
     }
-    else if (token->type == TT_eof) {
-        return  0;
-    }
-
-    return SYNTAX_ERROR;
 }}}
 
 /* CLASS -> id lb CBODY rb
 */
-static int class()
+static void class()
 {{{
     enter(__func__);
     // going for id
@@ -541,16 +542,15 @@ static int class()
     // going for '{'
     get_token();
 
-    return cbody();
+    cbody();
 }}}
 
 /*
    CBODY -> static TYPE id CBODY2 CBODY
 */
-static int cbody()
+static void cbody()
 {{{
     enter(__func__);
-    int res;
     // static or '}'
     get_token();
 
@@ -562,33 +562,17 @@ static int cbody()
         // 'id' expected
         get_token();
 
+        actual_func = table_find(symbol_tab,token->attr.str, actual_class);
+        cbody2();
 
-        // in case that symbol is function local symbol table is set
-        T_symbol *s = table_find(symbol_tab,token->attr.str, actual_class);
-        if (s->symbol_type == is_func) {
-            // updating actual function
-            actual_func = s;
-            // local table
-            T_symbol_table *local_tab = s->attr.func->local_table;
-            res = cbody2(local_tab);
-        }
-        else {
-            res = cbody2(NULL); // if variable - no local table
-        }
-
-        if (res)
-            return res;
-
-        return cbody();
+        cbody();
     }
-    else
-        return 0;
 }}}
 
 /*
    CBODY2 -> '=' ';' '('
 */
-static int cbody2(T_symbol_table *local_tab)
+static void cbody2()
 {{{
     enter(__func__);
     // '=' or ';' or '(' expected
@@ -601,60 +585,50 @@ static int cbody2(T_symbol_table *local_tab)
         token_vector tv = read_to_semic();
         // call precedence
         token_vec_delete(tv);
-        return 0;
     }
     else {
-        return func(local_tab);
+        func();
     }
 }}}
 
 /* FUNC -> ( PAR ) FBODY
  '(' has been read
 */
-static int func(T_symbol_table *local_tab)
+static void func()
 {{{
     enter(__func__);
     // just read parameters
     par();
     // process body
-    int res = fbody(local_tab);
+    fbody();
     // just for debug
     print_function(actual_func);
-    return res;
 }}}
 
 /*
    just read till ')'
 */
-static int par()
+static void par()
 {{{
     enter(__func__);
     while (token->type != TT_rBracket)
         get_token();
-    return 0;
 }}}
 
 // FBODY -> { ST_LIST }
 // FBODY -> ;
-static int fbody(T_symbol_table *local_tab)
+static void fbody()
 {{{
     enter(__func__);
     get_token();
 
-    // XXX maybe semicolon makes syntax error ?
-    if (token->type == TT_semicolon) {
-        return 0;
-    }
-    else {
-        return st_list(local_tab);
-    }
-
+    st_list();
 }}}
 
 // ST_LIST -> ε
 // ST_LIST -> {STLIST} STLIST
 // ST_LIST -> STAT STLIST
-static int st_list(T_symbol_table *local_tab)
+static void st_list()
 {{{
     enter(__func__);
     // read only if '{' or ';'
@@ -667,27 +641,22 @@ static int st_list(T_symbol_table *local_tab)
     if (token->type == TT_keyword || token->type == TT_id ||
         token->type == TT_fullid )
     {
+        stat(actual_func->attr.func->local_table,
+             actual_func->attr.func->func_ilist);
 
-        int res = stat(local_tab);
-        if (res)
-            return res;
-
-        return st_list(local_tab);
+        st_list();
     }
     else if (token->type == TT_rCurlBracket) {
-        return 0;
+        return;
     }
     else if (token->type == TT_lCurlBracket) {
-        int res = st_list(local_tab);        // { ST-LIST } ST-LIST
-        if (res)
-            return res;
-        return st_list(local_tab);
+        st_list();        // { ST-LIST } ST-LIST
+        st_list();
     }
-    return SYNTAX_ERROR;
 }}}
 
 // STAT -> many...
-static int stat(T_symbol_table *local_tab)
+static void stat(T_symbol_table *local_tab, ilist *instr_list)
 {{{
     enter(__func__);
     // while|for|if|return|continue|break|types
@@ -707,7 +676,7 @@ static int stat(T_symbol_table *local_tab)
                     get_token();
                     if (table_find(local_tab, token->attr.str, NULL)) {
                         // redefinition
-                        return DEFINITION_ERROR;
+                        terminate(DEFINITION_ERROR);
                     }
 
                     // creating a new variable symbol
@@ -722,7 +691,7 @@ static int stat(T_symbol_table *local_tab)
                     get_token();
 
                     if (token->type == TT_semicolon) {
-                        return 0;
+                        return;
                     }
                     else {
                         // assign '='
@@ -741,8 +710,8 @@ static int stat(T_symbol_table *local_tab)
                         }
 
                         token_vec_delete(tv);
-                        return 0;
                     }
+                    return;
                 }}}
             case TK_while:
             case TK_if:
@@ -753,30 +722,56 @@ static int stat(T_symbol_table *local_tab)
 
                     // reading till `)`
                     // '(' is not included
+                    T_instr *cond, *end_label;
+
+                    // creating label - for while
+                    cond = create_instr(instr_list, TI_lab, 0, 0, 0 );
+                    end_label = instr_init(TI_lab, 0, 0, 0);
+
                     token_vector tv = read_to_rbrac();
+
                     // TODO send tvect to precedence analyser
                     // XXX last token in tvect is ')'
-
                     token_vec_delete(tv);
+
+                    create_instr(instr_list, TI_jmpz, end_label, 0, 0);
+
                     get_token();    // '{'
-                    // if (..) { ....
+
                     // beginning new statement list
-                    int res;
-                    res = st_list(local_tab);
-                    if (res)
-                        return res;
-                    // TODO insert different instruction while/if
+                    st_list();
+
                     if (keyword == TK_while) {
-                        return 0;
+                        // jump to condition
+                        create_instr(instr_list, TI_jmp, cond, 0, 0);
+
+                        // inserting end label
+                        list_insert_last(instr_list, end_label);
+                        return;
                     }
                     // if next word is else do call st_else()
                     get_token();
 
-                    if (token->type == TT_keyword && token->attr.keyword == TK_else)
-                        return st_else(local_tab);
-                    // no else read, must unget
-                    unget_token();
-                    return 0;
+                    if (token->type == TT_keyword &&
+                        token->attr.keyword == TK_else)
+                    {
+                        // if condition satisfied jumping over else branch
+                        T_instr *lab_out = instr_init(TI_lab,0,0,0);
+                        create_instr(instr_list, TI_jmp, lab_out,0,0);
+                        // if not go to else
+                        list_insert_last(instr_list, end_label);
+                        // insert else branh
+                        st_else(local_tab, instr_list);
+                        // label under else branch
+                        list_insert_last(instr_list, lab_out);
+                    }
+                    else {
+                        list_insert_last(instr_list, end_label);
+                        // no else read, must unget
+                        unget_token();
+                    }
+
+                    return;
                 }}}
             case TK_return:
                 {{{
@@ -791,15 +786,15 @@ static int stat(T_symbol_table *local_tab)
                     if ( (tv->last == 0 && dtype != is_void) ||
                          (tv->last != 0 && dtype == is_void) )
                     {
-                        return TYPE_ERROR;
+                        terminate(TYPE_ERROR);
                     }
                     // TODO call expression handler
 
                     token_vec_delete(tv);
-                    return 0;
+                    return;
                 }}}
             default:
-                return SYNTAX_ERROR;
+                terminate(SYNTAX_ERROR);
         }
     }
     // id/fullid = exp | fullid()/id()
@@ -811,7 +806,7 @@ static int stat(T_symbol_table *local_tab)
         // id ( pars )
         // minimal count of tokens
         if (tv->last < 3)
-            return SYNTAX_ERROR;
+            terminate(SYNTAX_ERROR);
         // token iterator
         T_token *it = tv->arr;
 
@@ -824,7 +819,7 @@ static int stat(T_symbol_table *local_tab)
 
         // undefined reference
         if (!loc_sym && !glob_sym ) {
-           return DEFINITION_ERROR;
+           terminate(DEFINITION_ERROR);
         }
         // getting '=' or '('
         it++;
@@ -834,7 +829,7 @@ static int stat(T_symbol_table *local_tab)
             T_symbol *sym = loc_sym ? loc_sym : glob_sym;
             // assignment goes to function or class
             if (!sym || sym->symbol_type != is_var) {
-                return DEFINITION_ERROR;
+                terminate(DEFINITION_ERROR);
             }
             // go after expression or function
             it++;
@@ -848,13 +843,13 @@ static int stat(T_symbol_table *local_tab)
                 // TODO precedence analysis
             }
             token_vec_delete(tv);
-            return 0;
+            return;
         }}}
         else
         {{{
             handle_function(tv->arr, tv->last, instr_list, NULL, local_tab);
             token_vec_delete(tv);
-            return 0;
+            return;
         }}}
     }}}
 }}}
@@ -862,25 +857,23 @@ static int stat(T_symbol_table *local_tab)
 // ELSE -> .
 // ELSE -> else ELSE2
 // ELSE2 -> { ST_LIST }
-static int st_else(T_symbol_table *local_tab)
+static void st_else(T_symbol_table *local_tab, ilist *instr_list)
 {{{
     enter(__func__);
 
     get_token();
     // `else {`
     if (token->type == TT_lCurlBracket) {
-        int res = st_list(local_tab);
-        return res;
+        st_list();
     }
     // `else if`
     else {
-        return st_else2(local_tab);
+        st_else2(local_tab, instr_list);
     }
-
 }}}
 
 // ELSE2 -> if ( EXPR ) { ST_LIST } ELSE
-static int st_else2(T_symbol_table *local_tab)
+static void st_else2(T_symbol_table *local_tab, ilist *instr_list)
 {{{
     enter(__func__);
 
@@ -890,27 +883,34 @@ static int st_else2(T_symbol_table *local_tab)
     token_vector tv = read_to_rbrac();
     // TODO precedence
     token_vec_delete(tv);
+    T_instr *end_lab = instr_init(TI_lab, 0, 0, 0);
+    create_instr(instr_list, TI_jmpz, end_lab, 0, 0);
     // {
     get_token();
     // beginning of statement list
-    int res;
-    res = st_list(local_tab);
-    if (res)
-        return res;
+    st_list();
+
     // if next word is else do call st_else()
     get_token();
 
-    if (token->type == TT_keyword && token->attr.keyword == TK_else)
-        return st_else(local_tab);
-    // no else, token must be returned
-    unget_token();
-    return 0;
+    if (token->type == TT_keyword && token->attr.keyword == TK_else) {
+        T_instr *lab_out = instr_init(TI_lab, 0, 0, 0);
+        create_instr(instr_list, TI_jmp, lab_out, 0, 0);
+        list_insert_last(instr_list, end_lab);
+        st_else(local_tab, instr_list);
+        list_insert_last(instr_list, lab_out);
+    }
+    else {
+        list_insert_last(instr_list, end_lab);
+        // no else, token must be returned
+        unget_token();
+    }
 }}}
 
 int second_throughpass() {
     assert(register_symbol = table_find_simple(symbol_tab, "reg_log_rv", NULL));
-    int res = prog();
+    prog();
     print_table(symbol_tab);
-    return res;
+    return 0;
 }
 
