@@ -73,4 +73,14 @@ typedef struct T_ilist {
 void create_instr( ilist *L, T_instr_type itype, void *op1, void *op2,
                    void *dest);
 
+/**
+ * @brief Creates instruction.
+ *
+ * @param itype instruction type
+ * @param op1 first operand
+ * @param op2 second operand
+ * @param dest destination where result will be stored
+ */
+T_instr *instr_init(T_instr_type itype, void *op1, void *op2, void *dest);
+
 #endif
