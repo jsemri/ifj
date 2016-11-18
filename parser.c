@@ -375,10 +375,7 @@ static int fbody()
     if (get_token())
         return LEX_ERROR;
 
-    if (token->type == TT_semicolon) {
-        return 0;
-    }
-    else if (token->type == TT_lCurlBracket) {
+    if (token->type == TT_lCurlBracket) {
         return st_list();
     }
 

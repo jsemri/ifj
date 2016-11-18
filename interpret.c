@@ -14,26 +14,25 @@ ilist *instr_list;
 
 void create_frame(T_symbol *func, T_stack *stack)
 {{{
-    // creating function
-    T_func_symbol * frame = create_func(func->attr.func->data_type);
+    // creating frame
+    T_symbol_table *frame = table_init(RANGE);
     // copying all variables
     for (unsigned i = 0;i < RANGE;i++) {
         for (T_symbol *sym = func->attr.func->local_table->arr[i];
              sym != NULL; sym = sym->next)
         {
-            table_insert(frame->local_table, symbol_copy(sym));
+            table_insert(frame, symbol_copy(sym));
         }
     }
     // TODO initialize parameters - they ought to be in main stack
-    stack_push(frame_stack, stack);
+    stack_push(stack, frame);
 }}}
 
 void remove_frame(T_stack *stack)
 {{{
-    T_func_symbol *frame = stack_top(stack);
+    T_symbol_table *frame = stack_top(stack);
     stack_pop(stack);
-    local_table_remove(&frame->local_table);
-    free(frame);
+    local_table_remove(&frame);
 }}}
 
 T_symbol *find_var(T_symbol *var)
