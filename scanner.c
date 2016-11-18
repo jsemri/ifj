@@ -98,7 +98,7 @@ int get_token() {
                     state = S_int;
                     buf[counter++] = c;
                 } else {
-                    return LEX_ERROR;
+                    terminate(LEX_ERROR);
                 }
                 break;
 
@@ -128,7 +128,7 @@ int get_token() {
                     state = S_double2;
                     buf[counter++] = c;
                 } else {
-                    return LEX_ERROR;
+                    terminate(LEX_ERROR);
                 }
                 break;
 
@@ -156,7 +156,7 @@ int get_token() {
                     state = S_doubleExp3;
                     buf[counter++] = c;
                 } else {
-                    return LEX_ERROR;
+                    terminate(LEX_ERROR);
                 }
                 break;
 
@@ -165,7 +165,7 @@ int get_token() {
                     state = S_doubleExp3;
                     buf[counter++] = c;
                 } else {
-                    return LEX_ERROR;
+                    terminate(LEX_ERROR);
                 }
                 break;
 
@@ -192,7 +192,7 @@ int get_token() {
                     token->attr.str = get_str(buf);
                     return 0;
                 } else if (c == '\n' || c == EOF) {
-                    return LEX_ERROR;
+                    terminate(LEX_ERROR);
                 } else {
                     buf[counter++] = c;
                 }
@@ -200,7 +200,7 @@ int get_token() {
 
             case S_stringBackSlash:
                 if (c == '\n' || c == EOF) {
-                    return LEX_ERROR;
+                    terminate(LEX_ERROR);
                 } else {
                     state = S_string;
                 }
@@ -217,7 +217,7 @@ int get_token() {
                     for (i = 0; i < KEYW_COUNT &&
                             strcmp(buf, KEYWORDS[i]); i++);
                     if (i != KEYW_COUNT) {
-                        return LEX_ERROR;
+                        terminate(LEX_ERROR);
                     }
 
                     buf[counter++] = c;
@@ -244,7 +244,7 @@ int get_token() {
                 }
                 else if (buf[counter-1] == '.' && isspace(c)) {
                     // space between dot and identifiers
-                    return LEX_ERROR;
+                    terminate(LEX_ERROR);
                 }
                 else
                 {
@@ -256,7 +256,7 @@ int get_token() {
                     for (i = 0; i < KEYW_COUNT &&
                             strcmp(ptr, KEYWORDS[i]); i++);
                     if (i != KEYW_COUNT) {
-                        return LEX_ERROR;
+                        terminate(LEX_ERROR);
                     }
 
                     token->attr.str = get_str(buf);
@@ -314,7 +314,7 @@ int get_token() {
                     token->type = TT_or;
                     return 0;
                 } else {
-                    return LEX_ERROR;
+                    terminate(LEX_ERROR);
                 }
                 break;
 
@@ -323,7 +323,7 @@ int get_token() {
                     token->type = TT_and;
                     return 0;
                 } else {
-                    return LEX_ERROR;
+                    terminate(LEX_ERROR);
                 }
                 break;
 
