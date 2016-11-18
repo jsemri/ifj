@@ -1,9 +1,8 @@
-
-
 #include "globals.h"
 #include "stack.h"
 #include <stdbool.h>
 #include <stdlib.h>
+#include "symbol.h"
 
 #define INIT_SIZE   128
 #define GROWTH      8
@@ -43,8 +42,8 @@ void stack_remove(T_stack **stack, bool is_frame_stack) {
         if (is_frame_stack) {
             while (!is_empty(*stack)) {
                 // remove frame
-                T_symbol_table *frame = stack_top(*stack);
-                local_table_remove(&frame);
+                T_frame *frame = stack_top(*stack);
+                remove_frame(&frame);
                 stack_pop(*stack);
             }
         }
@@ -53,3 +52,37 @@ void stack_remove(T_stack **stack, bool is_frame_stack) {
     }
     *stack = NULL;
 }
+
+void create_frame(T_symbol *func, T_stack *stack) {
+    // creating frame
+    T_frame *frame = calloc(1, sizeof(T_frame));
+    if (!frame)
+        terminate(INTERNAL_ERROR);
+    frame->dtype = func->attr.func->data_type;
+    frame->local_tab = table_init(RANGE);
+    // copying all variables
+    for (unsigned i = 0;i < RANGE;i++) {
+        for (T_symbol *sym = func->attr.func->local_table->arr[i];
+             sym != NULL; sym = sym->next)
+        {
+            table_insert(frame->local_tab, symbol_copy(sym));
+        }
+    }
+    // TODO initialize parameters - they ought to be in main stack
+    stack_push(stack, frame);
+}
+
+void remove_frame(T_frame **frame) {
+    local_table_remove(&((*frame)->local_tab));
+    if ((*frame)->dtype == is_str && (*frame)->ret_val.str)
+        free((*frame)->ret_val.str);
+    free((*frame));
+    frame = NULL;
+}
+
+void remove_frame_from_stack(T_stack *stack) {
+    T_frame *frame = stack_top(stack);
+    remove_frame(&frame);
+    stack_pop(stack);
+}
+

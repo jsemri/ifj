@@ -44,9 +44,11 @@ void list_delete(ilist *L) {
 }
 
 void list_free(ilist **L) {
-    list_delete(*L);
-    free(*L);
-    *L = NULL;
+    if (*L) {
+        list_delete(*L);
+        free(*L);
+        *L = NULL;
+    }
 }
 
 void list_first(ilist *L) {
