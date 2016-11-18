@@ -17,6 +17,7 @@
 #include "instruction.h"
 #include "ial.h"
 #include "symbol.h"
+#include <assert.h> 
 
 // unget token
 static bool get_token_flag = false;
@@ -49,6 +50,9 @@ static int st_list(T_symbol_table *local_tab);
 static int stat(T_symbol_table *local_tab);
 static int st_else(T_symbol_table *local_tab);
 static int st_else2(T_symbol_table *local_tab);
+
+
+T_symbol *register_symbol;
 
 /*******************************************************
  * function handling helper functions
@@ -220,8 +224,8 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 tcount -= 2;
                 T_symbol *sym;
                 // print() - no parameters
-                if (is_rbrac(it) || dest)
-                    terminate(TYPE_ERROR);
+                if (is_rbrac(it))
+                    terminate(TYPE_ERROR);   // FIXME DEFINITION_ERROR ???
 
                 tcount--;
                 while (tcount > 0 ) {
@@ -472,8 +476,11 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
         else {
             terminate(TYPE_ERROR);
         }
-
         create_instr(L, TI_push_param, sym, NULL, NULL);
+        // assign return value of function
+        // this value ought to be in special symbol
+        if (dest)
+            create_instr(L, TI_mov, register_symbol, NULL, dest);
    }
    // TODO insert instruction CALL
     return 0;
@@ -901,6 +908,7 @@ static int st_else2(T_symbol_table *local_tab)
 }}}
 
 int second_throughpass() {
+    assert(register_symbol = table_find_simple(symbol_tab, "reg_log_rv", NULL));
     int res = prog();
     print_table(symbol_tab);
     return res;
