@@ -12,7 +12,6 @@
 
 #define FAIL_PREC(code) do {prec_stack_free(stack); \
                             return code;} while(0)
-                            /*destruct_rules(); -- TODO vyhodit mezivýsledky*/
 #define PUSH_SYMBOL(s) if (!prec_stack_push_symbol(stack, s)) FAIL_PREC(99)
 #define PUSH_TOKEN(t) if (!prec_stack_push_token(stack, t)) FAIL_PREC(99)
 #define PUSH_EXP(t) if (!prec_stack_push_exp(stack, t)) FAIL_PREC(99)
@@ -20,7 +19,9 @@
 
 static T_token* get_next_token(token_vector v);
 
-
+/*
+ * TODO Token a počet místo vektoru
+ */
 int precedence_analyser(token_vector v, T_symbol *lvalue,
                         T_func_symbol *act_func, T_symbol *act_class,
                         struct T_ilist *ilist) {
@@ -95,7 +96,6 @@ static T_token* get_next_token(token_vector v) {
     if (out->type == TT_lBracket)
         brackets++;
     if (out->type == TT_comma || out->type == TT_rBracket && brackets-- == 0)
-        // TODO Nekontroluje se, jestli výraz končí tím, čím má
         return NULL;
     return out;
 }

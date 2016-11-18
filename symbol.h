@@ -18,7 +18,8 @@ typedef enum {
     is_void = 0,
     is_int = 1,
     is_double = 2,
-    is_str = 3
+    is_str = 3,
+    is_bool = 4
 } T_data_type;
 
 /// Function attributes.

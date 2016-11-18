@@ -8,6 +8,8 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
+#include <stdbool.h>
+
 // keywords
 typedef enum {
     TK_void = 0,
@@ -67,7 +69,8 @@ typedef struct {
     double d;           // values double or integer
     int n;
     T_keyword keyword;  // keyword
-    char *str;      // POINTER to a T_string
+    char *str;          // pointer to T_string
+    bool b;             // boolean
 } T_value;
 
 // structure of token
