@@ -3,7 +3,7 @@
 #include "globals.h"
 #include <stdlib.h>
 
-void create_instr(ilist *L, T_instr_type itype, void *op1, void *op2,
+void *create_instr(ilist *L, T_instr_type itype, void *op1, void *op2,
                   void *dest)
 {{{
 
@@ -17,6 +17,8 @@ void create_instr(ilist *L, T_instr_type itype, void *op1, void *op2,
     ins->op2 = op2;
     ins->dest = dest;
     list_insert_last(L, ins);
+
+    return ins;
 }}}
 
 T_instr *instr_init(T_instr_type itype, void *op1, void *op2, void *dest)

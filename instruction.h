@@ -41,6 +41,7 @@ typedef enum {
     TI_compare,     // id/- id/v id/v
     TI_find,        // id/- id/v id/v
     TI_sort,        // id/- id/v -
+    TI_lab,
     TI_convert,     // casts int -> double, int/double -> string
 } T_instr_type;
 
@@ -70,7 +71,7 @@ typedef struct T_ilist {
  * @param op2 second operand
  * @param dest destination where result will be stored
  */
-void create_instr( ilist *L, T_instr_type itype, void *op1, void *op2,
+void *create_instr( ilist *L, T_instr_type itype, void *op1, void *op2,
                    void *dest);
 
 /**
