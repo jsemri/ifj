@@ -43,9 +43,8 @@ void stack_remove(T_stack **stack, bool is_frame_stack) {
         if (is_frame_stack) {
             while (!is_empty(*stack)) {
                 // remove frame
-                T_func_symbol *frame = stack_top(*stack);
-                local_table_remove(&frame->local_table);
-                free(frame);
+                T_symbol_table *frame = stack_top(*stack);
+                local_table_remove(&frame);
                 stack_pop(*stack);
             }
         }
