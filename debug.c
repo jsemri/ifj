@@ -13,13 +13,20 @@ static char *ins_arr[] = {
         "LESS", "LESSEQ", "GREATER", "GREATEREQ", "JMP",
         "JMPZ", "RET", "CALL", "PUSH_PAR", "READINT", "READDOUBLE",
         "READSTR", "PRINT", "LENGTH", "SUBSTR", "COMPARE", "FIND",
-        "SORT"
+        "SORT", "LAB", "CONVERT"
 };
 
 void print_instr(T_instr *ins) {
     if (ins) {
-        printf("|%s|", ins_arr[ins->itype] );
-        if (ins->dest) {
+        if (ins->itype == TI_lab)
+            printf("|%s %d|", ins_arr[ins->itype], (int)ins);
+        else
+            printf("|%s|", ins_arr[ins->itype] );
+        if (ins->itype == TI_jmp || ins->itype == TI_jmpz) {
+            printf("|%s %d|\n", ins_arr[((T_instr*)ins->op1)->itype], (int)ins->op1);
+            return;
+        }
+        else if (ins->dest) {
             if (((T_symbol*)(ins->dest))->member_class)
                 printf("|%s.%s|", ((T_symbol*)(ins->dest))->member_class->id,
                                 ((T_symbol*)(ins->dest))->id);
