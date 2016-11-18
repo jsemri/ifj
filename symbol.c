@@ -179,6 +179,12 @@ int fill_ifj16()
         terminate(INTERNAL_ERROR);
     strcpy(ptr, "ifj16");             // creates id ifj
     table_insert(symbol_tab, create_symbol(ptr, is_class)); // insert class ifj
+    // insert register
+    ptr = malloc(11);      // size of "reg_lob_rv"
+    strcpy(ptr, "reg_log_rv");
+    T_symbol *s = create_var(ptr, is_int);
+    s->attr.var->is_const = true;
+    table_insert(symbol_tab, s);
     return 0;
 }}}
 
