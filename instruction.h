@@ -29,9 +29,9 @@ typedef enum {
     TI_greaterEq,
     TI_jmp,         // jumps
     TI_jmpz,        // jump if zero
-    TI_return,
+    TI_ret,
     TI_call,        // id - - | all pars on stack
-    TI_push_param,  // pushing parameter to stack
+    TI_push,
     TI_readInt,     // id/- - -
     TI_readDouble,
     TI_readString,

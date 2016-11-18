@@ -2,6 +2,7 @@
 #define SYMBOL_H
 
 #include "token.h"
+#include "ilist.h"
 #include "token_vector.h"
 #include <stdbool.h>
 
@@ -26,7 +27,7 @@ typedef enum {
 /// Variable attributes.
 typedef struct {
     T_data_type data_type;          // data type
-    bool is_initialized;
+    bool is_init;
     bool is_const;                  // 0 if constant
     T_value value;                  // value of variable
 } T_var_symbol;

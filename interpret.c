@@ -8,53 +8,32 @@
 #include "ilist.h"
 #include "debug.h"
 
+#define act_frame ((T_frame*)(stack_top(frame_stack)))
+
 T_stack *frame_stack;
 T_stack *main_stack;
 
-void create_frame(T_symbol *func, T_stack *stack)
+T_symbol *get_var(T_symbol *var)
 {{{
-    // creating frame
-    T_symbol_table *frame = table_init(RANGE);
-    // copying all variables
-    for (unsigned i = 0;i < RANGE;i++) {
-        for (T_symbol *sym = func->attr.func->local_table->arr[i];
-             sym != NULL; sym = sym->next)
-        {
-            table_insert(frame, symbol_copy(sym));
-        }
-    }
-    // TODO initialize parameters - they ought to be in main stack
-    stack_push(stack, frame);
-}}}
-
-void remove_frame(T_stack *stack)
-{{{
-    T_symbol_table *frame = stack_top(stack);
-    stack_pop(stack);
-    local_table_remove(&frame);
-}}}
-
-T_symbol *find_var(T_symbol *var)
-{{{
-    // constant
-    if (var->attr.var->is_const)
+    // constant or static variable
+    if (var->attr.var->is_const || var->member_class)
         return var;
 
     T_symbol *ret_var;
     // first search in active frame - local table
-    if (frame_stack->used) {
-        T_func_symbol *func = stack_top(frame_stack);
-        ret_var = table_find(func->local_table, var->id, NULL);
-    }
+    T_frame *frame = stack_top(frame_stack);
+    ret_var = table_find(frame->local_tab, var->id, NULL);
     // found in actual frame
-    if (ret_var)
-        return ret_var;
-    // variable ought to be static, so will be returned
-    return var;
+    return ret_var;
 }}}
+
 
 void interpret_loop(ilist *instr_list)
 {{{
+
+    // finding a register
+    T_symbol *acc = table_find_simple(symbol_tab, "|accumulator|", 0);
+    T_symbol *op1, *op2, *dest;
 
     T_instr *ins = instr_list->first;
     while (ins != NULL) {
@@ -62,9 +41,42 @@ void interpret_loop(ilist *instr_list)
         print_instr(ins);
         switch (ins->itype) {
             case TI_mov:
-
-            case TI_add:
-
+                dest = get_var(dest);
+                op1 = get_var(dest);
+                // uninitialized or assign from void funtion
+                if (op1->attr.var->data_type == is_void ||
+                    !op1->attr.var->is_init)
+                {
+                    terminate(8);
+                }
+                // get value
+                break;
+            case TI_push:
+                stack_push(main_stack, op1);
+                break;
+            case TI_call:
+                // TODO
+                // create frame
+                // copy all content of stack to parameters
+                // jump to function
+            case TI_jmp:
+                ins = ins->op1;
+                break;
+            case TI_jmpz:
+                if (acc)
+                    ins = ins->op1;
+                break;
+            case TI_ret:
+                // getting an address of next jump
+                if (acc->attr.var->data_type != is_void &&
+                    act_frame->dtype == is_void)
+                {
+                    terminate(8);
+                }
+                ins = stack_top(main_stack);
+                stack_pop(main_stack);
+                // return value already in acc
+                break;
             default:
                 break;
         }
@@ -74,13 +86,16 @@ void interpret_loop(ilist *instr_list)
     return;
 }}}
 
-void interpret(ilist *instr_list)
+void interpret(T_symbol *run)
 {{{
     frame_stack = stack_init();
     main_stack = stack_init();
 
-    interpret_loop(instr_list);
+    // creating frame for main function run()
+    create_frame(run, frame_stack);
+    interpret_loop(run->attr.func->func_ilist);
 
+    // removing stacks
     stack_remove(&frame_stack, true);
     stack_remove(&main_stack, false);
 }}}

@@ -199,16 +199,11 @@ T_symbol *symbol_copy(T_symbol *sym)
 // filling global symbol table with built-in class ifj
 int fill_ifj16()
 {{{
-    char *ptr = malloc(6); // size of "ifj16"
-    if (!ptr)
-        terminate(INTERNAL_ERROR);
-    strcpy(ptr, "ifj16");             // creates id ifj
+    char *ptr = get_str("ifj16");
     table_insert(symbol_tab, create_symbol(ptr, is_class)); // insert class ifj
     // insert register
-    ptr = malloc(11);      // size of "reg_lob_rv"
-    strcpy(ptr, "reg_log_rv");
+    ptr = get_str("|accumulator|");
     T_symbol *s = create_var(ptr, is_int);
-    s->attr.var->is_const = true;
     table_insert(symbol_tab, s);
     return 0;
 }}}

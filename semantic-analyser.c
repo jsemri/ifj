@@ -245,7 +245,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     if (sym->attr.var->data_type == is_str)
                         is_atleast_one_str = true;
 
-                    create_instr(L, TI_push_param, sym, NULL, NULL);
+                    create_instr(L, TI_push, sym, NULL, NULL);
                     it++;
                     tcount--;
                     // token = '+' and is not last
@@ -266,6 +266,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
 
                 if (!is_rbrac(it))
                     terminate(SYNTAX_ERROR);
+                // TODO push number of parameters
                 create_instr(L, TI_print, NULL, NULL, NULL);
                 return 0;
             }}}
@@ -400,7 +401,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     terminate(TYPE_ERROR);
 
                 // pushing last parameter
-                create_instr(L, TI_push_param, sym3, NULL, NULL);
+                create_instr(L, TI_push, sym3, NULL, NULL);
                 // creating instruction
                 create_instr(L, TI_substr, sym1, sym2, dest);
                 return 0;
@@ -431,35 +432,39 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
                     T_symbol_table *local_tab)
 {{{
     // table_find is able to derive from ifj16.readInt pointer to class ifj16
-    T_symbol *sym = table_find(symbol_tab, it->attr.str, actual_class);
+    T_symbol *fsym = table_find(symbol_tab, it->attr.str, actual_class);
     // found ifj16
-    if (!strcmp(sym->id, "ifj16")) {
+    if (!strcmp(fsym->id, "ifj16")) {
         // handle builtins
         handle_builtins(it, tcount, L, dest, local_tab);
         return 0;
     }
     // no such function found
-    if (!sym || sym->symbol_type != is_func)
+    if (!fsym || fsym->symbol_type != is_func)
         terminate(DEFINITION_ERROR);
 
     // function found
 
-    unsigned pcount = sym->attr.func->par_count;
+    unsigned pcount = fsym->attr.func->par_count;
 
     // type control
     if (dest) {
-        T_data_type d1 = sym->attr.func->data_type;
+        T_data_type d1 = fsym->attr.func->data_type;
         T_data_type d2 = dest->attr.var->data_type;
         if ( d1 != d2 && (d1 != is_int || d2 != is_double ))
             terminate(TYPE_ERROR);
     }
 
     // parameters
-    T_symbol **pars = (T_symbol**)sym->attr.func->arguments;
+    T_symbol **pars = (T_symbol**)fsym->attr.func->arguments;
     // handling parameters
     it++;it++;  // skipping function id and '('
     unsigned exp_tc = pcount > 1 ? 2*pcount : pcount + 1;
     check_par_syntax(it, tcount - 2, exp_tc);
+
+    T_instr *return_label = instr_init(TI_lab,0,0,0);
+    // pushing return label
+    create_instr(L, TI_push, return_label,0,0);
 
     for (unsigned j = 0; j < pcount;j++) {
         // parameter
@@ -486,13 +491,19 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
         else {
             terminate(TYPE_ERROR);
         }
-        create_instr(L, TI_push_param, sym, NULL, NULL);
+        create_instr(L, TI_push, sym, NULL, NULL);
         // assign return value of function
         // this value ought to be in special symbol
-        if (dest)
-            create_instr(L, TI_mov, register_symbol, NULL, dest);
-   }
-   // TODO insert instruction CALL
+    }
+
+    create_instr(L, TI_call, fsym, 0, 0);
+
+    if (dest) {
+        create_instr(L, TI_mov, register_symbol, NULL, dest);
+    }
+
+    // inserting label, where to return from function
+    list_insert_last(L, return_label);
     return 0;
 }}}
 
@@ -789,8 +800,9 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                         terminate(TYPE_ERROR);
                     }
                     // TODO call expression handler
-
+                    // move expression to accumulator
                     token_vec_delete(tv);
+                    create_instr(instr_list, TI_ret, 0, 0, 0);
                     return;
                 }}}
             default:
@@ -908,7 +920,6 @@ static void st_else2(T_symbol_table *local_tab, ilist *instr_list)
 }}}
 
 int second_throughpass() {
-    assert(register_symbol = table_find_simple(symbol_tab, "reg_log_rv", NULL));
     prog();
     print_table(symbol_tab);
     return 0;

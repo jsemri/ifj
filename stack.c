@@ -7,6 +7,10 @@
 #define INIT_SIZE   128
 #define GROWTH      8
 
+
+T_stack *main_stack;
+T_stack *frame_stack;
+
 T_stack *stack_init() {
     T_stack *stack = calloc(1, sizeof(T_stack));
     stack->data = calloc(INIT_SIZE, sizeof(void*));
@@ -53,6 +57,33 @@ void stack_remove(T_stack **stack, bool is_frame_stack) {
     *stack = NULL;
 }
 
+void copy_value(T_symbol *dst, T_symbol *src)
+{{{
+    T_var_symbol *v1 = dst->attr.var;
+    T_var_symbol *v2 = src->attr.var;
+    if (!v2->is_init || v2->data_type == is_void)
+        terminate(8);
+    switch (v1->data_type) {
+        case is_int:
+            v1->value.n = v1->data_type == is_double ?
+                          v2->value.d : v2->value.n;
+            break;
+        case is_double:
+            v1->value.d = v1->data_type == is_double ?
+                          v2->value.d : v2->value.n;
+            break;
+        case is_str:
+            if (v1->value.str)
+                free(v1->value.str);
+            v1->value.str = get_str(v2->value.str);
+            break;
+        case is_void:
+            terminate(8);
+        default:
+            break;
+    }
+}}}
+
 void create_frame(T_symbol *func, T_stack *stack) {
     // creating frame
     T_frame *frame = calloc(1, sizeof(T_frame));
@@ -68,14 +99,16 @@ void create_frame(T_symbol *func, T_stack *stack) {
             table_insert(frame->local_tab, symbol_copy(sym));
         }
     }
-    // TODO initialize parameters - they ought to be in main stack
+    // copying parameters
+    for (unsigned i = 0;i < func->attr.func->par_count;i++) {
+        copy_value(func->attr.func->arguments[i], stack_top(main_stack));
+        stack_pop(main_stack);
+    }
     stack_push(stack, frame);
 }
 
 void remove_frame(T_frame **frame) {
     local_table_remove(&((*frame)->local_tab));
-    if ((*frame)->dtype == is_str && (*frame)->ret_val.str)
-        free((*frame)->ret_val.str);
     free((*frame));
     frame = NULL;
 }

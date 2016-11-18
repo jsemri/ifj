@@ -640,7 +640,7 @@ int parse()
         second_throughpass();
     }
 
-    interpret(run_func->attr.func->func_ilist);
+    interpret(run_func);
 
     table_remove(&symbol_tab);
     token_free(&token);

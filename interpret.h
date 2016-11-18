@@ -1,8 +1,8 @@
 #ifndef INTERPRET
 #define INTERPRET
 
-#include "ilist.h"
+#include "symbol.h"
 
-void interpret(ilist *instr_list);
+void interpret(T_symbol *run);
 
 #endif
