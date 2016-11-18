@@ -41,52 +41,47 @@ static int in_block = 0;
 static T_symbol *actual_class;
 
 // each function represents a nonterminal symbol in LL(1) table
-static int prog();
-static int body();
-static int class();
-static int cbody();
-static int cbody2(T_symbol *symbol, T_data_type dtype);
-static int func(T_symbol *symbol, T_data_type dtype);
-static int fbody();
-static int par(T_symbol *symbol);
-static int st_list();
-static int stat();
-static int st_else();
-static int st_else2();
+static void prog();
+static void body();
+static void class();
+static void cbody();
+static void cbody2(char *iden, T_data_type dtype);
+static void func(char *iden, T_data_type dtype);
+static void fbody();
+static void par(T_symbol *symbol);
+static void st_list();
+static void stat();
+static void st_else();
+static void st_else2();
 
 // PROG -> BODY eof
-static int prog()
+static void prog()
 {{{
     enter(__func__);
-
-    return   body();
+    body();
 }}}
 
 // BODY -> CLASS BODY
 // BODY -> e
-static int body()
+static void body()
 {{{
 
     enter(__func__);
-    unsigned res = 0;
     // must read, because of recursion... (or not ?)
-    if (get_token()) {
-        return LEX_ERROR;
-    }
+    get_token();
 
     // `class` or `eof` expected
     if (token->type == TT_keyword && token->attr.keyword == TK_class ) {
-        res = class();
-        if (res)
-            return res;
+        class();
 
-        return body();
+        body();
     }
     else if (token->type == TT_eof) {
-        return 0;
+        return;
     }
-    else
-        return SYNTAX_ERROR;
+    else {
+        terminate(SYNTAX_ERROR);
+    }
 }}}
 
 /* CLASS -> id lb CBODY rb
@@ -94,23 +89,22 @@ static int body()
    inserting symbol `class`
    changing actual class poiter
 */
-static int class()
+static void class()
 {{{
     enter(__func__);
-    // return value
-    int res = 0;
     // going for id
-    if (get_token())
-        return LEX_ERROR;
+    get_token();
 
     // `id` expected
-    if (token->type != TT_id)
-        return SYNTAX_ERROR;
+    if (token->type != TT_id) {
+        terminate(SYNTAX_ERROR);
+    }
+
     T_symbol *symbol;
     // finding a symbol
     if ((symbol = table_find(symbol_tab, token->attr.str, NULL))) {
         // class with same name found - definition error
-        return DEFINITION_ERROR;
+        terminate(DEFINITION_ERROR);
     }
 
     symbol = create_symbol(token->attr.str, is_class);
@@ -120,193 +114,158 @@ static int class()
     actual_class = symbol;
 
     // going for '{'
-    if (get_token())
-         return LEX_ERROR;
+    get_token();
 
-    if (token->type != TT_lCurlBracket)
-        return SYNTAX_ERROR;
+    if (token->type != TT_lCurlBracket) {
+        terminate(SYNTAX_ERROR);
+    }
 
     // cbody should return } in token
-    res = cbody();
-
-    return res;
+    cbody();
 }}}
 
 /*
    CBODY -> static TYPE id CBODY2 CBODY
    symbol data type, member class, id defined
 */
-static int cbody()
+static void cbody()
 {{{
     enter(__func__);
-    int res;
     unsigned dtype;     // data type
     // static or '}'
-    if (get_token())
-        return LEX_ERROR;
+    get_token();
 
     // 'static' expected
     if (token->type == TT_keyword && token->attr.keyword == TK_static) {
         // reading type
-        if (get_token())
-            return LEX_ERROR;
+        get_token();
 
         // 'data type' expected
         if (token->type == TT_keyword && token->attr.keyword < TK_boolean) {
             dtype = token->attr.keyword;
         }
         else {
-            return SYNTAX_ERROR;
+            terminate(SYNTAX_ERROR);
         }
 
         // 'id' expected
-        if (get_token())
-            return LEX_ERROR;
+        get_token();
 
-        if (token->type != TT_id)
-            return SYNTAX_ERROR;
-
-        // finding a symbol
-        T_symbol *symbol;
-        symbol = table_find(symbol_tab, token->attr.str, actual_class);
-
-        if ( symbol ){
-            // id in class with same name found - definition error
-            return DEFINITION_ERROR;
+        if (token->type != TT_id){
+            terminate(SYNTAX_ERROR);
         }
 
-        // creating a symbol
-        symbol = create_symbol(token->attr.str, 0);
-        token->attr.str = 0;
-        symbol->member_class = actual_class;
-        table_insert(symbol_tab, symbol);
+        // setting identifier name
+        char *iden = token->attr.str;
+        // finding a symbol
+        if (table_find(symbol_tab, token->attr.str, actual_class)) {
+            // id in class with same name found - definition error
+            terminate(DEFINITION_ERROR);
+        }
+        // discrediting
+        token->attr.str = NULL;
 
-        res = cbody2(symbol, dtype);
-        if (res)
-            return res;
+        cbody2(iden, dtype);
 
-        return cbody();
+        cbody();
     }
-    else if (token->type == TT_rCurlBracket)
-        return 0;
-    else
-        return SYNTAX_ERROR;
+    else if (token->type != TT_rCurlBracket)
+        terminate(SYNTAX_ERROR);    // XXX
 }}}
 
 /*
    CBODY2 -> '=' ';' '('
     setting variable or function
 */
-static int cbody2(T_symbol *symbol, T_data_type dtype)
+static void cbody2(char *iden, T_data_type dtype)
 {{{
     enter(__func__);
     // '=' or ';' or '(' expected
-    if (get_token())
-        return LEX_ERROR;
+    get_token();
 
     // variable
     if (token->type == TT_assign || token->type == TT_semicolon) {
 
         if (dtype == is_void) {
-            return TYPE_ERROR;
+            terminate(TYPE_ERROR);
         }
-        // setting symbol as variable
-        symbol->attr.var = create_var_from_symbol(dtype);
-        symbol->symbol_type = is_var;
+        // creating symbol as variable
+        T_symbol *sym = create_var(iden, dtype);
+        sym->member_class = actual_class;
+        table_insert(symbol_tab, sym);
 
-        // initialization
         // just reading everything till `;`
         while (token->type != TT_semicolon && token->type != TT_eof) {
-            if (get_token()) {
-                return LEX_ERROR;
-            }
+            get_token();
         }
 
-        if (token->type == TT_semicolon)
-            return 0;
-        return SYNTAX_ERROR;
+        if (token->type != TT_semicolon)
+            terminate(SYNTAX_ERROR);
     }
     else if (token->type == TT_lBracket) {
         // function
-        return func(symbol, dtype);
+        func(iden, dtype);
     }
     else
-        return SYNTAX_ERROR;
+        terminate(SYNTAX_ERROR);
 }}}
 
 /* FUNC -> ( PAR ) FBODY
  '(' has been read
 */
-static int func(T_symbol *symbol, T_data_type dtype)
+static void func(char *iden, T_data_type dtype)
 {{{
     enter(__func__);
-    int res = 0;
-
     // creating a function
-    symbol->attr.func = create_func(dtype);
-    symbol->symbol_type = is_func;
+    T_symbol *sym = create_func(iden, dtype);
+    sym->member_class = actual_class;
+    table_insert(symbol_tab, sym);
 
-    res = par(symbol);
-    if (res)
-        return res;
-
-    res = fbody(symbol);
-
-    if (res)
-        return res;
-
-    return 0;
+    par(sym);
+    fbody();
 }}}
 
 /*
     PAR -> ε | type id ...
 */
-static int par(T_symbol *symbol)
+static void par(T_symbol *symbol)
 {{{
     enter(__func__);
-
-    int rc = SYNTAX_ERROR;
     // reading for ')' or type
-    if (get_token()) {
-        return LEX_ERROR;
-    }
+    get_token();
 
     if (token->type == TT_rBracket) {
         // no parameters
         symbol->attr.func->par_count = 0;
         symbol->attr.func->arguments = NULL;
-        return 0;
+        return;
     }
 
     token_vector tv = token_vec_init();
 
     do {
         token_push_back(tv, token);
-        if (get_token()) {
-            rc = LEX_ERROR;
-            goto free_tvect;
-        }
+        get_token();
     } while (token->type != TT_rBracket && token->type != TT_eof);
 
     // pushing ')'
     token_push_back(tv, token);
 
     if (token->type == TT_eof) {
-        goto free_tvect;
+        terminate(SYNTAX_ERROR);
     }
 
     T_func_symbol *fptr = symbol->attr.func;
     // number of read tokens
     if ((tv->last)%3) {
-        goto free_tvect;
+        terminate(SYNTAX_ERROR);
     }
     fptr->par_count = (tv->last)/3;
 
     // allocating pointer to arguments
     void **arguments = calloc(1,sizeof(void*)*fptr->par_count);
     if (!arguments) {
-        rc = INTERNAL_ERROR;
-        goto free_tvect;
+        terminate(SYNTAX_ERROR);
     }
 
     unsigned i = 0; // parameter count
@@ -320,20 +279,22 @@ static int par(T_symbol *symbol)
             dtype = tptr->attr.keyword;
             // XXX maybe other error code ???
             if (dtype == TK_void)
-                return TYPE_ERROR;
+                terminate(TYPE_ERROR);
         }
         else {
-            goto free_args;
+            free(arguments);
+            terminate(SYNTAX_ERROR);
         }
         // identifier expected
         tptr++;
         if (tptr->type != TT_id) {
-            goto free_args;
+            free(arguments);
+            terminate(SYNTAX_ERROR);
         }
         // argument names must differ
         if (table_find(fptr->local_table, tptr->attr.str, NULL)) {
-            rc = DEFINITION_ERROR;
-            goto free_args;
+            free(arguments);
+            terminate(DEFINITION_ERROR);
         }
 
         // create and insert variable symbol
@@ -351,77 +312,64 @@ static int par(T_symbol *symbol)
             tptr++;
         }
         else if (tptr->type != TT_rBracket) {
-            goto free_args;
+            free(arguments);
+            terminate(SYNTAX_ERROR);
         }
     }
 
     fptr->arguments = arguments;
     token_vec_delete(tv);
-    return 0;
-
-    // errors
-    free_args:
-    free(arguments);
-    free_tvect:
-    token_vec_delete(tv);
-    return rc;
 }}}
 
 // FBODY -> { ST_LIST }
 // FBODY -> ;
-static int fbody()
+static void fbody()
 {{{
     enter(__func__);
-    if (get_token())
-        return LEX_ERROR;
+    get_token();
 
-    if (token->type == TT_lCurlBracket) {
-        return st_list();
+    if (token->type != TT_lCurlBracket) {
+        terminate(SYNTAX_ERROR);
     }
 
-    return SYNTAX_ERROR;
+    st_list();
 }}}
 
 // ST_LIST -> ε
 // ST_LIST -> {STLIST} STLIST
 // ST_LIST -> STAT STLIST
-static int st_list()
+static void st_list()
 {{{
     enter(__func__);
     // read only if '{' or ';'
     if (token->type == TT_lCurlBracket || token->type == TT_rCurlBracket ||
         token->type == TT_semicolon || token->type == TT_keyword) {
         // expecting whatever what is statement
-        if (get_token())
-            return LEX_ERROR;
+        get_token();
     }
     // keyword
     if (token->type == TT_keyword || token->type == TT_id ||
         token->type == TT_fullid)
     {
-
-        int res = stat();
-        if (res)
-            return res;
-
-        return st_list();
+        stat();
+        st_list();
     }
     else if (token->type == TT_rCurlBracket) {
-        return 0;
+        return;
     }
     else if (token->type == TT_lCurlBracket) {
         in_block++;
-        int res = st_list();        // { ST-LIST } ST-LIST
+        st_list();        // { ST-LIST } ST-LIST
         in_block--;
-        if (res)
-            return res;
-        return st_list();
+        st_list();
     }
-    return SYNTAX_ERROR;
+    else {
+        terminate(SYNTAX_ERROR);
+    }
 }}}
 
 // STAT -> many...
-static int stat()
+static void stat()
 {{{
     enter(__func__);
     int bc = 0;
@@ -435,32 +383,31 @@ static int stat()
                     // rule: STAT -> TYPE id ;| = EXPR ;
                     // local variable cannot be declared in block {...}
                     if (in_block)
-                        return SYNTAX_ERROR;
+                        terminate(SYNTAX_ERROR);
 
-                    if (get_token()) {
-                        return LEX_ERROR;
-                    }
+                    get_token();
+
                     if (token->type != TT_id) {
-                        return SYNTAX_ERROR;
+                        terminate(SYNTAX_ERROR);
                     }
-                    if (get_token()) {
-                        return LEX_ERROR;
-                    }
+                    get_token();
+
                     if (token->type == TT_semicolon) {
-                        return 0;
+                        return;
                     }
                     else if (token->type == TT_assign) {
                         while (token->type != TT_semicolon && token->type != TT_eof) {
-                            if (get_token()) {
-                                return LEX_ERROR;
-                            }
+                            get_token();
+
                         }
-                        if (token->type == TT_semicolon)
-                            return 0;
-                        return SYNTAX_ERROR;
+                        if (token->type == TT_semicolon) {
+                            return;
+                        }
+                        terminate(SYNTAX_ERROR);
                     }
-                    else
-                        return SYNTAX_ERROR;
+                    else {
+                        terminate(SYNTAX_ERROR);
+                    }
                 }
            case TK_while:
            case TK_if:
@@ -468,18 +415,15 @@ static int stat()
                     // while or if
                     T_keyword keyword = token->attr.keyword;
                     // ST -> if ( EXPR ) { ST_LIST } ELSE
-                    if (get_token()) {
-                        return LEX_ERROR;
-                    }
+                    get_token();
+
                     if (token->type != TT_lBracket) {
-                        return SYNTAX_ERROR;
+                        terminate(SYNTAX_ERROR);
                     }
                     // reading till ')' or 'eof' read
                     bc = 0; // bracket counter
                     do {
-                        if (get_token()) {
-                            return LEX_ERROR;
-                        }
+                        get_token();
                         if (token->type == TT_lBracket)
                             bc++;
                         if (token->type == TT_rBracket)
@@ -487,37 +431,34 @@ static int stat()
                     } while ( bc != -1 && token->type != TT_eof);
 
                     if (token->type == TT_eof) {
-                         return SYNTAX_ERROR;
+                         terminate(SYNTAX_ERROR);
                     }
 
-                    if (get_token()) {
-                        return LEX_ERROR;
-                    }
+                    get_token();
+
                     // if (..) { ....
                     if (token->type != TT_lCurlBracket) {
-                        return SYNTAX_ERROR;
+                        terminate(SYNTAX_ERROR);
                     }
                     // beginning new statement list
-                    int res;
                     in_block++;
-                    res = st_list();
+                    st_list();
                     in_block--;
-                    if (res)
-                        return res;
-
                     // end while
                     if (keyword == TK_while) {
-                        return 0;
+                        return;
                     }
 
                     // if next word is else do call st_else()
-                    if (get_token())
-                        return LEX_ERROR;
-                    if (token->type == TT_keyword && token->attr.keyword == TK_else)
-                        return st_else();
+                    get_token();
+                    if (token->type == TT_keyword &&
+                        token->attr.keyword == TK_else)
+                    {
+                        st_else();
+                    }
                     // no else read, must unget
                     unget_token();
-                    return 0;
+                    return;
                 }
             case TK_return:
                 // RET return EXPR;
@@ -526,39 +467,35 @@ static int stat()
                 {
                     // reading till ';' or 'eof' read
                     while ( token->type != TT_semicolon && token->type != TT_eof) {
-                        if (get_token()) {
-                            return LEX_ERROR;
-                        }
+                        get_token();
                     }
 
                     if (token->type == TT_eof) {
-                         return SYNTAX_ERROR;
+                         terminate(SYNTAX_ERROR);
                     }
 
-                    return 0;
+                    return;
                 }
             default:
-                return SYNTAX_ERROR;
+                terminate(SYNTAX_ERROR);
         }
     }
     // id = exp
     else if (token->type == TT_id || token->type == TT_fullid) {
 
         // inline rule
-        if (get_token())
-             return LEX_ERROR;
+        get_token();
 
         if (token->type == TT_assign) {
              // reading till ';' or 'eof' read
              while ( token->type != TT_semicolon && token->type != TT_eof) {
-                 if (get_token()) {
-                     return LEX_ERROR;
-                 }
+                 get_token();
+
              }
              if (token->type == TT_eof) {
-                 return SYNTAX_ERROR;
+                 terminate(SYNTAX_ERROR);
              }
-             return 0;
+             return;
          }
          else if (token->type == TT_lBracket) {
              // id();
@@ -566,9 +503,8 @@ static int stat()
              // reading till ';' or 'eof' read
              bc = 0; // bracket counter
              do {
-                 if (get_token()) {
-                     return LEX_ERROR;
-                 }
+                 get_token();
+
                  if (token->type == TT_lBracket)
                      bc++;
                  if (token->type == TT_rBracket)
@@ -576,62 +512,58 @@ static int stat()
              } while ( bc != -1 && token->type != TT_eof);
 
              if (token->type == TT_eof) {
-                 return SYNTAX_ERROR;
+                 terminate(SYNTAX_ERROR);
              }
 
-             if (get_token())
-                 return LEX_ERROR;
+             get_token();
 
              if (token->type == TT_semicolon)
-                 return 0;
+                 return;
 
-             return SYNTAX_ERROR;
+             terminate(SYNTAX_ERROR);
          }
     }
-        return SYNTAX_ERROR;
+    terminate(SYNTAX_ERROR);
 }}}
 
 // ELSE -> .
 // ELSE -> else ELSE2
 // ELSE2 -> { ST_LIST }
-static int st_else()
+static void st_else()
 {{{
     enter(__func__);
 
-    if (get_token()) {
-        return LEX_ERROR;
-    }
+    get_token();
+
     // `else {`
     if (token->type == TT_lCurlBracket) {
         in_block++;
-        int res = st_list()+0;
+        st_list();
         in_block--;
-        return res;
     }
     // `else if`
     else if (token->type == TT_keyword && token->attr.keyword == TK_if) {
-        return st_else2()+0;
+        st_else2();
     }
-
-    return SYNTAX_ERROR;
+    else {
+        terminate(SYNTAX_ERROR);
+    }
 }}}
 
 // ELSE2 -> if ( EXPR ) { ST_LIST } ELSE
-static int st_else2()
+static void st_else2()
 {{{
     enter(__func__);
 
-    if (get_token()) {
-        return LEX_ERROR;
-    }
+    get_token();
+
     // only '('
     if (token->type == TT_lBracket) {
         // reading till ')' or 'eof' read
         int bc = 0; // bracket counter
         do {
-            if (get_token()) {
-                return LEX_ERROR;
-            }
+            get_token();
+
             if (token->type == TT_lBracket)
                 bc++;
             if (token->type == TT_rBracket)
@@ -639,32 +571,28 @@ static int st_else2()
         } while ( bc != -1 && token->type != TT_eof);
 
         if (token->type == TT_eof) {
-            return SYNTAX_ERROR;
+            terminate(SYNTAX_ERROR);
         }
 
-        if (get_token()) {
-            return LEX_ERROR;
-        }
+        get_token();
+
         // begining of statement list
         if (token->type != TT_lCurlBracket) {
-            return SYNTAX_ERROR;
+            terminate(SYNTAX_ERROR);
         }
-        int res;
         in_block++;
-        res = st_list();
+        st_list();
         in_block--;
-        if (res)
-            return res;
         // if next word is else do call st_else()
-        if (get_token())
-            return LEX_ERROR;
+        get_token();
         if (token->type == TT_keyword && token->attr.keyword == TK_else)
-            return st_else();
+            st_else();
         // no else, token must be returned
         unget_token();
-        return 0;
     }
-    return SYNTAX_ERROR;
+    else {
+        terminate(SYNTAX_ERROR);
+    }
 }}}
 
 int parse()
@@ -695,29 +623,25 @@ int parse()
        lexical + syntax analysis
        filling symbol table + checking redefinitions
     */
-    res = prog();
-    if (res)
-        goto errors;
-
+    prog();
+    puts("aa");
     // checking Main class and run() function
     T_symbol *Mainclass = table_find(symbol_tab, "Main", NULL);
     if (!Mainclass) {
-        res = SEMANTIC_ERROR;
-        goto errors;
-    }
-    T_symbol *run_func = table_find(symbol_tab, "run", Mainclass);
-    if (!run_func || run_func->symbol_type != is_func) {
-        res = SEMANTIC_ERROR;
-        goto errors;
+        terminate(SEMANTIC_ERROR);  // definition error? XXX
     }
 
+    T_symbol *run_func = table_find(symbol_tab, "run", Mainclass);
+    if (!run_func || run_func->symbol_type != is_func) {
+        terminate(SEMANTIC_ERROR);  // definition error? XXX
+    }
 
     if (fseek(source, 0, SEEK_SET)) {
         res = INTERNAL_ERROR;
         goto errors;
     } else {
         #ifdef REC_DEBUG
-        puts("_____________________________________________\n\n\n");
+        puts("*********");
         #endif
         res = second_throughpass();
     }
@@ -730,5 +654,4 @@ int parse()
     list_free(&instr_list);
     return res;
 }}}
-
 

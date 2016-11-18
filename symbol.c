@@ -10,25 +10,39 @@
 #include <assert.h>
 #include <stdio.h>
 #include "debug.h"
+#include "ilist.h"
+
 // global symbol table
 T_symbol_table *symbol_tab;
 
-T_func_symbol *create_func(T_data_type dtype)
+T_symbol *create_func(char *id, T_data_type dtype)
 {{{
-
+    T_symbol *sym = create_symbol(id, is_func);
     T_func_symbol *func = calloc(1, sizeof(T_func_symbol));
 
     if (!func) {
+        free(sym);
         terminate(INTERNAL_ERROR);
     }
+    // setting return type
     func->data_type = dtype;
 
+    // creating local table
     if (!(func->local_table = table_init(RANGE))) {
         free(func);
+        free(sym);
         terminate(INTERNAL_ERROR);
     }
 
-    return func;
+    // creating instruction list
+    if (!(func->func_ilist = list_init())) {
+        table_remove(&func->local_table);
+        free(func);
+        free(sym);
+        terminate(INTERNAL_ERROR);
+    }
+    sym->attr.func = func;
+    return sym;
 }}}
 
 T_symbol *create_symbol(char *id, T_symbol_type stype)
@@ -45,22 +59,33 @@ T_symbol *create_symbol(char *id, T_symbol_type stype)
     return sym;
 }}}
 
-T_var_symbol *create_var_from_symbol(T_data_type dtype)
+void func_remove(T_symbol *sym)
 {{{
-    T_var_symbol *var = calloc(1, sizeof(T_var_symbol));
+    list_free(&sym->attr.func->func_ilist);
+    local_table_remove(&sym->attr.func->local_table);
+    if (sym->attr.func->arguments)
+        free(sym->attr.func->arguments);
+    free(sym->attr.func);
+    free(sym->id);
+    free(sym);
+}}}
 
-    if (!var) {
-        terminate(INTERNAL_ERROR);
-    }
-    var->data_type = dtype;
-
-    return var;
+void var_remove(T_symbol *sym)
+{{{
+    if (sym->attr.var->data_type && sym->attr.var->value.str)
+        free(sym->attr.var->value.str);
+    free(sym->id);
+    free(sym->attr.var);
+    free(sym);
 }}}
 
 T_symbol *create_var(char *id, T_data_type dtype)
 {{{
     T_symbol *sym = create_symbol(id, is_var);
-    sym->attr.var = create_var_from_symbol(dtype);
+    if (!(sym->attr.var = calloc(1, sizeof(T_var_symbol)))) {
+        free(sym);
+    }
+    sym->attr.var->data_type = dtype;
     return sym;
 }}}
 
@@ -201,7 +226,8 @@ void local_table_remove(struct T_Hash_symbol_table **stab)
                 free((void*)s->id);
 
                 if (s->attr.var->data_type == is_str &&
-                    s->attr.var->value.str) {
+                    s->attr.var->value.str)
+                {
                         free(s->attr.var->value.str);
                 }
                 free(s->attr.var);

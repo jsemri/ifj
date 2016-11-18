@@ -80,13 +80,8 @@ T_symbol *create_var(char *id, T_data_type dtype);
  */
 T_symbol *create_var_uniq(T_data_type dtype);
 
-/**
- * @brief Creates a variable.
- *
- * @param dtype data type
- * @return valid pointer on success
- */
-T_var_symbol *create_var_from_symbol(T_data_type dtype);
+void func_remove(T_symbol *sym);
+void var_remove(T_symbol *sym);
 
 /**
  * @brief Creates a function.
@@ -94,7 +89,7 @@ T_var_symbol *create_var_from_symbol(T_data_type dtype);
  * @param dtype data type
  * @return valid pointer on success
  */
-T_func_symbol *create_func(T_data_type dtype);
+T_symbol *create_func(char *id, T_data_type dtype);
 
 /**
  * Searches for variable (also full identifier is possible) with specific
