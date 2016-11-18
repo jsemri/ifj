@@ -7,6 +7,7 @@
 #include "symbol.h"
 #include "ilist.h"
 #include "stack.h"
+#include "precedence_analyser_stack.h"
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -75,6 +76,7 @@ void terminate(int err_code) {
     token_free(&token);
     if (global_token_vector)
         token_vec_delete(global_token_vector);
+    prec_stack_free();
     stack_remove(&frame_stack, true);
     stack_remove(&main_stack, false);
     fclose(source);

@@ -33,14 +33,14 @@ T_prec_rule rules[RULES_COUNT] = {
 
 #define CONV_TERM_TO_TT(i) (terms[i].type == PREC_TOKEN ? \
                             terms[i].ptr.token->type : TT_empty)
-#define FAIL_RULE(code) do{*errcode = code; return NULL;} while (0)
+#define FAIL_RULE(code) terminate(code)
 #define CREATE_SYMBOL(symbol, type) T_symbol *symbol = create_var_uniq(type); \
-                                    /*table_insert(symbol_tab, symbol)*/
+                                    table_insert(symbol_tab, symbol)
 // FIXME Pokus o vložení symbolu do tabulky skončí segfaultem
 #define ADD_INSTR(type, dst, s1, s2) create_instr(expr_ilist, type, s1, s2, dst)
 #define CHECK_TYPE(symbol, type) ((symbol)->attr.var->data_type == type)
 
-T_symbol *execute_rule(T_prec_stack_entry terms[3], int count, int *errcode,
+T_symbol *execute_rule(T_prec_stack_entry terms[3], int count,
                        T_func_symbol *act_func, T_symbol *act_class,
                        ilist *expr_ilist) {
     for (int i = 0; i < RULES_COUNT; i++) {
@@ -49,7 +49,7 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count, int *errcode,
                 rules[i].tokens >= 2 && rules[i].t2 != CONV_TERM_TO_TT(1) ||
                 rules[i].tokens >= 3 && rules[i].t3 != CONV_TERM_TO_TT(2))
             continue;
-        return rules[i].func(terms, errcode, act_func, act_class, expr_ilist);
+        return rules[i].func(terms, act_func, act_class, expr_ilist);
     }
     // No rule can be applied:
     //printf("-- Nic nevyhovuje\n");
@@ -57,11 +57,10 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count, int *errcode,
 }
 
 static T_symbol *conv(T_symbol *in, T_data_type new_type, ilist *expr_ilist) {
-    // TODO Udělat všude
     CREATE_SYMBOL(out, new_type);
 
     ADD_INSTR(TI_convert, out, in, NULL);
-    printf("[INST] Přetypování\n");
+    //printf("[INST] Přetypování\n");
 
     return out;
 }
@@ -89,14 +88,14 @@ static T_data_type cast_nums(T_symbol **s1, T_symbol **s2, ilist *expr_ilist) {
     }
 }
 
-T_symbol *rule_brackets(T_prec_stack_entry terms[3], int *errcode,
+T_symbol *rule_brackets(T_prec_stack_entry terms[3],
                         T_func_symbol *act_func, T_symbol *act_class,
                         ilist *expr_ilist) {
     return terms[1].ptr.symbol;
 }
 
 
-T_symbol *rule_bool(T_prec_stack_entry terms[3], int *errcode,
+T_symbol *rule_bool(T_prec_stack_entry terms[3],
                     T_func_symbol *act_func, T_symbol *act_class,
                     ilist *expr_ilist) {
     T_symbol *s1 = terms[0].ptr.symbol;
@@ -124,20 +123,20 @@ T_symbol *rule_bool(T_prec_stack_entry terms[3], int *errcode,
         type = TI_greaterEq;
     }
 
-    printf("[INST] Arithm. oper.\n");
+    //printf("[INST] Arithm. oper.\n");
     ADD_INSTR(type, symbol, s1, s2);
 
     return symbol;
 }
 
-T_symbol *rule_concat(T_prec_stack_entry terms[3], int *errcode,
+T_symbol *rule_concat(T_prec_stack_entry terms[3],
                       T_func_symbol *act_func, T_symbol *act_class,
                       ilist *expr_ilist) {
     T_symbol *s1 = terms[0].ptr.symbol;
     T_symbol *s2 = terms[2].ptr.symbol;
 
     if (!CHECK_TYPE(s1, is_str) && !CHECK_TYPE(s2, is_str))
-        return rule_arith(terms, errcode, act_func, act_class, expr_ilist);
+        return rule_arith(terms, act_func, act_class, expr_ilist);
 
     if (CHECK_TYPE(s1, is_int) || CHECK_TYPE(s1, is_double))
         s1 = conv(s1, is_str, expr_ilist);
@@ -148,7 +147,7 @@ T_symbol *rule_concat(T_prec_stack_entry terms[3], int *errcode,
         // Operands can't be converted to String
         FAIL_RULE(4);
 
-    printf("[INST] Spojení řetězců\n");
+    //printf("[INST] Spojení řetězců\n");
 
     CREATE_SYMBOL(symbol, is_str);
     ADD_INSTR(TI_concat, symbol, s1, s2);
@@ -156,7 +155,7 @@ T_symbol *rule_concat(T_prec_stack_entry terms[3], int *errcode,
     return symbol;
 }
 
-T_symbol *rule_arith(T_prec_stack_entry terms[3], int *errcode,
+T_symbol *rule_arith(T_prec_stack_entry terms[3],
                      T_func_symbol *act_func, T_symbol *act_class,
                      ilist *expr_ilist) {
     T_symbol *s1 = terms[0].ptr.symbol;
@@ -180,14 +179,14 @@ T_symbol *rule_arith(T_prec_stack_entry terms[3], int *errcode,
         type = TI_div;
     }
 
-    printf("[INST] Arithm. oper.\n");
+    //printf("[INST] Arithm. oper.\n");
     ADD_INSTR(type, symbol, s1, s2);
 
     return symbol;
 }
 
 
-T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3], int *errcode,
+T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3],
                         T_func_symbol *act_func, T_symbol *act_class,
                         ilist *expr_ilist) {
     if (terms[0].ptr.token->type == TT_id) {
@@ -197,13 +196,13 @@ T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3], int *errcode,
     }
 
     if (terms[0].ptr.token->type == TT_int) {
-        printf("[INST] Nový symbol: int=%d\n", terms[0].ptr.token->attr.n);
+        //printf("[INST] Nový symbol: int=%d\n", terms[0].ptr.token->attr.n);
         CREATE_SYMBOL(symbol, is_int);
         // TODO Přidat instrukci..
         return symbol;
     }
     else if (terms[0].ptr.token->type == TT_double) {
-        printf("[INST] Nový symbol: double=%g\n", terms[0].ptr.token->attr.d);
+        //printf("[INST] Nový symbol: double=%g\n", terms[0].ptr.token->attr.d);
         CREATE_SYMBOL(symbol, is_double);
         // TODO Přidat instrukci..
         return symbol;

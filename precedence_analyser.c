@@ -6,33 +6,28 @@
 #include "precedence_analyser_stack.h"
 #include "precedence_table.h"
 #include "precedence_rules.h"
+#include "globals.h"
 #include <stdio.h>
 
 #define MAX_TERMS_IN_RULE 3
 
-#define FAIL_PREC(code) do {prec_stack_free(stack); \
-                            return code;} while(0)
-#define PUSH_SYMBOL(s) if (!prec_stack_push_symbol(stack, s)) FAIL_PREC(99)
-#define PUSH_TOKEN(t) if (!prec_stack_push_token(stack, t)) FAIL_PREC(99)
-#define PUSH_EXP(t) if (!prec_stack_push_exp(stack, t)) FAIL_PREC(99)
-#define ADD_HANDLE() if (!prec_stack_add_handle(stack)) FAIL_PREC(99)
+#define PUSH_SYMBOL(s) prec_stack_push_symbol(stack, s)
+#define PUSH_TOKEN(t) prec_stack_push_token(stack, t)
+#define PUSH_EXP(t) prec_stack_push_exp(stack, t)
+#define ADD_HANDLE() prec_stack_add_handle(stack)
 
 static T_token* get_next_token(token_vector v);
 
 /*
  * TODO Token a počet místo vektoru
  */
-int precedence_analyser(token_vector v, T_symbol *lvalue,
-                        T_func_symbol *act_func, T_symbol *act_class,
-                        struct T_ilist *ilist) {
+void precedence_analyser(token_vector v, T_symbol *lvalue,
+                         T_func_symbol *act_func, T_symbol *act_class,
+                         struct T_ilist *ilist) {
     T_prec_stack *stack = prec_stack_new();
-    if (stack == NULL)
-        return 99;
     PUSH_SYMBOL(PREC_TOP);
     T_token *token = get_next_token(v);
 
-    // TODO Vypnout krokování :)
-    int steps = 1, max = 99;
     while (token != NULL || !prec_stack_is_empty(stack)) {
         T_tokenType input_tt = token ? token->type : TT_eof;
         T_tokenType stack_tt = prec_stack_get_top_token_type(stack);
@@ -47,15 +42,9 @@ int precedence_analyser(token_vector v, T_symbol *lvalue,
             //printf("Provést: >\n");
             T_prec_stack_entry rule_terms[MAX_TERMS_IN_RULE];
             int count;
-            if (!prec_stack_reduce(stack, rule_terms, MAX_TERMS_IN_RULE,
-                                   &count)) {
-                FAIL_PREC(2);
-            }
-            int errcode;
-            T_symbol *result = execute_rule(rule_terms, count, &errcode,
-                                            act_func, act_class, ilist);
-            if (result == NULL)
-                FAIL_PREC(errcode);
+            prec_stack_reduce(stack, rule_terms, MAX_TERMS_IN_RULE, &count);
+            T_symbol *result = execute_rule(rule_terms, count, act_func,
+                                            act_class, ilist);
             PUSH_EXP(result);
         }
         else if (precedence == PREC_EQUAL) {
@@ -64,21 +53,21 @@ int precedence_analyser(token_vector v, T_symbol *lvalue,
             token = get_next_token(v);
         }
         else {
-            //if (steps == max) printf("***\n");
             //fprintf(stderr, "Chybí operátor\n");
-            FAIL_PREC(2);
+            terminate(SYNTAX_ERROR);
         }
-        if (steps++ == max)
-            break;
     }
 
+    T_symbol *result = prec_stack_get_result(stack);
     if (lvalue != NULL) {
-        // TODO Ulož výsledek do lValue
-        printf("[INST] Ulož výsledek do lValue\n");
+        create_instr(ilist, TI_mov, result, NULL, lvalue);
+        //printf("[INST] Ulož výsledek do lValue\n");
     }
-    prec_stack_print(stack);
-    prec_stack_free(stack);
-    return 0;
+    else {
+        // TODO Ulož výsledek "někam" jinam
+    }
+    //prec_stack_print(stack);
+    prec_stack_free();
 }
 
 /**
@@ -135,9 +124,7 @@ int main() {
     add_int(v, 2);
 
     ilist *list = list_init();
-    int r = precedence_analyser(v, NULL, NULL, NULL, list);
-
-    printf("%% Návratový kód: %d\n", r);
+    precedence_analyser(v, NULL, NULL, NULL, list);
 
     token_vec_delete(v);
     return 0;

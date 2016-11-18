@@ -7,26 +7,32 @@
 #include "token.h"
 #include "symbol.h"
 #include <stdlib.h>
+#include <assert.h>
 
 #define INIT_CAPACITY 20
 
-static bool prec_stack_resize_if_needed(T_prec_stack *s);
+static void prec_stack_resize_if_needed(T_prec_stack *s);
+T_prec_stack *prec_stack_instance = NULL;
 
 /**
  * Inicializes an empty stack
- * @return A pointer to inicialized stack or NULL if the allocation fails
+ * @return A pointer to inicialized stack
  */
 T_prec_stack *prec_stack_new() {
-    T_prec_stack *t = alloc(sizeof(T_prec_stack));
-    if (t == NULL)
-        return NULL;
+    T_prec_stack *t = malloc(sizeof(T_prec_stack));
+    if (t == NULL) {
+        terminate(INTERNAL_ERROR);
+        assert(t != NULL);
+    }
     t->last = 0;
     t->capacity = INIT_CAPACITY;
     t->data = malloc(INIT_CAPACITY * sizeof(T_prec_stack_entry));
     if (t->data == NULL) {
         free(t);
-        return NULL;
+        terminate(INTERNAL_ERROR);
+        assert(t->data != NULL);
     }
+    prec_stack_instance = t;
     return t;
 }
 
@@ -36,67 +42,58 @@ T_prec_stack *prec_stack_new() {
  * @param s A pointer to the resized stack
  * @return True, if the operation was succesful
  */
-static bool prec_stack_resize_if_needed(T_prec_stack *s) {
+static void prec_stack_resize_if_needed(T_prec_stack *s) {
     if (s->last < s->capacity)
         // No need to resize the stack
-        return true;
+        return;
     T_prec_stack_entry *data = realloc(s->data, 2 * s->capacity *
                                                 sizeof(T_prec_stack_entry));
     if (data == NULL)
         // Resizing failed
-        return false;
+        terminate(INTERNAL_ERROR);
+    assert(data != NULL);
 
     s->capacity *= 2;
     s->data = data;
-    return true;
 }
 
 /**
  * Adds token to the top of the stack
  * @param s Stack
  * @param token Token
- * @return True, if the operation was succesful
  */
-bool prec_stack_push_token(T_prec_stack *s, T_token *token) {
-    if (!prec_stack_resize_if_needed(s))
-        return false;
+void prec_stack_push_token(T_prec_stack *s, T_token *token) {
+    prec_stack_resize_if_needed(s);
     T_prec_stack_entry new_entry;
     new_entry.type = PREC_TOKEN;
     new_entry.ptr.token = token;
     s->data[s->last++] = new_entry;
-    return true;
 }
 
 /**
  * Adds expression to the top of the stack
  * @param s Stack
  * @param token Token that represents the expression
- * @return True, if the operation was succesful
  */
-bool prec_stack_push_exp(T_prec_stack *s, T_symbol *symbol) {
-    if (!prec_stack_resize_if_needed(s))
-        return false;
+void prec_stack_push_exp(T_prec_stack *s, T_symbol *symbol) {
+    prec_stack_resize_if_needed(s);
     T_prec_stack_entry new_entry;
     new_entry.type = PREC_EXP;
     new_entry.ptr.symbol = symbol;
     s->data[s->last++] = new_entry;
-    return true;
 }
 
 /**
  * Adds symbol to the top of the stack
  * @param s Stack
  * @param symbol Added symbol, either PREC_STOP or PREC_TOP
- * @return True, if the operation was succesful
  */
-bool prec_stack_push_symbol(T_prec_stack *s, T_prec_stack_type symbol) {
-    if (!prec_stack_resize_if_needed(s))
-        return false;
+void prec_stack_push_symbol(T_prec_stack *s, T_prec_stack_type symbol) {
+    prec_stack_resize_if_needed(s);
     T_prec_stack_entry new_entry;
     new_entry.type = symbol;
     new_entry.ptr.token = NULL;
     s->data[s->last++] = new_entry;
-    return true;
 }
 
 /**
@@ -118,51 +115,50 @@ T_tokenType prec_stack_get_top_token_type(T_prec_stack *s) {
 /**
  * Removes all elements from the topmost handle to the top from the stack.
  * All elements except the handle will be moved to variable 'out'. If more than
- * 'max' elements should be moved there, the function will fail. The number of
- * filled elements will be strored in 'count'
+ * 'max' elements should be moved there, the function will fail and
+ * 'terminate(SYNTAX_ERROR)' will be called. The number of filled elements
+ * will be strored in 'count'
  * @param s The stack
  * @param out Output array where the elements will be moved
  * @param max The capacity of array 'out'
  * @param count The number of actually written elements will be written here
- * @return True, if the operation was succesful
  */
-bool prec_stack_reduce(T_prec_stack *s, T_prec_stack_entry out[], int max,
+void prec_stack_reduce(T_prec_stack *s, T_prec_stack_entry out[], int max,
                        int *count) {
     int j = 0;
     for (int i = s->last - 1; i >= 0; i--) {
         if (s->data[i].type == PREC_HANDLE) {
             s->last = (unsigned) i;
             *count = j;
-            return true;
+            return;
         }
         if (j == max)
-            return false;
+            terminate(SYNTAX_ERROR);
         out[j++] = s->data[i];
     }
-    return false;
+    terminate(SYNTAX_ERROR);
 }
 
 /**
  * Adds handle before the first token on the stack.
- * @return True, if the operation was succesful
+ *
+ * terminate(SYNTAX_ERROR) will be called if there is no token behind which
+ * the handle should be added.
  */
-bool prec_stack_add_handle(T_prec_stack *s) {
-    if (!prec_stack_resize_if_needed(s))
-        return false;
-    bool result = false;
+void prec_stack_add_handle(T_prec_stack *s) {
+    prec_stack_resize_if_needed(s);
     for (int i = s->last - 1; i >= 0; i--) {
         if (s->data[i].type == PREC_TOKEN || s->data[i].type == PREC_TOP) {
             T_prec_stack_entry e;
             e.type = PREC_HANDLE;
             e.ptr.token = NULL;
             s->data[i+1] = e;
-            result = true;
-            break;
+            s->last++;
+            return;
         }
         s->data[i+1] = s->data[i];
     }
-    s->last++;
-    return result;
+    terminate(SYNTAX_ERROR);
 }
 
 /**
@@ -174,6 +170,17 @@ bool prec_stack_add_handle(T_prec_stack *s) {
 bool prec_stack_is_empty(T_prec_stack *s) {
     return s->last == 2 && s->data[0].type == PREC_TOP
            && s->data[1].type == PREC_EXP;
+}
+
+/**
+ * Returns a pointer to a symbol where result of the expression is strored
+ * @param s Stack
+ * @return A pointer to the symbol with result
+ */
+T_symbol *prec_stack_get_result(T_prec_stack *s) {
+    if (s->last != 2 || s->data[1].type != PREC_EXP)
+        terminate(SYNTAX_ERROR);
+    return s->data[1].ptr.symbol;
 }
 
 /**
@@ -229,7 +236,10 @@ void prec_stack_print(T_prec_stack *stack_ptr) {
  * Deletes stack
  * @param stack_ptr A pointer to the stack that sould be deleted
  */
-void prec_stack_free(T_prec_stack *stack_ptr) {
-    free(stack_ptr->data);
-    free(stack_ptr);
+void prec_stack_free() {
+    if (prec_stack_instance == NULL)
+        return;
+    free(prec_stack_instance->data);
+    free(prec_stack_instance);
+    prec_stack_instance = NULL;
 }
