@@ -7,11 +7,9 @@
 #include "symbol.h"
 #include "ilist.h"
 #include "stack.h"
-#include "precedence_analyser_stack.h"
 #include <stdlib.h>
 #include <stdbool.h>
 
-ilist *instr_list;
 T_symbol_table *symbol_tab;
 FILE *source;
 T_token *token;
@@ -76,14 +74,12 @@ void terminate(int err_code) {
     token_free(&token);
     if (global_token_vector)
         token_vec_delete(global_token_vector);
-    prec_stack_free();
+    //prec_stack_free();
     stack_remove(&frame_stack, true);
     stack_remove(&main_stack, false);
     fclose(source);
-    list_free(&instr_list);
     table_remove(&symbol_tab);
 
     exit(err_code);
 }
-
 

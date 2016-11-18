@@ -32,7 +32,6 @@ static bool get_token_flag = false;
 #define unget_token() get_token_flag = true
 
 // global variables
-ilist *instr_list;
 T_symbol_table *symbol_tab;
 T_token *token;
 FILE *source;
@@ -456,8 +455,10 @@ static void stat()
                     {
                         st_else();
                     }
-                    // no else read, must unget
-                    unget_token();
+                    else {
+                        // no else read, must unget
+                        unget_token();
+                    }
                     return;
                 }
             case TK_return:
@@ -585,10 +586,13 @@ static void st_else2()
         in_block--;
         // if next word is else do call st_else()
         get_token();
-        if (token->type == TT_keyword && token->attr.keyword == TK_else)
+        if (token->type == TT_keyword && token->attr.keyword == TK_else) {
             st_else();
-        // no else, token must be returned
-        unget_token();
+        }
+        else {
+            // no else, token must be returned
+            unget_token();
+        }
     }
     else {
         terminate(SYNTAX_ERROR);
@@ -598,25 +602,17 @@ static void st_else2()
 int parse()
 {{{
 
-    if (!(instr_list = list_init()))
-        return INTERNAL_ERROR;
-
     if (!(token = token_new()) ) {
-        list_free(&instr_list);
         return INTERNAL_ERROR;
     }
 
     // create global symbol table
     if (!(symbol_tab = table_init(RANGE))) {
         token_free(&token);
-        list_free(&instr_list);
         return INTERNAL_ERROR;
     }
 
-    // return value
-    int res = INTERNAL_ERROR;
-
-    // insert ifj16
+    // insert ifj16 class
     fill_ifj16();
 
     /*
@@ -624,7 +620,6 @@ int parse()
        filling symbol table + checking redefinitions
     */
     prog();
-    puts("aa");
     // checking Main class and run() function
     T_symbol *Mainclass = table_find(symbol_tab, "Main", NULL);
     if (!Mainclass) {
@@ -637,21 +632,18 @@ int parse()
     }
 
     if (fseek(source, 0, SEEK_SET)) {
-        res = INTERNAL_ERROR;
-        goto errors;
+        terminate(INTERNAL_ERROR);
     } else {
         #ifdef REC_DEBUG
         puts("*********");
         #endif
-        res = second_throughpass();
+        second_throughpass();
     }
-    interpret();
 
+    interpret(run_func->attr.func->func_ilist);
 
-    errors:
     table_remove(&symbol_tab);
     token_free(&token);
-    list_free(&instr_list);
-    return res;
+    return 0;
 }}}
 

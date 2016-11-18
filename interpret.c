@@ -10,7 +10,6 @@
 
 T_stack *frame_stack;
 T_stack *main_stack;
-ilist *instr_list;
 
 void create_frame(T_symbol *func, T_stack *stack)
 {{{
@@ -54,13 +53,13 @@ T_symbol *find_var(T_symbol *var)
     return var;
 }}}
 
-void interpret_loop()
+void interpret_loop(ilist *instr_list)
 {{{
 
     T_instr *ins = instr_list->first;
     while (ins != NULL) {
 
-//        print_instr(ins);
+        print_instr(ins);
         switch (ins->itype) {
             case TI_mov:
 
@@ -75,12 +74,12 @@ void interpret_loop()
     return;
 }}}
 
-void interpret()
+void interpret(ilist *instr_list)
 {{{
     frame_stack = stack_init();
     main_stack = stack_init();
 
-    interpret_loop();
+    interpret_loop(instr_list);
 
     stack_remove(&frame_stack, true);
     stack_remove(&main_stack, false);
