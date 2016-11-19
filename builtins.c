@@ -69,3 +69,22 @@ void read_stdin(T_symbol *result, T_data_type dtype) {
     }
     result->attr.var->initialized = true;
 }
+
+void substr(T_symbol *s, T_symbol *i, T_symbol *n, T_symbol *result) {
+    int startChar = i->attr.var->value.n;
+    int numOfChars = n->attr.var->value.n;
+    int endChar = startChar + numOfChars;
+    char *buf;
+
+    if((buf = malloc(sizeof(char) * numOfChars)) == NULL) {
+        terminate(99);
+    }
+
+    int count = 0;
+    for (int i = startChar; i < (endChar + 1); ++i) {
+        buf[count++] = s->attr.var->value.str[i];
+    }
+
+    result->attr.var->value.str = buf;
+    free(buf);
+}
