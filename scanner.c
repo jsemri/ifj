@@ -8,7 +8,6 @@
 #include "globals.h"
 #include "debug.h"
 #include "symbol.h"
-#include <stdlib.h>
 
 #define KEYW_COUNT 17
 
