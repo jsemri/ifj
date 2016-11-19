@@ -177,6 +177,7 @@ T_symbol *add_constant(T_value value, struct T_Hash_symbol_table *symbol_tab,
     // string value is in identifier
     // setting constant flag
     sym->attr.var->is_const = true;
+    sym->attr.var->is_init = true;
     table_insert(symbol_tab, sym);
     return sym;
 }}}
