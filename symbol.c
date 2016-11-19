@@ -72,8 +72,7 @@ void func_remove(T_symbol *sym)
 
 void var_remove(T_symbol *sym)
 {{{
-    if (sym->attr.var->data_type && sym->attr.var->value.str &&
-        !sym->attr.var->is_const)
+    if (sym->attr.var->data_type && sym->attr.var->value.str)
         free(sym->attr.var->value.str);
     free(sym->id);
     free(sym->attr.var);
@@ -148,34 +147,22 @@ T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
     return sym;
 }}}
 
-T_symbol *add_constant(T_value value, struct T_Hash_symbol_table *symbol_tab,
+T_symbol *add_constant(T_value *value, struct T_Hash_symbol_table *symbol_tab,
                        T_data_type dtype)
 {{{
 
-    // temporary buffer
-    char buf[1024] = "";
+    static char w1, w2, w3;
 
-    // creating a identifier name for constant
-    if (dtype == is_int)
-        snprintf(buf, 1023, "%d", value.n);
-    else if (dtype == is_double)
-        snprintf(buf, 1023, "%g", value.d);
-    else
-        snprintf(buf, 1023, "%s", value.str);      // TODO do it other way
+    char buf[] = "&|a4ejg82|";
+    w1 = rand() % 255 + 1;
+    w2 = rand() % 149 + 1;
+    w3 = rand() % 255 + 1;
+    buf[0] = w1;buf[1] = w2; buf[2] = w3;
+    T_symbol *sym = create_var(get_str(buf), dtype);
 
-    T_symbol *sym = table_find_simple(symbol_tab, buf, NULL);
-    // constant already in table, return pointer on it
-    if (sym && sym->attr.var->data_type == dtype)
-        return sym;
 
-    // creating deep copy
-    char *id = get_str(buf);
-    sym = create_var(id, dtype);
-
-    if (dtype == is_int || dtype == is_double)
-        sym->attr.var->value = value;
-    else
-        sym->attr.var->value.str = id;
+    sym->attr.var->value = *value;
+    value->str = NULL;
 
     // string value is in identifier
     // setting constant flag
@@ -197,6 +184,7 @@ T_symbol *symbol_copy(T_symbol *sym)
     else {
         new_symbol->attr.var->value = sym->attr.var->value;
     }
+    new_symbol->attr.var->is_init = sym->attr.var->is_init;
     return new_symbol;
 }}}
 

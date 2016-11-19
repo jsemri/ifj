@@ -56,7 +56,7 @@ void interpret_loop(ilist *instr_list)
             }
         }
 
-        print_instr(ins);
+//        print_instr(ins);
 
         switch (ins->itype) {
             case TI_mov:
@@ -77,8 +77,9 @@ void interpret_loop(ilist *instr_list)
                 for (int i = 0;i < op1->attr.var->value.n;i++) {
                     T_symbol *out = stack_top(main_stack);
                     out = get_var(out);
-                    if (out->attr.var->is_init == false)
+                    if (out->attr.var->is_init == false) {
                         terminate(8);
+                    }
                     // XXX print it whole once
                     if (out->attr.var->data_type == is_int) {
                         printf("%d", out->attr.var->value.n);
@@ -123,7 +124,7 @@ void interpret_loop(ilist *instr_list)
                 break;
 
             case TI_call:
-                create_frame(ins->op1, frame_stack);
+                create_frame(ins->op1);
                 ins = ((T_symbol*)(ins->op1))->attr.func->func_ilist->first;
                 continue;
 
@@ -142,6 +143,7 @@ void interpret_loop(ilist *instr_list)
                 if (acc->attr.var->data_type != is_void &&
                     act_frame->dtype == is_void)
                 {
+                    puts("return");
                     terminate(8);
                 }
                 ins = stack_top(main_stack);
@@ -164,7 +166,7 @@ void interpret(T_symbol *run)
     frame_stack = stack_init();
     main_stack = stack_init();
     // creating frame for main function run()
-    create_frame(run, frame_stack);
+    create_frame(run);
 //    interpret_loop(glist);
     interpret_loop(run->attr.func->func_ilist);
 
