@@ -11,58 +11,13 @@ static char *ins_arr[] = {
         "STOP", "MOV", "ADD", "SUB", "MUL", "DIV",
         "CONCAT", "AND", "OR", "NOT", "EQUAL", "NOTEQ",
         "LESS", "LESSEQ", "GREATER", "GREATEREQ", "JMP",
-        "JMPZ", "RET", "CALL", "PUSH_PAR", "READINT", "READDOUBLE",
+        "JMPZ", "RET", "CALL", "PUSH_var","PUSH", "READINT", "READDOUBLE",
         "READSTR", "PRINT", "LENGTH", "SUBSTR", "COMPARE", "FIND",
         "SORT", "LAB", "CONVERT"
 };
 
 void print_instr(T_instr *ins) {
-    if (ins) {
-        if (ins->itype == TI_lab)
-            // FIXME debug.c:22:52: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
-            ;
-            //printf("|%s %d|", ins_arr[ins->itype], (int)ins);
-        else
-            printf("|%s|", ins_arr[ins->itype] );
-        if (ins->itype == TI_jmp || ins->itype == TI_jmpz) {
-            // FIXME debug.c:26:71: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
-            //printf("|%s %d|\n", ins_arr[((T_instr*)ins->op1)->itype], (int)ins->op1);
-            return;
-        }
-        else if (ins->dest) {
-            if (((T_symbol*)(ins->dest))->member_class)
-                printf("|%s.%s|", ((T_symbol*)(ins->dest))->member_class->id,
-                                ((T_symbol*)(ins->dest))->id);
-            else
-                printf("|%s|",((T_symbol*)(ins->dest))->id);
-        }
-        else
-            printf(" |-| ");
-
-        if (ins->op1) {
-            if (((T_symbol*)(ins->op1))->member_class)
-                printf("|%s.%s|", ((T_symbol*)(ins->op1))->member_class->id,
-                                ((T_symbol*)(ins->op1))->id);
-            else
-                printf("|%s|",((T_symbol*)(ins->op1))->id);
-
-        }
-        else
-            printf(" |-| ");
-
-        if (ins->op2) {
-            if (((T_symbol*)(ins->op2))->member_class)
-                printf("|%s.%s|\n", ((T_symbol*)(ins->op2))->member_class->id,
-                                ((T_symbol*)(ins->op2))->id);
-            else
-                printf("|%s|\n",((T_symbol*)(ins->op2))->id);
-        }
-        else
-            printf(" |-|\n");
-    }
-    else {
-        printf("NULL\n");
-    }
+    printf("|%s|", ins_arr[ins->itype] );
 }
 
 
@@ -74,7 +29,7 @@ static char *dtypes[] = {"void", "int", "double", "String" };
 void print_function(T_symbol *func) {
     // function name
     puts("======FUNCTION BEGIN======");
-    printf("%s %s()\n", dtypes[func->data_type], func->id);
+    printf("%s %s()\n", dtypes[func->attr.func->data_type], func->id);
     // arguments
     for (unsigned i = 0;i < func->attr.func->par_count;i++) {
         T_symbol *s = (T_symbol*)func->attr.func->arguments[i];

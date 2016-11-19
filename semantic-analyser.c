@@ -229,6 +229,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
 
                 tcount--;
                 bool is_atleast_one_str;
+                int count = 0;
                 while (tcount > 0 ) {
                     if (is_iden(it)) {
                         sym = is_defined(it->attr.str, local_tab,
@@ -240,12 +241,12 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     else {
                         terminate(SYNTAX_ERROR);
                     }
-
+                    count++;
                     // at least one parameter has to be string
                     if (sym->attr.var->data_type == is_str)
                         is_atleast_one_str = true;
 
-                    create_instr(L, TI_push, sym, NULL, NULL);
+                    create_instr(L, TI_push_var, sym, NULL, NULL);
                     it++;
                     tcount--;
                     // token = '+' and is not last
@@ -266,8 +267,11 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
 
                 if (!is_rbrac(it))
                     terminate(SYNTAX_ERROR);
-                // TODO push number of parameters
-                create_instr(L, TI_print, NULL, NULL, NULL);
+                // add number of parameters
+                T_value val;
+                val.n = count;
+                create_instr(L, TI_print, add_constant(val, symbol_tab, is_int),
+                             NULL, NULL);
                 return 0;
             }}}
         case b_length:
@@ -281,8 +285,8 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 // checking destination data type if any
                 if (dest) {
                     T_data_type dtype = dest->attr.var->data_type;
-                    if ((i == b_sort && dtype != is_str ) || (i == b_length &&
-                                (dtype == is_int || dtype == is_double) ))
+                    if ((i == b_sort && dtype != is_str ) ||
+                        (i == b_length && dtype == is_str ))
                     {
                         terminate(TYPE_ERROR);
                     }
@@ -401,7 +405,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     terminate(TYPE_ERROR);
 
                 // pushing last parameter
-                create_instr(L, TI_push, sym3, NULL, NULL);
+                create_instr(L, TI_push_var, sym3, NULL, NULL);
                 // creating instruction
                 create_instr(L, TI_substr, sym1, sym2, dest);
                 return 0;
@@ -491,7 +495,7 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
         else {
             terminate(TYPE_ERROR);
         }
-        create_instr(L, TI_push, sym, NULL, NULL);
+        create_instr(L, TI_push_var, sym, NULL, NULL);
         // assign return value of function
         // this value ought to be in special symbol
     }

@@ -32,6 +32,7 @@ typedef enum {
     TI_ret,
     TI_call,        // id - - | all pars on stack
     TI_push,
+    TI_push_var,
     TI_readInt,     // id/- - -
     TI_readDouble,
     TI_readString,
