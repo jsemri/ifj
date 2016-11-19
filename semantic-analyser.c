@@ -503,6 +503,7 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
     }
 
     // inserting label, where to return from function
+    // this instruction should be in stack
     list_insert_last(L, return_label);
     return 0;
 }}}
@@ -613,7 +614,7 @@ static void func()
     // process body
     fbody();
     // just for debug
-    print_function(actual_func);
+//    print_function(actual_func);
 }}}
 
 /*
@@ -921,7 +922,7 @@ static void st_else2(T_symbol_table *local_tab, ilist *instr_list)
 
 int second_throughpass() {
     prog();
-    print_table(symbol_tab);
+    //print_table(symbol_tab);
     return 0;
 }
 
