@@ -123,6 +123,8 @@ int main() {
     add_token(v, TT_mul);
     add_int(v, 2);
 
+    symbol_tab = table_init(RANGE);
+
     ilist *list = list_init();
     precedence_analyser(v, NULL, NULL, NULL, list);
 
