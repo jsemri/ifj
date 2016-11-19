@@ -65,7 +65,7 @@ void copy_value(T_symbol *dst, T_symbol *src) {
     T_var_symbol *v1 = dst->attr.var;
     T_var_symbol *v2 = src->attr.var;
     // uninitialized value or return value from void function
-    if (!v2->is_init || v2->data_type == is_void) {
+    if (!v2->initialized || v2->data_type == is_void) {
         puts("uninitialized parameter");
         terminate(8);
     }
@@ -91,7 +91,7 @@ void copy_value(T_symbol *dst, T_symbol *src) {
             break;
     }
     // raising initialization flag
-    v1->is_init = true;
+    v1->initialized = true;
 }
 
 void create_frame(T_symbol *func) {

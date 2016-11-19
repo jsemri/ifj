@@ -19,6 +19,7 @@
 #include "symbol.h"
 #include "ilist.h"
 #include <assert.h>
+#include "interpret.h"
 
 // unget token
 static bool get_token_flag = false;
@@ -31,7 +32,9 @@ static bool get_token_flag = false;
 #define unget_token() get_token_flag = true
 
 // global variables
+ilist *glist;
 T_symbol_table *symbol_tab;
+T_symbol *acc;
 T_token *token;
 // pointer to actual class
 static T_symbol *actual_class;
@@ -50,9 +53,6 @@ static void st_list();
 static void stat(T_symbol_table *local_tab, ilist *instr_list);
 static void st_else(T_symbol_table *local_tab, ilist *instr_list);
 static void st_else2(T_symbol_table *local_tab, ilist *instr_list);
-
-
-T_symbol *register_symbol;
 
 /*******************************************************
  * function handling helper functions
@@ -507,7 +507,7 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
     create_instr(L, TI_call, fsym, 0, 0);
 
     if (dest) {
-        create_instr(L, TI_mov, register_symbol, NULL, dest);
+        create_instr(L, TI_mov, acc, NULL, dest);
     }
 
     // inserting label, where to return from function
@@ -720,7 +720,7 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                         get_token();   // necessary, will be included in vector
                         token_vector tv = read_to_semic();
                         // id ( )
-                        if (tv->last > 3 && check_if_func(tv->arr) ) {
+                        if (tv->last >= 3 && check_if_func(tv->arr) ) {
                             // handling function
                             handle_function(tv->arr, tv->last, instr_list, sym,
                                             local_tab);
@@ -929,6 +929,7 @@ static void st_else2(T_symbol_table *local_tab, ilist *instr_list)
 }}}
 
 int second_throughpass() {
+    acc = table_find_simple(symbol_tab, "|accumulator|",NULL);
     prog();
     //print_table(symbol_tab);
     return 0;

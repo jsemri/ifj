@@ -27,7 +27,7 @@ typedef enum {
 /// Variable attributes.
 typedef struct {
     T_data_type data_type;          // data type
-    bool is_init;
+    bool initialized;
     bool is_const;                  // 0 if constant
     T_value value;                  // value of variable
 } T_var_symbol;

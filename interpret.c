@@ -6,16 +6,23 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ilist.h"
+#include "builtins.h"
 #include "debug.h"
 
 #define act_frame ((T_frame*)(stack_top(frame_stack)))
+#define is_real(s) (s->attr.var->data_type == is_double)
+#define is_init(s) (s->attr.var->initialized)
 
 T_stack *frame_stack;
 T_stack *main_stack;
+T_symbol *acc;
 ilist *glist;
 
 T_symbol *get_var(T_symbol *var)
 {{{
+    if (!var)
+        return NULL;
+
     T_symbol *ret_var;
     // first search in active frame - local table
     T_frame *frame = stack_top(frame_stack);
@@ -24,14 +31,113 @@ T_symbol *get_var(T_symbol *var)
     return ret_var ? ret_var : var;
 }}}
 
+void math_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1, T_symbol *op2)
+{{{
+    // check if both are initialized
+    if (!is_init(op1) || !is_init(op2))
+        terminate(8);
+
+    double x, y;
+    if (is_real(op1))
+        x = op1->attr.var->value.d;
+    else
+        x = op1->attr.var->value.n;
+
+    if (is_real(op2))
+        y = op1->attr.var->value.d;
+    else
+        y = op1->attr.var->value.n;
+
+
+    switch (itype) {
+        case TI_add:
+            if (is_real(dest))
+                dest->attr.var->value.d = x + y;
+            else
+                dest->attr.var->value.n = (int)(x + y);
+            break;
+
+        case TI_sub:
+            if (is_real(dest))
+                dest->attr.var->value.d = x + y;
+            else
+                dest->attr.var->value.n = (int)(x - y);
+            break;
+
+        case TI_mul:
+            if (is_real(dest))
+                dest->attr.var->value.d = x * y;
+            else
+                dest->attr.var->value.n = (int)(x * y);
+            break;
+
+        default:
+            if (is_real(dest))
+                dest->attr.var->value.d = x / y;
+            else
+                dest->attr.var->value.n = (int)(x / y);
+            break;
+    }
+    dest->attr.var->initialized = true;
+}}}
+
+
+void compare_instr(T_instr_type itype, T_symbol *op1, T_symbol *op2)
+{{{
+    // check if both initialized
+    if (!is_init(op1) || !is_init(op2))
+        terminate(8);
+
+    int res;
+    double x, y;
+    if (is_real(op1))
+        x = op1->attr.var->value.d;
+    else
+        y = op1->attr.var->value.n;
+
+    if (is_real(op2))
+        x = op1->attr.var->value.d;
+    else
+        y = op1->attr.var->value.n;
+
+    switch (itype) {
+
+        case TI_equal:
+            res = (x == y);
+            break;
+
+        case TI_notequal:
+            res = (x != y);
+            break;
+
+        case TI_less:
+            res = (x < y);
+            break;
+
+        case TI_lessEq:
+            res = (x <= y);
+            break;
+
+        case TI_greater:
+            res = (x > y);
+            break;
+
+        default:
+            res = (x >= y);
+            break;
+    }
+    // logic value stored only in accumulator
+    acc->attr.var->data_type = is_int;
+    acc->attr.var->value.n = res;
+}}}
 
 void interpret_loop(ilist *instr_list)
 {{{
 
     // finding a register
-    T_symbol *acc = table_find_simple(symbol_tab, "|accumulator|", 0);
     acc->attr.var->data_type = is_void;
-    T_symbol *op1, *op2, *dest;
+    T_symbol *op1, *dest;
+    T_data_type dtype;
 
     T_instr *ins = instr_list->first;
     while (true) {
@@ -41,7 +147,7 @@ void interpret_loop(ilist *instr_list)
                 // end of run()
                 // in frame stack ought to be only run local table
                 if (frame_stack->used == 0) {
-                    puts("end of run()");
+                   // puts("end of run()");
                     return;
                 }
                 // jump out of function
@@ -58,13 +164,29 @@ void interpret_loop(ilist *instr_list)
 
 //        print_instr(ins);
 
+
         switch (ins->itype) {
+            case TI_add:
+            case TI_sub:
+            case TI_mul:
+            case TI_div:
+                math_instr(ins->itype, get_var(ins->dest), get_var(ins->op1),
+                         get_var(ins->op2));
+                break;
+            case TI_equal:
+            case TI_notequal:
+            case TI_less:
+            case TI_lessEq:
+            case TI_greater:
+            case TI_greaterEq:
+                compare_instr(ins->itype, get_var(ins->op1), get_var(ins->op2));
+                break;
             case TI_mov:
                 dest = get_var(ins->dest);
                 op1 = get_var(ins->op1);
                 // uninitialized or assign from void funtion
                 if (op1->attr.var->data_type == is_void ||
-                    !op1->attr.var->is_init)
+                    !is_init(op1))
                 {
                     terminate(8);
                 }
@@ -77,7 +199,7 @@ void interpret_loop(ilist *instr_list)
                 for (int i = 0;i < op1->attr.var->value.n;i++) {
                     T_symbol *out = stack_top(main_stack);
                     out = get_var(out);
-                    if (out->attr.var->is_init == false) {
+                    if (!is_init(out)) {
                         terminate(8);
                     }
                     // XXX print it whole once
@@ -97,6 +219,9 @@ void interpret_loop(ilist *instr_list)
             case TI_readInt:
             case TI_readDouble:
             case TI_readString:
+                dtype = ins->itype == TI_readInt ? is_int : is_str;
+                dtype = ins->itype == TI_readDouble ? is_double : dtype;
+                read_stdin(get_var(ins->dest), dtype);
                 // TODO read character after character till \n, EOF
                 break;
 
@@ -107,7 +232,7 @@ void interpret_loop(ilist *instr_list)
                     dest->attr.var->value.n = strlen(op1->attr.var->value.str);
                 else
                     dest->attr.var->value.d = strlen(op1->attr.var->value.str);
-                dest->attr.var->is_init = true;
+                dest->attr.var->initialized = true;
                 break;
 
             case TI_sort:
@@ -165,10 +290,12 @@ void interpret(T_symbol *run)
 {{{
     frame_stack = stack_init();
     main_stack = stack_init();
+
     // creating frame for main function run()
     create_frame(run);
 //    interpret_loop(glist);
     interpret_loop(run->attr.func->func_ilist);
+
 
     // removing stacks
     stack_remove(&frame_stack, true);

@@ -11,16 +11,12 @@
 // id - variable
 // v - constant
 typedef enum {
-    TI_stop,
     TI_mov,         // id id/v -
     TI_add,
     TI_sub,
     TI_mul,
     TI_div,
     TI_concat,      // string concatenation
-    TI_and,         // comparison/relational
-    TI_or,
-    TI_not,
     TI_equal,
     TI_notequal,
     TI_less,
