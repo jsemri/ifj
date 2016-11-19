@@ -15,21 +15,21 @@
 
 #define RULES_COUNT 15
 T_prec_rule rules[RULES_COUNT] = {
-    (T_prec_rule) {3, TT_empty, TT_plus, TT_empty, rule_concat},
-    (T_prec_rule) {3, TT_empty, TT_minus, TT_empty, rule_arith},
-    (T_prec_rule) {3, TT_empty, TT_div, TT_empty, rule_arith},
-    (T_prec_rule) {3, TT_empty, TT_mul, TT_empty, rule_arith},
-    (T_prec_rule) {3, TT_empty, TT_equal, TT_empty, rule_bool},
-    (T_prec_rule) {3, TT_empty, TT_notEq, TT_empty, rule_bool},
-    (T_prec_rule) {3, TT_empty, TT_lesser, TT_empty, rule_bool},
-    (T_prec_rule) {3, TT_empty, TT_greater, TT_empty, rule_bool},
-    (T_prec_rule) {3, TT_empty, TT_lessEq, TT_empty, rule_bool},
-    (T_prec_rule) {3, TT_empty, TT_greatEq, TT_empty, rule_bool},
-    (T_prec_rule) {3, TT_lBracket, TT_empty, TT_rBracket, rule_brackets},
-    (T_prec_rule) {1, TT_id, TT_empty, TT_empty, rule_i_to_exp},
-    (T_prec_rule) {1, TT_int, TT_empty, TT_empty, rule_i_to_exp},
-    (T_prec_rule) {1, TT_double, TT_empty, TT_empty, rule_i_to_exp},
-    (T_prec_rule) {1, TT_string, TT_empty, TT_empty, rule_i_to_exp},
+    {3, TT_empty, TT_plus, TT_empty, rule_concat},
+    {3, TT_empty, TT_minus, TT_empty, rule_arith},
+    {3, TT_empty, TT_div, TT_empty, rule_arith},
+    {3, TT_empty, TT_mul, TT_empty, rule_arith},
+    {3, TT_empty, TT_equal, TT_empty, rule_bool},
+    {3, TT_empty, TT_notEq, TT_empty, rule_bool},
+    {3, TT_empty, TT_lesser, TT_empty, rule_bool},
+    {3, TT_empty, TT_greater, TT_empty, rule_bool},
+    {3, TT_empty, TT_lessEq, TT_empty, rule_bool},
+    {3, TT_empty, TT_greatEq, TT_empty, rule_bool},
+    {3, TT_lBracket, TT_empty, TT_rBracket, rule_brackets},
+    {1, TT_id, TT_empty, TT_empty, rule_i_to_exp},
+    {1, TT_int, TT_empty, TT_empty, rule_i_to_exp},
+    {1, TT_double, TT_empty, TT_empty, rule_i_to_exp},
+    {1, TT_string, TT_empty, TT_empty, rule_i_to_exp},
 };
 
 #define CONV_TERM_TO_TT(i) (terms[i].type == PREC_TOKEN ? \
