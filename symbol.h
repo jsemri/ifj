@@ -115,7 +115,7 @@ T_symbol *is_defined(char *iden, struct T_Hash_symbol_table *local_tab,
  * @param dtype data type
  * @return pointer to constant variable
  */
-T_symbol *add_constant(T_value value, struct T_Hash_symbol_table*,
+T_symbol *add_constant(T_value *value, struct T_Hash_symbol_table*,
                        T_data_type dtype);
 
 /**

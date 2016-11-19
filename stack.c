@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include "debug.h"
 
-#define INIT_SIZE   128
-#define GROWTH      8
+#define INIT_SIZE   64
+#define GROWTH      2
 
 
 T_stack *main_stack;
@@ -23,9 +23,11 @@ T_stack *stack_init() {
 
 void stack_push(T_stack *stack, void *item) {
     if (stack->used + 2 == stack->size) {
-        void *p = realloc(stack->data, stack->size + GROWTH);
+        void *p = realloc(stack->data,sizeof(void*)*stack->size*GROWTH);
+        if (!p)
+            terminate(INTERNAL_ERROR);
         stack->data = p;
-        stack->size+=GROWTH;
+        stack->size*=GROWTH;
     }
     stack->data[++stack->used] = item;
 }
@@ -64,6 +66,7 @@ void copy_value(T_symbol *dst, T_symbol *src) {
     T_var_symbol *v2 = src->attr.var;
     // uninitialized value or return value from void function
     if (!v2->is_init || v2->data_type == is_void) {
+        puts("uninitialized parameter");
         terminate(8);
     }
 
@@ -82,24 +85,29 @@ void copy_value(T_symbol *dst, T_symbol *src) {
             v1->value.str = get_str(v2->value.str);
             break;
         case is_void:
+            puts("void parameter");
             terminate(8);
         default:
             break;
     }
     // raising initialization flag
     v1->is_init = true;
-    dst->attr.var = v1;
 }
 
-void create_frame(T_symbol *func, T_stack *stack) {
-    static bool init_par = false;
+void create_frame(T_symbol *func) {
     // creating frame
     T_frame *frame = calloc(1, sizeof(T_frame));
     if (!frame)
         terminate(INTERNAL_ERROR);
     frame->dtype = func->attr.func->data_type;
     frame->local_tab = table_init(RANGE);
-    // copying all variables
+
+    if (!is_empty(main_stack)) {
+        for (unsigned i = 0;i < func->attr.func->par_count;i++) {
+            copy_value(func->attr.func->arguments[i], stack_top(main_stack));
+            stack_pop(main_stack);
+        }
+    }
     for (unsigned i = 0;i < RANGE;i++) {
         for (T_symbol *sym = func->attr.func->local_table->arr[i];
              sym != NULL; sym = sym->next)
@@ -107,18 +115,7 @@ void create_frame(T_symbol *func, T_stack *stack) {
             table_insert(frame->local_tab, symbol_copy(sym));
         }
     }
-    // copying parameters
-    // for run(), we don't have anything in stack
-    if (!init_par) {
-        init_par = true;
-    }
-    else {
-        for (unsigned i = 0;i < func->attr.func->par_count;i++) {
-            copy_value(func->attr.func->arguments[i], stack_top(main_stack));
-            stack_pop(main_stack);
-        }
-    }
-    stack_push(stack, frame);
+    stack_push(frame_stack, frame);
 }
 
 void remove_frame(T_frame **frame) {
@@ -127,9 +124,9 @@ void remove_frame(T_frame **frame) {
     frame = NULL;
 }
 
-void remove_frame_from_stack(T_stack *stack) {
-    T_frame *frame = stack_top(stack);
+void remove_frame_from_stack() {
+    T_frame *frame = stack_top(frame_stack);
     remove_frame(&frame);
-    stack_pop(stack);
+    stack_pop(frame_stack);
 }
 

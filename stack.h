@@ -23,9 +23,9 @@ typedef struct {
 
 void remove_frame(T_frame **frame);
 
-void remove_frame_from_stack(T_stack *stack);
+void remove_frame_from_stack();
 
-void create_frame(T_symbol *func, T_stack *stack);
+void create_frame(T_symbol *func);
 
 T_stack *stack_init();
 
