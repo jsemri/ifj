@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include "symbol.h"
+#include <stdio.h>
+#include "debug.h"
 
 #define INIT_SIZE   128
 #define GROWTH      8
@@ -14,13 +16,13 @@ T_stack *frame_stack;
 T_stack *stack_init() {
     T_stack *stack = calloc(1, sizeof(T_stack));
     stack->data = calloc(INIT_SIZE, sizeof(void*));
-    stack->used = 0;
+    stack->used = -1;
     stack->size = INIT_SIZE - 1;
     return stack;
 }
 
 void stack_push(T_stack *stack, void *item) {
-    if (stack->used+1 == stack->size) {
+    if (stack->used + 2 == stack->size) {
         void *p = realloc(stack->data, stack->size + GROWTH);
         stack->data = p;
         stack->size+=GROWTH;
@@ -33,12 +35,12 @@ void *stack_top(T_stack *stack) {
 }
 
 void stack_pop(T_stack *stack) {
-    if (stack->used)
+    if (stack->used > -1)
         stack->data[stack->used--] = NULL;
 }
 
 bool is_empty(T_stack *stack) {
-    return !stack->used;
+    return (stack->used == -1);
 }
 
 void stack_remove(T_stack **stack, bool is_frame_stack) {
@@ -57,12 +59,14 @@ void stack_remove(T_stack **stack, bool is_frame_stack) {
     *stack = NULL;
 }
 
-void copy_value(T_symbol *dst, T_symbol *src)
-{{{
+void copy_value(T_symbol *dst, T_symbol *src) {
     T_var_symbol *v1 = dst->attr.var;
     T_var_symbol *v2 = src->attr.var;
-    if (!v2->is_init || v2->data_type == is_void)
+    // uninitialized value or return value from void function
+    if (!v2->is_init || v2->data_type == is_void) {
         terminate(8);
+    }
+
     switch (v1->data_type) {
         case is_int:
             v1->value.n = v1->data_type == is_double ?
@@ -82,9 +86,12 @@ void copy_value(T_symbol *dst, T_symbol *src)
         default:
             break;
     }
-}}}
+    // raising initialization flag
+    v1->is_init = true;
+}
 
 void create_frame(T_symbol *func, T_stack *stack) {
+    static bool init_par = false;
     // creating frame
     T_frame *frame = calloc(1, sizeof(T_frame));
     if (!frame)
@@ -100,9 +107,15 @@ void create_frame(T_symbol *func, T_stack *stack) {
         }
     }
     // copying parameters
-    for (unsigned i = 0;i < func->attr.func->par_count;i++) {
-        copy_value(func->attr.func->arguments[i], stack_top(main_stack));
-        stack_pop(main_stack);
+    // for run(), we don't have anything in stack
+    if (!init_par) {
+        init_par = true;
+    }
+    else {
+        for (unsigned i = 0;i < func->attr.func->par_count;i++) {
+            copy_value(func->attr.func->arguments[i], stack_top(main_stack));
+            stack_pop(main_stack);
+        }
     }
     stack_push(stack, frame);
 }
