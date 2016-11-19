@@ -39,5 +39,7 @@ void stack_remove(T_stack **stack, bool is_frame_stack);
 
 void copy_value(T_symbol *dst, T_symbol *src);
 
+bool is_empty(T_stack *stack);
+
 #endif
 

@@ -30,6 +30,7 @@ void interpret_loop(ilist *instr_list)
 
     // finding a register
     T_symbol *acc = table_find_simple(symbol_tab, "|accumulator|", 0);
+    acc->attr.var->data_type = is_void;
     T_symbol *op1, *op2, *dest;
 
     T_instr *ins = instr_list->first;
@@ -145,6 +146,7 @@ void interpret_loop(ilist *instr_list)
                 }
                 ins = stack_top(main_stack);
                 stack_pop(main_stack);
+                remove_frame_from_stack(frame_stack);
                 // return value already in acc
                 break;
 

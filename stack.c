@@ -60,7 +60,6 @@ void stack_remove(T_stack **stack, bool is_frame_stack) {
 }
 
 void copy_value(T_symbol *dst, T_symbol *src) {
-    printf("%d\n", src->attr.var->value.n);
     T_var_symbol *v1 = dst->attr.var;
     T_var_symbol *v2 = src->attr.var;
     // uninitialized value or return value from void function

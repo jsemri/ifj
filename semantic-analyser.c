@@ -122,6 +122,7 @@ static char *arr_ifj16[] = {
 #define is_iden(t) (t->type == TT_id || t->type == TT_fullid)
 #define is_comma(t) (t->type == TT_comma)
 #define is_rbrac(t) (t->type == TT_rBracket)
+#define is_lbrac(t) (t->type == TT_lBracket)
 #define is_plus(t) (t->type == TT_plus)
 
 void check_par_syntax(T_token *it, int tcount, int exp_toks)
@@ -221,15 +222,20 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
         case b_print:
             {{{
                 // token count excluding `id (`
-                tcount -= 2;
+                tcount--;
                 T_symbol *sym;
                 // print() - no parameters
                 if (is_rbrac(it))
                     terminate(TYPE_ERROR);   // FIXME DEFINITION_ERROR ???
 
-                tcount--;
                 bool is_atleast_one_str;
                 int count = 0;
+                it = it - 2 + tcount; // going form last
+                tcount-=2;
+                // last is not ')'
+                if (!is_rbrac(it))
+                    terminate(SYNTAX_ERROR);
+                it--;
                 while (tcount > 0 ) {
                     if (is_iden(it)) {
                         sym = is_defined(it->attr.str, local_tab,
@@ -246,15 +252,15 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     if (sym->attr.var->data_type == is_str)
                         is_atleast_one_str = true;
 
-                    create_instr(L, TI_push_var, sym, NULL, NULL);
-                    it++;
+                    create_instr(L, TI_push, sym, NULL, NULL);
+                    it--;
                     tcount--;
                     // token = '+' and is not last
                     if (is_plus(it) && tcount > 1) {
                         tcount--;
-                        it++;
+                        it--;
                     }
-                    else if (is_rbrac(it) && tcount == 0) {
+                    else if (is_lbrac(it) && tcount == 0) {
                         break;
                     }
                     else {
@@ -265,8 +271,8 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 if (!is_atleast_one_str)
                     terminate(TYPE_ERROR);
 
-                if (!is_rbrac(it))
-                    terminate(SYNTAX_ERROR);
+                //if (!is_rbrac(it))
+                  //  terminate(SYNTAX_ERROR);
                 // add number of parameters
                 T_value val;
                 val.n = count;
@@ -279,7 +285,6 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
             // str (str) | int (str)
             {{{
                 check_par_syntax(it, tcount - 2, 2);
-
                 T_symbol *sym;
                 T_instr_type ins = i == b_sort ? TI_sort : TI_length;
                 // checking destination data type if any
@@ -405,7 +410,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     terminate(TYPE_ERROR);
 
                 // pushing last parameter
-                create_instr(L, TI_push_var, sym3, NULL, NULL);
+                create_instr(L, TI_push, sym3, NULL, NULL);
                 // creating instruction
                 create_instr(L, TI_substr, sym1, sym2, dest);
                 return 0;
