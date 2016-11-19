@@ -11,7 +11,7 @@
  * read input by characters.
  *
  */
-void read_stdout(T_symbol *result);
+void read_stdin(T_symbol *result);
 
 
 /**
