@@ -29,7 +29,7 @@ static char *dtypes[] = {"void", "int", "double", "String" };
 void print_function(T_symbol *func) {
     // function name
     puts("======FUNCTION BEGIN======");
-    printf("%s %s()\n", dtypes[func->data_type], func->id);
+    printf("%s %s()\n", dtypes[func->attr.func->data_type], func->id);
     // arguments
     for (unsigned i = 0;i < func->attr.func->par_count;i++) {
         T_symbol *s = (T_symbol*)func->attr.func->arguments[i];
