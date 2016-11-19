@@ -16,16 +16,12 @@ ilist *glist;
 
 T_symbol *get_var(T_symbol *var)
 {{{
-    // constant or static variable
-    if (var->attr.var->is_const || var->member_class)
-        return var;
-
     T_symbol *ret_var;
     // first search in active frame - local table
     T_frame *frame = stack_top(frame_stack);
     ret_var = table_find(frame->local_tab, var->id, NULL);
-    // found in actual frame
-    return ret_var;
+    // local variable or static/constant variable returned
+    return ret_var ? ret_var : var;
 }}}
 
 
@@ -60,10 +56,11 @@ void interpret_loop(ilist *instr_list)
         }
 
         print_instr(ins);
+
         switch (ins->itype) {
             case TI_mov:
-                dest = get_var(dest);
-                op1 = get_var(op1);
+                dest = get_var(ins->dest);
+                op1 = get_var(ins->op1);
                 // uninitialized or assign from void funtion
                 if (op1->attr.var->data_type == is_void ||
                     !op1->attr.var->is_init)
@@ -73,14 +70,58 @@ void interpret_loop(ilist *instr_list)
                 copy_value(dest, op1);
                 break;
 
+            case TI_print:
+                // op1 is a constant
+                op1 = ins->op1;
+                for (int i = 0;i < op1->attr.var->value.n;i++) {
+                    T_symbol *out = stack_top(main_stack);
+                    out = get_var(out);
+                    if (out->attr.var->is_init == false)
+                        terminate(8);
+                    // XXX print it whole once
+                    if (out->attr.var->data_type == is_int) {
+                        printf("%d", out->attr.var->value.n);
+                    }
+                    else if (out->attr.var->data_type == is_double) {
+                        printf("%g", out->attr.var->value.d);
+                    }
+                    else {
+                        printf("%s", out->attr.var->value.str);
+                    }
+                    stack_pop(main_stack);
+                }
+                break;
+
+            case TI_readInt:
+            case TI_readDouble:
+            case TI_readString:
+                // TODO read character after character till \n, EOF
+                break;
+
+            case TI_length:
+                op1 = get_var(ins->op1);
+                dest = get_var(ins->dest);
+                if (dest->attr.var->data_type == is_int)
+                    dest->attr.var->value.n = strlen(op1->attr.var->value.str);
+                else
+                    dest->attr.var->value.d = strlen(op1->attr.var->value.str);
+                dest->attr.var->is_init = true;
+                break;
+
+            case TI_sort:
+            case TI_find:
+            case TI_compare:
+            case TI_substr:
+                // TODO
+                break;
             case TI_push:
                 stack_push(main_stack, ins->op1);
                 break;
+            case TI_push_var:
+                stack_push(main_stack, get_var(ins->op1));
+                break;
 
             case TI_call:
-                // TODO
-                // create frame
-                // jump to function
                 create_frame(ins->op1, frame_stack);
                 ins = ((T_symbol*)(ins->op1))->attr.func->func_ilist->first;
                 continue;
@@ -110,17 +151,16 @@ void interpret_loop(ilist *instr_list)
             default:
                 break;
         }
+        // next instruction
         ins = ins->next;
     }
 
-    return;
 }}}
 
 void interpret(T_symbol *run)
 {{{
     frame_stack = stack_init();
     main_stack = stack_init();
-
     // creating frame for main function run()
     create_frame(run, frame_stack);
 //    interpret_loop(glist);

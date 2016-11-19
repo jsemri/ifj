@@ -72,7 +72,8 @@ void func_remove(T_symbol *sym)
 
 void var_remove(T_symbol *sym)
 {{{
-    if (sym->attr.var->data_type && sym->attr.var->value.str)
+    if (sym->attr.var->data_type && sym->attr.var->value.str &&
+        !sym->attr.var->is_const)
         free(sym->attr.var->value.str);
     free(sym->id);
     free(sym->attr.var);
@@ -173,6 +174,8 @@ T_symbol *add_constant(T_value value, struct T_Hash_symbol_table *symbol_tab,
 
     if (dtype == is_int || dtype == is_double)
         sym->attr.var->value = value;
+    else
+        sym->attr.var->value.str = id;
 
     // string value is in identifier
     // setting constant flag
