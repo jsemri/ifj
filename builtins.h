@@ -1,6 +1,6 @@
 
 #ifndef BUILTINS_H
-#ifndef BUILTINS_H
+#define BUILTINS_H
 
 
 #include "symbol.h"
@@ -11,7 +11,7 @@
  * read input by characters.
  *
  */
-void read_stdout(T_symbol *result);
+void read_stdin(T_symbol *result, T_data_type dtype);
 
 
 /**

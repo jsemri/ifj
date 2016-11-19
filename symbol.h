@@ -27,7 +27,7 @@ typedef enum {
 /// Variable attributes.
 typedef struct {
     T_data_type data_type;          // data type
-    bool is_init;
+    bool initialized;
     bool is_const;                  // 0 if constant
     T_value value;                  // value of variable
 } T_var_symbol;
@@ -115,7 +115,7 @@ T_symbol *is_defined(char *iden, struct T_Hash_symbol_table *local_tab,
  * @param dtype data type
  * @return pointer to constant variable
  */
-T_symbol *add_constant(T_value value, struct T_Hash_symbol_table*,
+T_symbol *add_constant(T_value *value, struct T_Hash_symbol_table*,
                        T_data_type dtype);
 
 /**

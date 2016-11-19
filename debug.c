@@ -17,7 +17,7 @@ static char *ins_arr[] = {
 };
 
 void print_instr(T_instr *ins) {
-    printf("|%s|", ins_arr[ins->itype] );
+    printf("|%s|\n", ins_arr[ins->itype] );
 }
 
 

@@ -19,6 +19,7 @@
 #include "symbol.h"
 #include "ilist.h"
 #include <assert.h>
+#include "interpret.h"
 
 // unget token
 static bool get_token_flag = false;
@@ -31,7 +32,9 @@ static bool get_token_flag = false;
 #define unget_token() get_token_flag = true
 
 // global variables
+ilist *glist;
 T_symbol_table *symbol_tab;
+T_symbol *acc;
 T_token *token;
 // pointer to actual class
 static T_symbol *actual_class;
@@ -50,9 +53,6 @@ static void st_list();
 static void stat(T_symbol_table *local_tab, ilist *instr_list);
 static void st_else(T_symbol_table *local_tab, ilist *instr_list);
 static void st_else2(T_symbol_table *local_tab, ilist *instr_list);
-
-
-T_symbol *register_symbol;
 
 /*******************************************************
  * function handling helper functions
@@ -122,6 +122,7 @@ static char *arr_ifj16[] = {
 #define is_iden(t) (t->type == TT_id || t->type == TT_fullid)
 #define is_comma(t) (t->type == TT_comma)
 #define is_rbrac(t) (t->type == TT_rBracket)
+#define is_lbrac(t) (t->type == TT_lBracket)
 #define is_plus(t) (t->type == TT_plus)
 
 void check_par_syntax(T_token *it, int tcount, int exp_toks)
@@ -178,9 +179,6 @@ void check_par_syntax(T_token *it, int tcount, int exp_toks)
 int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     T_symbol_table *local_tab)
 {{{
-    // magic constant 3 - minimal count of tokens
-/*    if (tcount < 3)
-        terminate(SYNTAX_ERROR);*/
     // getting function name
     char *func_id = strchr(it->attr.str, '.') + 1;
     int i;
@@ -221,22 +219,27 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
         case b_print:
             {{{
                 // token count excluding `id (`
-                tcount -= 2;
+                tcount--;
                 T_symbol *sym;
                 // print() - no parameters
                 if (is_rbrac(it))
                     terminate(TYPE_ERROR);   // FIXME DEFINITION_ERROR ???
 
-                tcount--;
                 bool is_atleast_one_str;
                 int count = 0;
+                it = it - 2 + tcount; // going form last
+                tcount-=2;
+                // last is not ')'
+                if (!is_rbrac(it))
+                    terminate(SYNTAX_ERROR);
+                it--;
                 while (tcount > 0 ) {
                     if (is_iden(it)) {
                         sym = is_defined(it->attr.str, local_tab,
                                                actual_class, is_void);
                     }
                     else if (is_const(it)) {
-                        sym = add_constant(it->attr, symbol_tab, is_str);
+                        sym = add_constant(&it->attr, symbol_tab, is_str);
                     }
                     else {
                         terminate(SYNTAX_ERROR);
@@ -247,14 +250,14 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                         is_atleast_one_str = true;
 
                     create_instr(L, TI_push_var, sym, NULL, NULL);
-                    it++;
+                    it--;
                     tcount--;
                     // token = '+' and is not last
                     if (is_plus(it) && tcount > 1) {
                         tcount--;
-                        it++;
+                        it--;
                     }
-                    else if (is_rbrac(it) && tcount == 0) {
+                    else if (is_lbrac(it) && tcount == 0) {
                         break;
                     }
                     else {
@@ -265,12 +268,12 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 if (!is_atleast_one_str)
                     terminate(TYPE_ERROR);
 
-                if (!is_rbrac(it))
-                    terminate(SYNTAX_ERROR);
+                //if (!is_rbrac(it))
+                  //  terminate(SYNTAX_ERROR);
                 // add number of parameters
                 T_value val;
                 val.n = count;
-                create_instr(L, TI_print, add_constant(val, symbol_tab, is_int),
+                create_instr(L, TI_print, add_constant(&val, symbol_tab, is_int),
                              NULL, NULL);
                 return 0;
             }}}
@@ -279,7 +282,6 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
             // str (str) | int (str)
             {{{
                 check_par_syntax(it, tcount - 2, 2);
-
                 T_symbol *sym;
                 T_instr_type ins = i == b_sort ? TI_sort : TI_length;
                 // checking destination data type if any
@@ -298,7 +300,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                                                actual_class, is_str);
                 }
                 else if (it->type == TT_string) {
-                    sym = add_constant(it->attr, symbol_tab, is_str);
+                    sym = add_constant(&it->attr, symbol_tab, is_str);
                 }
                 else
                     terminate(TYPE_ERROR);
@@ -332,7 +334,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                                      is_str);
                 }
                 else if (it->type == TT_string) {
-                    sym1 = add_constant(it->attr, symbol_tab, is_str);
+                    sym1 = add_constant(&it->attr, symbol_tab, is_str);
                 }
                 else
                     terminate(TYPE_ERROR);
@@ -342,7 +344,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                                      is_str);
                 }
                 else if (it2->type == TT_string) {
-                    sym2 = add_constant(it2->attr, symbol_tab, is_str);
+                    sym2 = add_constant(&it2->attr, symbol_tab, is_str);
                 }
                 else
                     terminate(TYPE_ERROR);
@@ -376,7 +378,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                                      is_str);
                 }
                 else if (it->type == TT_string) {
-                    sym1 = add_constant(it->attr, symbol_tab, is_str);
+                    sym1 = add_constant(&it->attr, symbol_tab, is_str);
                 }
                 else
                     terminate(TYPE_ERROR);
@@ -387,7 +389,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                                      is_int);
                 }
                 else if (it2->type == TT_int) {
-                    sym2 = add_constant(it2->attr, symbol_tab, is_int);
+                    sym2 = add_constant(&it2->attr, symbol_tab, is_int);
                 }
                 else
                     terminate(TYPE_ERROR);
@@ -399,13 +401,13 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                                      is_int);
                 }
                 else if (it3->type == TT_int) {
-                    sym3 = add_constant(it2->attr, symbol_tab, is_int);
+                    sym3 = add_constant(&it2->attr, symbol_tab, is_int);
                 }
                 else
                     terminate(TYPE_ERROR);
 
                 // pushing last parameter
-                create_instr(L, TI_push_var, sym3, NULL, NULL);
+                create_instr(L, TI_push, sym3, NULL, NULL);
                 // creating instruction
                 create_instr(L, TI_substr, sym1, sym2, dest);
                 return 0;
@@ -432,7 +434,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
  * @return 0 on success, TYPE_ERROR or DEFINITION_ERROR
  *
  */
-int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
+int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     T_symbol_table *local_tab)
 {{{
     // table_find is able to derive from ifj16.readInt pointer to class ifj16
@@ -449,7 +451,7 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
 
     // function found
 
-    unsigned pcount = fsym->attr.func->par_count;
+    int pcount = fsym->attr.func->par_count;
 
     // type control
     if (dest) {
@@ -462,15 +464,16 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
     // parameters
     T_symbol **pars = (T_symbol**)fsym->attr.func->arguments;
     // handling parameters
-    it++;it++;  // skipping function id and '('
-    unsigned exp_tc = pcount > 1 ? 2*pcount : pcount + 1;
-    check_par_syntax(it, tcount - 2, exp_tc);
-
+//    it++;it++;  // skipping function id and '('
+    int exp_tc = pcount > 1 ? 2*pcount : pcount + 1;
+    check_par_syntax(it + 2, tcount - 2, exp_tc);
     T_instr *return_label = instr_init(TI_lab,0,0,0);
     // pushing return label
     create_instr(L, TI_push, return_label,0,0);
 
-    for (unsigned j = 0; j < pcount;j++) {
+    it += tcount - 1;
+    tcount =-2;it--;
+    for (int j = pcount-1; j >= 0;j--) {
         // parameter
         T_symbol *sym;
         // data type of each parameter
@@ -482,15 +485,15 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
             // push identifier on stack
         }
         else if (it->type == TT_string && dtype == is_str) {
-            sym = add_constant(it->attr, symbol_tab, is_str);
+            sym = add_constant(&it->attr, symbol_tab, is_str);
         }
         else if (it->type == TT_int && dtype == is_int) {
-            sym = add_constant( it->attr, symbol_tab, is_int);
+            sym = add_constant(&it->attr, symbol_tab, is_int);
         }
         else if ((it->type == TT_int || it->type == TT_double)
                   && dtype == is_double)
         {
-            sym = add_constant( it->attr, symbol_tab, is_double);
+            sym = add_constant(&it->attr, symbol_tab, is_double);
         }
         else {
             terminate(TYPE_ERROR);
@@ -498,12 +501,13 @@ int handle_function(T_token *it, unsigned tcount, ilist *L, T_symbol *dest,
         create_instr(L, TI_push_var, sym, NULL, NULL);
         // assign return value of function
         // this value ought to be in special symbol
+        it-=2;
     }
 
     create_instr(L, TI_call, fsym, 0, 0);
 
     if (dest) {
-        create_instr(L, TI_mov, register_symbol, NULL, dest);
+        create_instr(L, TI_mov, acc, NULL, dest);
     }
 
     // inserting label, where to return from function
@@ -716,7 +720,7 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                         get_token();   // necessary, will be included in vector
                         token_vector tv = read_to_semic();
                         // id ( )
-                        if (tv->last > 3 && check_if_func(tv->arr) ) {
+                        if (tv->last >= 3 && check_if_func(tv->arr) ) {
                             // handling function
                             handle_function(tv->arr, tv->last, instr_list, sym,
                                             local_tab);
@@ -925,6 +929,7 @@ static void st_else2(T_symbol_table *local_tab, ilist *instr_list)
 }}}
 
 int second_throughpass() {
+    acc = table_find_simple(symbol_tab, "|accumulator|",NULL);
     prog();
     //print_table(symbol_tab);
     return 0;

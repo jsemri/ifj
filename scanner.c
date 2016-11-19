@@ -8,9 +8,9 @@
 #include "globals.h"
 #include "debug.h"
 #include "symbol.h"
-#include <stdlib.h>
 
 #define KEYW_COUNT 17
+#define is_oct(c)  (c >= '0' && c<= '7' )
 
 FILE *source;
 T_token *token;
@@ -40,6 +40,7 @@ int get_token() {
     int c; //read character
     token_clear(token);
     char buf[SIZE] = "";
+    int b1, b2; // for octal numbers
     unsigned counter = 0;
 
     // Reads chars from a file until EOF occurs
@@ -201,9 +202,45 @@ int get_token() {
             case S_stringBackSlash:
                 if (c == '\n' || c == EOF) {
                     terminate(LEX_ERROR);
-                } else {
+                }
+                else if (c == 'n') {
+                    buf[counter++] = '\n';
                     state = S_string;
                 }
+                else if (c == 't'){
+                    buf[counter++] = '\t';
+                    state = S_string;
+                }
+                else if (c == '\\') {
+                    buf[counter++] = '\\';
+                }
+                else if (c <= '3' && c>= '0') {
+                    b1 = c - '0';
+                    state = S_octal1;
+                }
+                else {
+                    terminate(LEX_ERROR);
+                }
+                break;
+
+            case S_octal1:
+                if (is_oct(c)) {
+                    b2 = c - '0';
+                    state = S_octal2;
+                }
+                else
+                    terminate(LEX_ERROR);
+                break;
+
+            case S_octal2:
+                if (is_oct(c)) {
+                    c = c - '0' + b1 + b2;
+                    buf[counter++] = c;
+                    state = S_string;
+                }
+                else
+                    terminate(LEX_ERROR);
+
                 break;
 
             /*_________ID________*/
