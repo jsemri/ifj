@@ -13,6 +13,7 @@
 #include "instruction.h"
 #include "stack.h"
 #include "symbol.h"
+#include "ilist.h"
 
 // error codes
 #define LEX_ERROR 1
@@ -34,6 +35,7 @@
 extern T_stack *frame_stack;   // local tables will be copied here
 extern T_stack *main_stack;
 extern T_symbol_table *symbol_tab;
+extern ilist *glist;
 extern FILE *source;
 extern T_token *token;
 // used when token vector cannot be freed

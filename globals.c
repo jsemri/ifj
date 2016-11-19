@@ -13,6 +13,7 @@
 T_symbol_table *symbol_tab;
 FILE *source;
 T_token *token;
+ilist *glist;
 token_vector global_token_vector;
 T_stack *frame_stack;
 T_stack *main_stack;
@@ -77,6 +78,7 @@ void terminate(int err_code) {
     //prec_stack_free();
     stack_remove(&frame_stack, true);
     stack_remove(&main_stack, false);
+    list_free(&glist);
     fclose(source);
     table_remove(&symbol_tab);
 

@@ -32,6 +32,7 @@ static bool get_token_flag = false;
 #define unget_token() get_token_flag = true
 
 // global variables
+ilist *glist;
 T_symbol_table *symbol_tab;
 T_token *token;
 FILE *source;
@@ -612,6 +613,12 @@ int parse()
         return INTERNAL_ERROR;
     }
 
+    if(!(glist = list_init())) {
+        token_free(&token);
+        table_remove(&symbol_tab);
+        return INTERNAL_ERROR;
+    }
+
     // insert ifj16 class
     fill_ifj16();
 
@@ -644,6 +651,7 @@ int parse()
 
     table_remove(&symbol_tab);
     token_free(&token);
+    list_free(&glist);
     return 0;
 }}}
 
