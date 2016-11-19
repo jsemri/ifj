@@ -21,6 +21,31 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count,
                        T_func_symbol *act_func, T_symbol *act_class,
                        ilist *expr_ilist);
 
+/**
+ * Converts the input symbol to a new data type and adds the convertion
+ * instruction to expr_ilist.
+ *
+ * This function does check what the current data type of the input symbol is
+ * and depending on the current data-type and the new date-type the function
+ * will:
+ *
+ * a) Do nothing, if the input symbol is already in the target data type.
+ *    The same T_symbol* that was inserted to the function in parameter 'in'
+ *    will be returned.
+ * b) Create a new T_symbol* and add a new instruction to the end of instruction
+ *    list if the two data-type are different, but the source data-type can be
+ *    casted to the target data-type.
+ * c) Call terminate(TYPE_ERROR), if the input symbol can't be casted
+ *    to new_type.
+ *
+ * @param in The input symbol
+ * @param new_type The target data-type
+ * @param expr_ilist The instruction list (a new instuction will be added there
+ *                   in case B).
+ * @return The same, or a new, symbol with the target data-type
+ */
+T_symbol *convert(T_symbol *in, T_data_type new_type, ilist *expr_ilist);
+
 bool init_exp_table();
 
 T_symbol *rule_brackets(T_prec_stack_entry terms[3],

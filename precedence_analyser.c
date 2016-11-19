@@ -7,6 +7,7 @@
 #include "precedence_table.h"
 #include "precedence_rules.h"
 #include "globals.h"
+#include "symbol.h"
 #include <stdio.h>
 
 #define MAX_TERMS_IN_RULE 3
@@ -60,6 +61,8 @@ void precedence_analyser(token_vector v, T_symbol *lvalue,
 
     T_symbol *result = prec_stack_get_result(stack);
     if (lvalue != NULL) {
+        // FIXME Přetypovat result na typ lvalue.
+        result = convert(result, lvalue->attr.var->data_type, ilist);
         create_instr(ilist, TI_mov, result, NULL, lvalue);
         //printf("[INST] Ulož výsledek do lValue\n");
     }
@@ -72,8 +75,8 @@ void precedence_analyser(token_vector v, T_symbol *lvalue,
 
 /**
  * TODO Document me
- * @param v
- * @return
+ * @param
+ * @return A pointer to next token to be processed
  */
 static T_token* get_next_token(token_vector v) {
     static int read_tokens = 0;

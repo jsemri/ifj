@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define RULES_COUNT 14
+#define RULES_COUNT 15
 T_prec_rule rules[RULES_COUNT] = {
     (T_prec_rule) {3, TT_empty, TT_plus, TT_empty, rule_concat},
     (T_prec_rule) {3, TT_empty, TT_minus, TT_empty, rule_arith},
@@ -29,6 +29,7 @@ T_prec_rule rules[RULES_COUNT] = {
     (T_prec_rule) {1, TT_id, TT_empty, TT_empty, rule_i_to_exp},
     (T_prec_rule) {1, TT_int, TT_empty, TT_empty, rule_i_to_exp},
     (T_prec_rule) {1, TT_double, TT_empty, TT_empty, rule_i_to_exp},
+    (T_prec_rule) {1, TT_string, TT_empty, TT_empty, rule_i_to_exp},
 };
 
 #define CONV_TERM_TO_TT(i) (terms[i].type == PREC_TOKEN ? \
@@ -36,7 +37,6 @@ T_prec_rule rules[RULES_COUNT] = {
 #define FAIL_RULE(code) terminate(code)
 #define CREATE_SYMBOL(symbol, type) T_symbol *symbol = create_var_uniq(type); \
                                     table_insert(symbol_tab, symbol)
-// FIXME Pokus o vložení symbolu do tabulky skončí segfaultem
 #define ADD_INSTR(type, dst, s1, s2) create_instr(expr_ilist, type, s1, s2, dst)
 #define CHECK_TYPE(symbol, type) ((symbol)->attr.var->data_type == type)
 
@@ -56,9 +56,69 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count,
     FAIL_RULE(2);
 }
 
-static T_symbol *conv(T_symbol *in, T_data_type new_type, ilist *expr_ilist) {
-    CREATE_SYMBOL(out, new_type);
+#define ALLOWED_CONVERSIONS_SIZE 6
 
+/**
+ * The list of valid conversions
+ *
+ * Each valid implicit converversion of the source data-type to the destination
+ * data-type is represented here by two elements. The first element in the pair
+ * represents the source, the second represents the target data-type.
+ *
+ * For example, ALLOWED_CONVERSIONS[] = {is_int, is_double, is_int, is_str}
+ * means that an integer can be casted to double or to a String.
+ *
+ * All other conversions not listed here are prohibited and will lead
+ * to TYPE_ERROR.
+ */
+T_data_type ALLOWED_CONVERSIONS[ALLOWED_CONVERSIONS_SIZE] = {
+    is_int, is_double,
+    is_int, is_str,
+    is_double, is_str,
+};
+
+/**
+ * Converts the input symbol to a new data type and adds the convertion
+ * instruction to expr_ilist.
+ *
+ * This function does check what the current data type of the input symbol is
+ * and depending on the current data-type and the new date-type the function
+ * will:
+ *
+ * a) Do nothing, if the input symbol is already in the target data type.
+ *    The same T_symbol* that was inserted to the function in parameter 'in'
+ *    will be returned.
+ * b) Create a new T_symbol* and add a new instruction to the end of instruction
+ *    list if the two data-type are different, but the source data-type can be
+ *    casted to the target data-type.
+ * c) Call terminate(TYPE_ERROR), if the input symbol can't be casted
+ *    to new_type.
+ *
+ * @param in The input symbol
+ * @param new_type The target data-type
+ * @param expr_ilist The instruction list (a new instuction will be added there
+ *                   in case B).
+ * @return The same, or a new, symbol with the target data-type
+ */
+T_symbol *convert(T_symbol *in, T_data_type new_type, ilist *expr_ilist) {
+    if (CHECK_TYPE(in, new_type)) {
+        // Both data types are already the same, do nothing
+        return in;
+    }
+
+    bool is_allowed = false;
+    for (int i = 0; i < ALLOWED_CONVERSIONS_SIZE; i += 2) {
+        if (CHECK_TYPE(in, ALLOWED_CONVERSIONS[i])
+                && ALLOWED_CONVERSIONS[i+1] == new_type) {
+            is_allowed = true;
+            break;
+        }
+    }
+    if (!is_allowed) {
+        terminate(TYPE_ERROR);
+    }
+
+    CREATE_SYMBOL(out, new_type);
     ADD_INSTR(TI_convert, out, in, NULL);
     //printf("[INST] Přetypování\n");
 
@@ -69,23 +129,9 @@ static T_data_type cast_nums(T_symbol **s1, T_symbol **s2, ilist *expr_ilist) {
     if (CHECK_TYPE(*s1, is_int) && CHECK_TYPE(*s2, is_int))
         // Both operands are int, result will be int
         return is_int;
-    else if (CHECK_TYPE(*s1, is_double) && CHECK_TYPE(*s2, is_double))
-        // Both operands are double, result will be double
-        return is_double;
-    else if (CHECK_TYPE(*s1, is_int) && CHECK_TYPE(*s2, is_double)) {
-        // First operand need to be casted to double
-        *s1 = conv(*s1, is_double, expr_ilist);
-        return is_double;
-    }
-    else if (CHECK_TYPE(*s1, is_double) && CHECK_TYPE(*s2, is_int)) {
-        // Second operand need to be casted to double
-        *s2 = conv(*s2, is_double, expr_ilist);
-        return is_double;
-    }
-    else {
-        // Input numbers can't be converted to a single numeric type.
-        return is_void;
-    }
+    *s1 = convert(*s1, is_double, expr_ilist);
+    *s2 = convert(*s2, is_double, expr_ilist);
+    return is_double;
 }
 
 T_symbol *rule_brackets(T_prec_stack_entry terms[3],
@@ -100,11 +146,7 @@ T_symbol *rule_bool(T_prec_stack_entry terms[3],
                     ilist *expr_ilist) {
     T_symbol *s1 = terms[0].ptr.symbol;
     T_symbol *s2 = terms[2].ptr.symbol;
-    T_data_type out_type = cast_nums(&s1, &s2, expr_ilist);
-    if (out_type == is_void) {
-        // Input operands are not numbers
-        FAIL_RULE(4);
-    }
+    cast_nums(&s1, &s2, expr_ilist);
 
     CREATE_SYMBOL(symbol, is_bool);
 
@@ -138,14 +180,8 @@ T_symbol *rule_concat(T_prec_stack_entry terms[3],
     if (!CHECK_TYPE(s1, is_str) && !CHECK_TYPE(s2, is_str))
         return rule_arith(terms, act_func, act_class, expr_ilist);
 
-    if (CHECK_TYPE(s1, is_int) || CHECK_TYPE(s1, is_double))
-        s1 = conv(s1, is_str, expr_ilist);
-    if (CHECK_TYPE(s2, is_int) || CHECK_TYPE(s2, is_double))
-        s2 = conv(s2, is_str, expr_ilist);
-
-    if (!CHECK_TYPE(s1, is_str) || !CHECK_TYPE(s2, is_str))
-        // Operands can't be converted to String
-        FAIL_RULE(4);
+    s1 = convert(s1, is_str, expr_ilist);
+    s2 = convert(s2, is_str, expr_ilist);
 
     //printf("[INST] Spojení řetězců\n");
 
@@ -161,10 +197,6 @@ T_symbol *rule_arith(T_prec_stack_entry terms[3],
     T_symbol *s1 = terms[0].ptr.symbol;
     T_symbol *s2 = terms[2].ptr.symbol;
     T_data_type out_type = cast_nums(&s1, &s2, expr_ilist);
-    if (out_type == is_void) {
-        // Input operands are not numbers
-        FAIL_RULE(4);
-    }
 
     CREATE_SYMBOL(symbol, out_type);
 
