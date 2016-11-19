@@ -19,11 +19,14 @@ static char *ins_arr[] = {
 void print_instr(T_instr *ins) {
     if (ins) {
         if (ins->itype == TI_lab)
-            printf("|%s %d|", ins_arr[ins->itype], (int)ins);
+            // FIXME debug.c:22:52: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+            ;
+            //printf("|%s %d|", ins_arr[ins->itype], (int)ins);
         else
             printf("|%s|", ins_arr[ins->itype] );
         if (ins->itype == TI_jmp || ins->itype == TI_jmpz) {
-            printf("|%s %d|\n", ins_arr[((T_instr*)ins->op1)->itype], (int)ins->op1);
+            // FIXME debug.c:26:71: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+            //printf("|%s %d|\n", ins_arr[((T_instr*)ins->op1)->itype], (int)ins->op1);
             return;
         }
         else if (ins->dest) {
