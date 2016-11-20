@@ -139,7 +139,7 @@ void add_float(token_vector v, double i) {
     token_push_back(v, token);
 }
 
-int main() {
+int main0() {
     token_vector v = token_vec_init();
     /*add_int(v, 10);
     add_token(v, TT_plus);
