@@ -5,8 +5,6 @@
 #include "precedence_analyser_stack.h"
 #include "precedence_rules.h"
 #include "globals.h"
-#include "token.h"
-#include "symbol.h"
 #include <stdlib.h>
 
 #define RULES_COUNT 15
@@ -42,9 +40,9 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count,
                        ilist *instr_list) {
     for (int i = 0; i < RULES_COUNT; i++) {
         if (rules[i].tokens != count ||
-                rules[i].tokens >= 1 && rules[i].t1 != CONV_TERM_TO_TT(0) ||
-                rules[i].tokens >= 2 && rules[i].t2 != CONV_TERM_TO_TT(1) ||
-                rules[i].tokens >= 3 && rules[i].t3 != CONV_TERM_TO_TT(2))
+                (rules[i].tokens >= 1 && rules[i].t1 != CONV_TERM_TO_TT(0)) ||
+                (rules[i].tokens >= 2 && rules[i].t2 != CONV_TERM_TO_TT(1)) ||
+                (rules[i].tokens >= 3 && rules[i].t3 != CONV_TERM_TO_TT(2)))
             continue;
         return rules[i].func(terms, ltable, act_class, instr_list);
     }
@@ -135,6 +133,10 @@ static T_data_type cast_nums(T_symbol **s1, T_symbol **s2, ilist *instr_list) {
 T_symbol *rule_brackets(T_prec_stack_entry terms[3],
                         T_symbol_table *ltable, T_symbol *act_class,
                         ilist *instr_list) {
+    (void) ltable;
+    (void) act_class;
+    (void) instr_list;
+
     return terms[1].ptr.symbol;
 }
 
@@ -142,6 +144,9 @@ T_symbol *rule_brackets(T_prec_stack_entry terms[3],
 T_symbol *rule_bool(T_prec_stack_entry terms[3],
                     T_symbol_table *ltable, T_symbol *act_class,
                     ilist *instr_list) {
+    (void) ltable;
+    (void) act_class;
+
     T_symbol *s1 = terms[2].ptr.symbol;
     T_symbol *s2 = terms[0].ptr.symbol;
     cast_nums(&s1, &s2, instr_list);
@@ -192,6 +197,9 @@ T_symbol *rule_concat(T_prec_stack_entry terms[3],
 T_symbol *rule_arith(T_prec_stack_entry terms[3],
                      T_symbol_table *ltable, T_symbol *act_class,
                      ilist *instr_list) {
+    (void) ltable;
+    (void) act_class;
+
     T_symbol *s1 = terms[2].ptr.symbol;
     T_symbol *s2 = terms[0].ptr.symbol;
     T_data_type out_type = cast_nums(&s1, &s2, instr_list);
@@ -219,6 +227,8 @@ T_symbol *rule_arith(T_prec_stack_entry terms[3],
 T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3],
                         T_symbol_table *ltable, T_symbol *act_class,
                         ilist *instr_list) {
+    (void) instr_list;
+
     if (terms[0].ptr.token->type == TT_id) {
         return is_defined(terms[0].ptr.token->attr.str, ltable, act_class,
                           is_void);

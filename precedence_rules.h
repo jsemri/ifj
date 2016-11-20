@@ -8,6 +8,7 @@
 #include "token.h"
 #include "ial.h"
 #include "ilist.h"
+#include "symbol.h"
 #include "precedence_analyser_stack.h"
 #include <stdbool.h>
 
