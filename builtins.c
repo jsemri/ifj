@@ -171,8 +171,31 @@ void concat(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
         terminate(8);
     }
 
-    char *s1 = sym1->attr.var->value.str;
-    char *s2 = sym2->attr.var->value.str;
+    // buffers are static because number can't reach over 31 characters
+    char *s1, *s2, buf1[BUF_SIZE], buf2[BUF_SIZE];
+
+    if (sym1->attr.var->data_type == is_str) {
+        s1 = sym1->attr.var->value.str;
+    }
+    else {
+        if (is_real(sym1))
+            snprintf(buf1, BUF_SIZE-1, "%g", sym1->attr.var->value.d);
+        else
+            snprintf(buf1, BUF_SIZE-1, "%d", sym1->attr.var->value.n);
+        s1 = buf1;
+    }
+
+    if (sym2->attr.var->data_type == is_str) {
+        s2 = sym2->attr.var->value.str;
+    }
+    else {
+        if (is_real(sym2))
+            snprintf(buf2, BUF_SIZE-1, "%g", sym2->attr.var->value.d);
+        else
+            snprintf(buf2, BUF_SIZE-1, "%d", sym2->attr.var->value.n);
+        s2 = buf2;
+    }
+
     char *str = calloc(strlen(s1) + strlen(s2) + 1,1);
 
     if (!str)
