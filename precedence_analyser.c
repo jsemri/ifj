@@ -92,7 +92,6 @@ void precedence_analyser(T_token *first_token, int token_count,
     //printf("[INST] Ulož výsledek do lValue\n");
     result = convert(result, lvalue->attr.var->data_type, instr_list);
     create_instr(instr_list, TI_mov, result, NULL, lvalue);
-    lvalue->attr.var->initialized = true;
 
     //prec_stack_print(stack);
     prec_stack_free();

@@ -30,8 +30,7 @@ T_prec_rule rules[RULES_COUNT] = {
                             terms[i].ptr.token->type : TT_empty)
 #define FAIL_RULE(code) terminate(code)
 #define CREATE_SYMBOL(symbol, type) T_symbol *symbol = create_var_uniq(type); \
-                                    table_insert(symbol_tab, symbol); \
-                                    symbol->attr.var->initialized = true
+                                    table_insert(symbol_tab, symbol)
 #define ADD_INSTR(type, dst, s1, s2) create_instr(instr_list, type, s1, s2, dst)
 #define CHECK_TYPE(symbol, type) ((symbol)->attr.var->data_type == type)
 
