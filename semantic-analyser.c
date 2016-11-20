@@ -327,7 +327,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 // second argument
                 T_token *it2 = it + 2;
                 // setting instruction
-                T_instr_type ins = (i == b_find ? b_find : b_compare);
+                T_instr_type ins = (i == b_find ? TI_find : TI_compare);
                 // determining constant or identifier
                 if (is_iden(it)) {
                     sym1 = is_defined(it->attr.str, local_tab, actual_class,
@@ -397,23 +397,19 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 // third parameter - must be int
                 T_symbol *sym3;
                 if (is_iden(it)) {
-                    sym3 = is_defined(it2->attr.str, local_tab, actual_class,
+                    sym3 = is_defined(it3->attr.str, local_tab, actual_class,
                                      is_int);
                 }
                 else if (it3->type == TT_int) {
-                    sym3 = add_constant(&it2->attr, symbol_tab, is_int);
+                    sym3 = add_constant(&it3->attr, symbol_tab, is_int);
                 }
                 else
                     terminate(TYPE_ERROR);
 
                 // pushing last parameter
-                create_instr(L, TI_push, sym3, NULL, NULL);
+                create_instr(L, TI_push_var, sym3, NULL, NULL);
                 // creating instruction
                 create_instr(L, TI_substr, sym1, sym2, dest);
-                return 0;
-
-
-
                 return 0;
             }}}
         default:
@@ -439,16 +435,21 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
 {{{
     // table_find is able to derive from ifj16.readInt pointer to class ifj16
     T_symbol *fsym = table_find(symbol_tab, it->attr.str, actual_class);
+
+    // not fount
+    if (!fsym)
+        terminate(DEFINITION_ERROR);
+
     // found ifj16
     if (!strcmp(fsym->id, "ifj16")) {
         // handle builtins
         handle_builtins(it, tcount, L, dest, local_tab);
         return 0;
     }
-    // no such function found
-    if (!fsym || fsym->symbol_type != is_func)
-        terminate(DEFINITION_ERROR);
 
+    // no such function found
+    if (fsym->symbol_type != is_func)
+        terminate(DEFINITION_ERROR);
     // function found
 
     int pcount = fsym->attr.func->par_count;
@@ -602,6 +603,7 @@ static void cbody2()
     if (token->type == TT_assign || token->type == TT_semicolon) {
 
         // cannot be called function XXX
+        // error 6 - static variable in initialization
         token_vector tv = read_to_semic();
         // call precedence
         token_vec_delete(tv);
@@ -806,7 +808,7 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                     if ( (tv->last == 0 && dtype != is_void) ||
                          (tv->last != 0 && dtype == is_void) )
                     {
-                        terminate(TYPE_ERROR);
+                        terminate(DEFINITION_ERROR);
                     }
                     // TODO call expression handler
                     // move expression to accumulator

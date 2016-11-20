@@ -8,10 +8,10 @@
 
 
 static char *ins_arr[] = {
-        "STOP", "MOV", "ADD", "SUB", "MUL", "DIV",
-        "CONCAT", "AND", "OR", "NOT", "EQUAL", "NOTEQ",
-        "LESS", "LESSEQ", "GREATER", "GREATEREQ", "JMP",
-        "JMPZ", "RET", "CALL", "PUSH_var","PUSH", "READINT", "READDOUBLE",
+        "MOV", "ADD", "SUB", "MUL", "DIV",
+        "CONCAT", "EQUAL", "NOTEQ","LESS", "LESSEQ",
+        "GREATER", "GREATEREQ", "JMP","JMPZ", "RET",
+        "CALL", "PUSH","PUSH_var", "READINT", "READDOUBLE",
         "READSTR", "PRINT", "LENGTH", "SUBSTR", "COMPARE", "FIND",
         "SORT", "LAB", "CONVERT"
 };
@@ -47,8 +47,15 @@ void print_function(T_symbol *func) {
 void print_table(T_symbol_table *st) {
     for (unsigned i = 0;i < st->size; i++) {
         for (T_symbol *s = st->arr[i];s;s = s->next) {
-            if (s->symbol_type == is_var)
-                printf("|%s--%s|->", dtypes[s->attr.var->data_type], s->id);
+            if (s->symbol_type == is_var) {
+                printf("|%s--%s|", dtypes[s->attr.var->data_type], s->id);
+                if (s->attr.var->data_type == is_int)
+                    printf("|%d|->", s->attr.var->value.n);
+                else if (s->attr.var->data_type == is_str)
+                    printf("|%s|->", s->attr.var->value.str);
+                else
+                    printf("|%g|->", s->attr.var->value.d);
+            }
             else
                 printf("|%s--%s|->", s->id, arr[s->symbol_type]);
         }
