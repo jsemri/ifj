@@ -10,10 +10,10 @@
 #include "instruction.h"
 #include "symbol.h"
 #include "ilist.h"
+#include "ial.h"
 
-
-void precedence_analyser(token_vector v, T_symbol *lvalue,
-                         T_func_symbol *act_func, T_symbol *act_class,
-                         struct T_ilist *ilist);
+void precedence_analyser(T_token *first_token, int token_count,
+                         T_symbol *lvalue, T_symbol_table* local_table,
+                         T_symbol *act_class, ilist *instr_list);
 
 #endif //IFJ_PRECEDENCE_ANALYSER_H

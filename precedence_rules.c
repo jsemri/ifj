@@ -4,13 +4,7 @@
 
 #include "precedence_analyser_stack.h"
 #include "precedence_rules.h"
-#include "token_vector.h"
-#include "token.h"
-#include "ial.h"
 #include "globals.h"
-#include "symbol.h"
-#include "ilist.h"
-#include <stdio.h>
 #include <stdlib.h>
 
 #define RULES_COUNT 15
@@ -36,24 +30,27 @@ T_prec_rule rules[RULES_COUNT] = {
                             terms[i].ptr.token->type : TT_empty)
 #define FAIL_RULE(code) terminate(code)
 #define CREATE_SYMBOL(symbol, type) T_symbol *symbol = create_var_uniq(type); \
-                                    table_insert(symbol_tab, symbol)
-#define ADD_INSTR(type, dst, s1, s2) create_instr(expr_ilist, type, s1, s2, dst)
+                                    table_insert(symbol_tab, symbol); \
+                                    symbol->attr.var->initialized = true
+#define ADD_INSTR(type, dst, s1, s2) create_instr(instr_list, type, s1, s2, dst)
 #define CHECK_TYPE(symbol, type) ((symbol)->attr.var->data_type == type)
 
 T_symbol *execute_rule(T_prec_stack_entry terms[3], int count,
-                       T_func_symbol *act_func, T_symbol *act_class,
-                       ilist *expr_ilist) {
+                       T_symbol_table *ltable, T_symbol *act_class,
+                       ilist *instr_list) {
     for (int i = 0; i < RULES_COUNT; i++) {
         if (rules[i].tokens != count ||
                 rules[i].tokens >= 1 && rules[i].t1 != CONV_TERM_TO_TT(0) ||
                 rules[i].tokens >= 2 && rules[i].t2 != CONV_TERM_TO_TT(1) ||
                 rules[i].tokens >= 3 && rules[i].t3 != CONV_TERM_TO_TT(2))
             continue;
-        return rules[i].func(terms, act_func, act_class, expr_ilist);
+        return rules[i].func(terms, ltable, act_class, instr_list);
     }
     // No rule can be applied:
     //printf("-- Nic nevyhovuje\n");
+    printf("Tady bude konec..\n");
     FAIL_RULE(2);
+    return NULL;
 }
 
 #define ALLOWED_CONVERSIONS_SIZE 6
@@ -79,7 +76,7 @@ T_data_type ALLOWED_CONVERSIONS[ALLOWED_CONVERSIONS_SIZE] = {
 
 /**
  * Converts the input symbol to a new data type and adds the convertion
- * instruction to expr_ilist.
+ * instruction to ilist.
  *
  * This function does check what the current data type of the input symbol is
  * and depending on the current data-type and the new date-type the function
@@ -96,11 +93,11 @@ T_data_type ALLOWED_CONVERSIONS[ALLOWED_CONVERSIONS_SIZE] = {
  *
  * @param in The input symbol
  * @param new_type The target data-type
- * @param expr_ilist The instruction list (a new instuction will be added there
+ * @param ilist The instruction list (a new instuction will be added there
  *                   in case B).
  * @return The same, or a new, symbol with the target data-type
  */
-T_symbol *convert(T_symbol *in, T_data_type new_type, ilist *expr_ilist) {
+T_symbol *convert(T_symbol *in, T_data_type new_type, ilist *instr_list) {
     if (CHECK_TYPE(in, new_type)) {
         // Both data types are already the same, do nothing
         return in;
@@ -125,28 +122,28 @@ T_symbol *convert(T_symbol *in, T_data_type new_type, ilist *expr_ilist) {
     return out;
 }
 
-static T_data_type cast_nums(T_symbol **s1, T_symbol **s2, ilist *expr_ilist) {
+static T_data_type cast_nums(T_symbol **s1, T_symbol **s2, ilist *instr_list) {
     if (CHECK_TYPE(*s1, is_int) && CHECK_TYPE(*s2, is_int))
         // Both operands are int, result will be int
         return is_int;
-    *s1 = convert(*s1, is_double, expr_ilist);
-    *s2 = convert(*s2, is_double, expr_ilist);
+    *s1 = convert(*s1, is_double, instr_list);
+    *s2 = convert(*s2, is_double, instr_list);
     return is_double;
 }
 
 T_symbol *rule_brackets(T_prec_stack_entry terms[3],
-                        T_func_symbol *act_func, T_symbol *act_class,
-                        ilist *expr_ilist) {
+                        T_symbol_table *ltable, T_symbol *act_class,
+                        ilist *instr_list) {
     return terms[1].ptr.symbol;
 }
 
 
 T_symbol *rule_bool(T_prec_stack_entry terms[3],
-                    T_func_symbol *act_func, T_symbol *act_class,
-                    ilist *expr_ilist) {
+                    T_symbol_table *ltable, T_symbol *act_class,
+                    ilist *instr_list) {
     T_symbol *s1 = terms[0].ptr.symbol;
     T_symbol *s2 = terms[2].ptr.symbol;
-    cast_nums(&s1, &s2, expr_ilist);
+    cast_nums(&s1, &s2, instr_list);
 
     CREATE_SYMBOL(symbol, is_bool);
 
@@ -172,16 +169,16 @@ T_symbol *rule_bool(T_prec_stack_entry terms[3],
 }
 
 T_symbol *rule_concat(T_prec_stack_entry terms[3],
-                      T_func_symbol *act_func, T_symbol *act_class,
-                      ilist *expr_ilist) {
+                      T_symbol_table *ltable, T_symbol *act_class,
+                      ilist *instr_list) {
     T_symbol *s1 = terms[0].ptr.symbol;
     T_symbol *s2 = terms[2].ptr.symbol;
 
     if (!CHECK_TYPE(s1, is_str) && !CHECK_TYPE(s2, is_str))
-        return rule_arith(terms, act_func, act_class, expr_ilist);
+        return rule_arith(terms, ltable, act_class, instr_list);
 
-    s1 = convert(s1, is_str, expr_ilist);
-    s2 = convert(s2, is_str, expr_ilist);
+    s1 = convert(s1, is_str, instr_list);
+    s2 = convert(s2, is_str, instr_list);
 
     //printf("[INST] Spojení řetězců\n");
 
@@ -192,11 +189,11 @@ T_symbol *rule_concat(T_prec_stack_entry terms[3],
 }
 
 T_symbol *rule_arith(T_prec_stack_entry terms[3],
-                     T_func_symbol *act_func, T_symbol *act_class,
-                     ilist *expr_ilist) {
+                     T_symbol_table *ltable, T_symbol *act_class,
+                     ilist *instr_list) {
     T_symbol *s1 = terms[0].ptr.symbol;
     T_symbol *s2 = terms[2].ptr.symbol;
-    T_data_type out_type = cast_nums(&s1, &s2, expr_ilist);
+    T_data_type out_type = cast_nums(&s1, &s2, instr_list);
 
     CREATE_SYMBOL(symbol, out_type);
 
@@ -219,12 +216,12 @@ T_symbol *rule_arith(T_prec_stack_entry terms[3],
 
 
 T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3],
-                        T_func_symbol *act_func, T_symbol *act_class,
-                        ilist *expr_ilist) {
+                        T_symbol_table *ltable, T_symbol *act_class,
+                        ilist *instr_list) {
     if (terms[0].ptr.token->type == TT_id) {
         // TODO je i inicializovaná?
-        return is_defined(terms[0].ptr.token->attr.str, act_func->local_table,
-                          act_class, is_void);
+        return is_defined(terms[0].ptr.token->attr.str, ltable, act_class,
+                          is_void);
     }
 
     if (terms[0].ptr.token->type == TT_int) {

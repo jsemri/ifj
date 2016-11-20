@@ -17,18 +17,18 @@
 #define PUSH_EXP(t) prec_stack_push_exp(stack, t)
 #define ADD_HANDLE() prec_stack_add_handle(stack)
 
-static T_token* get_next_token(token_vector v);
+static T_token* get_next_token(T_token *cur_token, int token_count);
 
 /*
- * TODO Token a počet místo vektoru
+ * TODO Document me!
  */
-void precedence_analyser(token_vector v, T_symbol *lvalue,
-                         T_func_symbol *act_func, T_symbol *act_class,
-                         struct T_ilist *ilist) {
+void precedence_analyser(T_token *first_token, int token_count,
+                         T_symbol *lvalue, T_symbol_table* local_table,
+                         T_symbol *act_class, ilist *instr_list) {
     T_prec_stack *stack = prec_stack_new();
     PUSH_SYMBOL(PREC_TOP);
-    T_token *token = get_next_token(v);
 
+    T_token *token = first_token;
     while (token != NULL || !prec_stack_is_empty(stack)) {
         T_tokenType input_tt = token ? token->type : TT_eof;
         T_tokenType stack_tt = prec_stack_get_top_token_type(stack);
@@ -37,21 +37,21 @@ void precedence_analyser(token_vector v, T_symbol *lvalue,
             //printf("Provést: <\n");
             ADD_HANDLE();
             PUSH_TOKEN(token);
-            token = get_next_token(v);
+            token = get_next_token(token, token_count);
         }
         else if (precedence == PREC_GREATER) {
             //printf("Provést: >\n");
             T_prec_stack_entry rule_terms[MAX_TERMS_IN_RULE];
             int count;
             prec_stack_reduce(stack, rule_terms, MAX_TERMS_IN_RULE, &count);
-            T_symbol *result = execute_rule(rule_terms, count, act_func,
-                                            act_class, ilist);
+            T_symbol *result = execute_rule(rule_terms, count, local_table,
+                                            act_class, instr_list);
             PUSH_EXP(result);
         }
         else if (precedence == PREC_EQUAL) {
             //printf("Provést: =\n");
             PUSH_TOKEN(token);
-            token = get_next_token(v);
+            token = get_next_token(token, token_count);
         }
         else {
             //fprintf(stderr, "Chybí operátor\n");
@@ -62,8 +62,8 @@ void precedence_analyser(token_vector v, T_symbol *lvalue,
     T_symbol *result = prec_stack_get_result(stack);
     if (lvalue != NULL) {
         // FIXME Přetypovat result na typ lvalue.
-        result = convert(result, lvalue->attr.var->data_type, ilist);
-        create_instr(ilist, TI_mov, result, NULL, lvalue);
+        result = convert(result, lvalue->attr.var->data_type, instr_list);
+        create_instr(instr_list, TI_mov, result, NULL, lvalue);
         //printf("[INST] Ulož výsledek do lValue\n");
     }
     else {
@@ -78,18 +78,13 @@ void precedence_analyser(token_vector v, T_symbol *lvalue,
  * @param
  * @return A pointer to next token to be processed
  */
-static T_token* get_next_token(token_vector v) {
-    static int read_tokens = 0;
-    static int brackets = 0;
-    if (read_tokens == v->last) {
+static T_token* get_next_token(T_token *cur_token, int token_count) {
+    static int read_tokens = 1;
+    if (read_tokens == token_count) {
         return NULL;
     }
-    T_token *out = &v->arr[read_tokens++];
-    if (out->type == TT_lBracket)
-        brackets++;
-    if (out->type == TT_comma || out->type == TT_rBracket && brackets-- == 0)
-        return NULL;
-    return out;
+    read_tokens++;
+    return cur_token + 1;
 }
 
 /*
@@ -129,7 +124,7 @@ int main() {
     symbol_tab = table_init(RANGE);
 
     ilist *list = list_init();
-    precedence_analyser(v, NULL, NULL, NULL, list);
+    precedence_analyser(&v->arr[0], v->last, NULL, symbol_tab, NULL, list);
 
     token_vec_delete(v);
     return 0;

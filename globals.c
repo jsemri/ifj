@@ -62,6 +62,7 @@ void *ralloc(void *ptr, size_t size) {
 }
 
 void terminate(int err_code) {
+    printf("Terminate [%d] :)\n", err_code);
     void **cur = pool.first;
     while (cur != NULL) {
         for (int i = 0; i < POOL_SIZE; i++) {
