@@ -162,3 +162,10 @@ void length(T_symbol *sym1, T_symbol *result)
 
     result->attr.var->initialized = true;
 }}}
+
+void concat(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
+{{{
+
+}}}
+
+

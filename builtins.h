@@ -26,4 +26,8 @@ void compare(T_symbol *sym1, T_symbol *sym2, T_symbol *result);
 
 void length(T_symbol *sym1, T_symbol *result);
 
+void clear_buffer(T_symbol *sym);
+
+void concat(T_symbol *sym1, T_symbol *sym2, T_symbol *result);
+
 #endif

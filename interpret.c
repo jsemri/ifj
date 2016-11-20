@@ -11,6 +11,7 @@
 
 #define act_frame ((T_frame*)(stack_top(frame_stack)))
 #define is_real(s) (s->attr.var->data_type == is_double)
+#define is_integer(s) (s->attr.var->data_type == is_int)
 #define is_init(s) (s->attr.var->initialized)
 
 T_stack *frame_stack;
@@ -148,8 +149,8 @@ void interpret_loop(ilist *instr_list)
     T_data_type dtype;
 
     T_instr *ins = instr_list->first;
-//    while (ins) {print_instr(ins);ins = ins->next;}
-    while (true) {
+    while (ins) {print_instr(ins);ins = ins->next;}
+    while (false) {
 
         if (ins == NULL) {
             if (act_frame->dtype == is_void) {
@@ -183,6 +184,9 @@ void interpret_loop(ilist *instr_list)
                 math_instr(ins->itype, get_var(ins->dest), get_var(ins->op1),
                          get_var(ins->op2));
                 break;
+            case TI_concat:
+                concat(get_var(ins->dest), get_var(ins->op1), get_var(ins->op2));
+                break;
             case TI_equal:
             case TI_notequal:
             case TI_less:
@@ -201,7 +205,23 @@ void interpret_loop(ilist *instr_list)
                     puts("8 by mov");
                     terminate(8);
                 }
-                copy_value(dest, op1);
+
+                if (is_real(dest)) {
+                    double x = is_real(op1) ? op1->attr.var->value.d :
+                                              op1->attr.var->value.n;
+                    dest->attr.var->value.d = x;
+                }
+                else if (is_integer(dest)) {
+                    double x = is_real(op1) ? op1->attr.var->value.d :
+                                              op1->attr.var->value.n;
+                    dest->attr.var->value.n = x;
+                }
+                else {
+                   clear_buffer(dest);
+                   dest->attr.var->value.str = get_str(op1->attr.var->value.str);
+                }
+                // TODO
+                // copy_value(dest, op1);
                 break;
 
             case TI_print:
