@@ -142,8 +142,8 @@ T_symbol *rule_brackets(T_prec_stack_entry terms[3],
 T_symbol *rule_bool(T_prec_stack_entry terms[3],
                     T_symbol_table *ltable, T_symbol *act_class,
                     ilist *instr_list) {
-    T_symbol *s1 = terms[0].ptr.symbol;
-    T_symbol *s2 = terms[2].ptr.symbol;
+    T_symbol *s1 = terms[2].ptr.symbol;
+    T_symbol *s2 = terms[0].ptr.symbol;
     cast_nums(&s1, &s2, instr_list);
 
     CREATE_SYMBOL(symbol, is_bool);
@@ -172,8 +172,8 @@ T_symbol *rule_bool(T_prec_stack_entry terms[3],
 T_symbol *rule_concat(T_prec_stack_entry terms[3],
                       T_symbol_table *ltable, T_symbol *act_class,
                       ilist *instr_list) {
-    T_symbol *s1 = terms[0].ptr.symbol;
-    T_symbol *s2 = terms[2].ptr.symbol;
+    T_symbol *s1 = terms[2].ptr.symbol;
+    T_symbol *s2 = terms[0].ptr.symbol;
 
     if (!CHECK_TYPE(s1, is_str) && !CHECK_TYPE(s2, is_str))
         return rule_arith(terms, ltable, act_class, instr_list);
@@ -192,8 +192,8 @@ T_symbol *rule_concat(T_prec_stack_entry terms[3],
 T_symbol *rule_arith(T_prec_stack_entry terms[3],
                      T_symbol_table *ltable, T_symbol *act_class,
                      ilist *instr_list) {
-    T_symbol *s1 = terms[0].ptr.symbol;
-    T_symbol *s2 = terms[2].ptr.symbol;
+    T_symbol *s1 = terms[2].ptr.symbol;
+    T_symbol *s2 = terms[0].ptr.symbol;
     T_data_type out_type = cast_nums(&s1, &s2, instr_list);
 
     CREATE_SYMBOL(symbol, out_type);
@@ -220,7 +220,6 @@ T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3],
                         T_symbol_table *ltable, T_symbol *act_class,
                         ilist *instr_list) {
     if (terms[0].ptr.token->type == TT_id) {
-        // TODO je i inicializovaná?
         return is_defined(terms[0].ptr.token->attr.str, ltable, act_class,
                           is_void);
     }

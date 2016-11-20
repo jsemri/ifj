@@ -9,6 +9,7 @@
 #include "globals.h"
 #include "symbol.h"
 #include <stdio.h>
+#include <assert.h>
 
 #define MAX_TERMS_IN_RULE 3
 
@@ -19,12 +20,36 @@
 
 static T_token* get_next_token(T_token *cur_token, int token_count);
 
-/*
- * TODO Document me!
+/**
+ * The entry point of the precedence analyser
+ *
+ * This analyser will generate instuctions, which will calculate the result
+ * of the input expression. The result of the expression will be in 'lvalue'.
+ *
+ * For example, for expression 1 + 2 * 3 these instruction will be added
+ * to the instruction list 'instr_list':
+ *
+ * MUL [tmp1], 2, 3
+ * ADD [tmp2], 1, [tmp1]
+ * MOV [lvalue], [tmp2]
+ *
+ * @param first_token The first token of the expression
+ * @param token_count Number of tokens of the expression
+ * @param lvalue Symbol where the result of the expression will be stored
+ * @param local_table The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated. The new instruction will be added to the end
+ *                   of the list.
  */
 void precedence_analyser(T_token *first_token, int token_count,
                          T_symbol *lvalue, T_symbol_table* local_table,
                          T_symbol *act_class, ilist *instr_list) {
+    assert(first_token != NULL);
+    assert(token_count >= 0);
+    assert(lvalue != NULL);
+    assert(instr_list != NULL);
+
     T_prec_stack *stack = prec_stack_new();
     PUSH_SYMBOL(PREC_TOP);
 
@@ -60,23 +85,22 @@ void precedence_analyser(T_token *first_token, int token_count,
     }
 
     T_symbol *result = prec_stack_get_result(stack);
-    if (lvalue != NULL) {
-        // FIXME Přetypovat result na typ lvalue.
-        result = convert(result, lvalue->attr.var->data_type, instr_list);
-        create_instr(instr_list, TI_mov, result, NULL, lvalue);
-        lvalue->attr.var->initialized = true;
-        //printf("[INST] Ulož výsledek do lValue\n");
-    }
-    else {
-        // TODO Ulož výsledek "někam" jinam
-    }
+    //printf("[INST] Ulož výsledek do lValue\n");
+    result = convert(result, lvalue->attr.var->data_type, instr_list);
+    create_instr(instr_list, TI_mov, result, NULL, lvalue);
+    lvalue->attr.var->initialized = true;
+
     //prec_stack_print(stack);
     prec_stack_free();
 }
 
 /**
- * TODO Document me
- * @param
+ * Reads the next token and returns it.
+ *
+ * If all tokens from the expression were read, NULL will be returned.
+ *
+ * @param cur_token The token that is currently processed
+ * @param token_count Number of token that should be read (in total)
  * @return A pointer to next token to be processed
  */
 static T_token* get_next_token(T_token *cur_token, int token_count) {
