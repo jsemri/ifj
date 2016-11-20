@@ -20,6 +20,7 @@
 #include "ilist.h"
 #include <assert.h>
 #include "interpret.h"
+#include "precedence_analyser.h"
 
 // unget token
 static bool get_token_flag = false;
@@ -59,6 +60,7 @@ static void st_else2(T_symbol_table *local_tab, ilist *instr_list);
  *
  */
 
+// count of built-in function
 #define BI_COUNT 9
 
 // including actual token
@@ -727,8 +729,14 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                             handle_function(tv->arr, tv->last, instr_list, sym,
                                             local_tab);
                         }
+                        else if (tv->last > 0) {
+                            // at least one value
+                            precedence_analyser(tv->arr, tv->last, sym,
+                                                local_tab, actual_class,
+                                                instr_list );
+                        }
                         else {
-                            // TODO precedence analysis
+                            terminate(SYNTAX_ERROR);
                         }
 
                         token_vec_delete(tv);
@@ -751,8 +759,15 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                     end_label = instr_init(TI_lab, 0, 0, 0);
 
                     token_vector tv = read_to_rbrac();
+                    // empty expression
+                    if (tv->size == 1 ) {
+                        terminate(SYNTAX_ERROR);
+                    }
 
-                    // TODO send tvect to precedence analyser
+                    // result will be stored in accumulator
+                    precedence_analyser(tv->arr, tv->last-1, acc, local_tab,
+                                        actual_class, instr_list );
+
                     // XXX last token in tvect is ')'
                     token_vec_delete(tv);
 
@@ -810,8 +825,11 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                     {
                         terminate(DEFINITION_ERROR);
                     }
-                    // TODO call expression handler
-                    // move expression to accumulator
+                    // return value will be stored in accumulator
+                    acc->attr.var->data_type = dtype;
+                    precedence_analyser(tv->arr, tv->last-1, acc, local_tab,
+                                        actual_class, instr_list );
+
                     token_vec_delete(tv);
                     create_instr(instr_list, TI_ret, 0, 0, 0);
                     return;
@@ -862,8 +880,12 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                 unsigned tcount = tv->last - 2;
                 handle_function(it, tcount, instr_list, sym, local_tab);
             }
+            else if (tv->last >= 3) {
+                precedence_analyser(it, tv->last - 2, sym, local_tab,
+                                    actual_class, instr_list );
+            }
             else {
-                // TODO precedence analysis
+                terminate(SYNTAX_ERROR);
             }
             token_vec_delete(tv);
             return;
@@ -904,8 +926,16 @@ static void st_else2(T_symbol_table *local_tab, ilist *instr_list)
     get_token();
     // reading till ')'
     token_vector tv = read_to_rbrac();
-    // TODO precedence
+    if (tv->size == 1 ) {
+        terminate(SYNTAX_ERROR);
+    }
+
+    // result will be stored in accumulator
+    precedence_analyser(tv->arr, tv->last-1, acc, local_tab, actual_class,
+                        instr_list );
+
     token_vec_delete(tv);
+
     T_instr *end_lab = instr_init(TI_lab, 0, 0, 0);
     create_instr(instr_list, TI_jmpz, end_lab, 0, 0);
     // {

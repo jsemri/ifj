@@ -20,6 +20,7 @@
 #include "symbol.h"
 #include "ilist.h"
 #include "interpret.h"
+#include "precedence_analyser.h"
 
 
 #ifdef DEBUG
@@ -193,14 +194,25 @@ static void cbody2(char *iden, T_data_type dtype)
         T_symbol *sym = create_var(iden, dtype);
         sym->member_class = actual_class;
         table_insert(symbol_tab, sym);
+        if (token->type == TT_semicolon)
+            return;
 
         // just reading everything till `;`
+        token_vector tv = token_vec_init();
         while (token->type != TT_semicolon && token->type != TT_eof) {
             get_token();
+            token_push_back(tv, token);
         }
 
-        if (token->type != TT_semicolon)
+        // id = ; or no ';'
+        if (tv->last == 1 || token->type != TT_semicolon )
             terminate(SYNTAX_ERROR);
+
+        precedence_analyser(tv->arr, tv->last-1, sym, symbol_tab, actual_class,
+                            glist);
+
+        token_vec_delete(tv);
+
     }
     else if (token->type == TT_lBracket) {
         // function
