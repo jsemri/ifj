@@ -22,4 +22,8 @@ void print(int count);
 
 void substr(T_symbol *sym1, T_symbol *sym2, T_symbol *sym3, T_symbol *result);
 
+void compare(T_symbol *sym1, T_symbol *sym2, T_symbol *result);
+
+void length(T_symbol *sym1, T_symbol *result);
+
 #endif

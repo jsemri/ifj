@@ -85,6 +85,8 @@ void read_stdin(T_symbol *result, T_data_type dtype)
 void substr(T_symbol *sym1, T_symbol *sym2, T_symbol *sym3, T_symbol *result)
 {{{
 
+    // TODO overlapping
+
     // checking initialization flag
     if (!is_init(sym1) || !is_init(sym2) || !is_init(sym3))
     {
@@ -104,8 +106,10 @@ void substr(T_symbol *sym1, T_symbol *sym2, T_symbol *sym3, T_symbol *result)
     else
         n = sym3->attr.var->value.n;
 
-    if (n + i > (int)strlen(buf) || n < 0 || i < 0)
+    // overreach or negative numbers
+    if (n + i > (int)strlen(buf) || n < 0 || i < 0) {
         terminate(10);
+    }
 
     char *res;
     if(!(res = calloc(n + 1, 1))) {
@@ -117,5 +121,44 @@ void substr(T_symbol *sym1, T_symbol *sym2, T_symbol *sym3, T_symbol *result)
 
     clear_buffer(result);
     result->attr.var->value.str = res;
+    result->attr.var->initialized = true;
+}}}
+
+
+void compare(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
+{{{
+    if (!is_init(sym1) || !is_init(sym2))
+    {
+        terminate(8);
+    }
+
+    int cmp = strcmp(sym1->attr.var->value.str, sym2->attr.var->value.str);
+    cmp = cmp > 0 ? 1 : cmp;
+    cmp = cmp < 0 ? -1 : cmp;
+
+    if (is_real(result))
+        result->attr.var->value.d = cmp;
+    else
+        result->attr.var->value.n = cmp;
+
+    result->attr.var->initialized = true;
+}}}
+
+
+void length(T_symbol *sym1, T_symbol *result)
+{{{
+
+    if (!is_init(sym1))
+    {
+        terminate(8);
+    }
+
+    int len = strlen(sym1->attr.var->value.str);
+
+    if (is_real(result))
+        result->attr.var->value.d = len;
+    else
+        result->attr.var->value.n = len;
+
     result->attr.var->initialized = true;
 }}}

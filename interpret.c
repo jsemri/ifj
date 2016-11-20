@@ -23,19 +23,25 @@ T_symbol *get_var(T_symbol *var)
     if (!var)
         return NULL;
 
+    // if constant
+    if (var->attr.var->is_const)
+        return var;
+
     T_symbol *ret_var;
     // first search in active frame - local table
     T_frame *frame = stack_top(frame_stack);
     ret_var = table_find(frame->local_tab, var->id, NULL);
-    // local variable or static/constant variable returned
+    // local variable or static variable returned
     return ret_var ? ret_var : var;
 }}}
 
 void math_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1, T_symbol *op2)
 {{{
     // check if both are initialized
-    if (!is_init(op1) || !is_init(op2))
+    if (!is_init(op1) || !is_init(op2)) {
+        puts("8 by math instr");
         terminate(8);
+    }
 
     double x, y;
     if (is_real(op1))
@@ -85,8 +91,10 @@ void math_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1, T_symbol *op2
 void compare_instr(T_instr_type itype, T_symbol *op1, T_symbol *op2)
 {{{
     // check if both initialized
-    if (!is_init(op1) || !is_init(op2))
+    if (!is_init(op1) || !is_init(op2)) {
+        puts("8 by compare instr");
         terminate(8);
+    }
 
     int res;
     double x, y;
@@ -159,11 +167,12 @@ void interpret_loop(ilist *instr_list)
             }
             else {
                 // no return at function of non void return type
+                puts("8 by no return at end of non void fnc");
                 terminate(8);
             }
         }
 
-//        print_instr(ins);
+        print_instr(ins);
 
 
         switch (ins->itype) {
@@ -189,6 +198,7 @@ void interpret_loop(ilist *instr_list)
                 if (op1->attr.var->data_type == is_void ||
                     !is_init(op1))
                 {
+                    puts("8 by mov");
                     terminate(8);
                 }
                 copy_value(dest, op1);
@@ -201,6 +211,7 @@ void interpret_loop(ilist *instr_list)
                     T_symbol *out = stack_top(main_stack);
                     out = get_var(out);
                     if (!is_init(out)) {
+                        puts("8 from print");
                         terminate(8);
                     }
                     // XXX print it whole once
@@ -223,17 +234,10 @@ void interpret_loop(ilist *instr_list)
                 dtype = ins->itype == TI_readInt ? is_int : is_str;
                 dtype = ins->itype == TI_readDouble ? is_double : dtype;
                 read_stdin(get_var(ins->dest), dtype);
-                // TODO read character after character till \n, EOF
                 break;
 
             case TI_length:
-                op1 = get_var(ins->op1);
-                dest = get_var(ins->dest);
-                if (dest->attr.var->data_type == is_int)
-                    dest->attr.var->value.n = strlen(op1->attr.var->value.str);
-                else
-                    dest->attr.var->value.d = strlen(op1->attr.var->value.str);
-                dest->attr.var->initialized = true;
+                length(get_var(ins->op1), get_var(ins->dest));
                 break;
 
             case TI_sort:
@@ -243,10 +247,11 @@ void interpret_loop(ilist *instr_list)
                 // TODO
                 break;
             case TI_compare:
-                // TODO
+                compare(get_var(ins->op1), get_var(ins->op2), get_var(ins->dest));
                 break;
             case TI_substr:
                 op1 = stack_top(main_stack);
+                // last parameter on stack
                 stack_pop(main_stack);
                 substr(get_var(ins->op1), get_var(ins->op2), get_var(op1),
                        get_var(ins->dest));
@@ -278,7 +283,7 @@ void interpret_loop(ilist *instr_list)
                 if (acc->attr.var->data_type != is_void &&
                     act_frame->dtype == is_void)
                 {
-                    puts("return");
+                    puts("8 by return");
                     terminate(8);
                 }
                 ins = stack_top(main_stack);
@@ -300,7 +305,6 @@ void interpret(T_symbol *run)
 {{{
     frame_stack = stack_init();
     main_stack = stack_init();
-
     // creating frame for main function run()
     create_frame(run);
 //    interpret_loop(glist);
