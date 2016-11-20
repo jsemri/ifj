@@ -19,6 +19,7 @@
 #define ADD_HANDLE() prec_stack_add_handle(stack)
 
 static T_token* get_next_token(T_token *cur_token, int token_count);
+int read_tokens;
 
 /**
  * The entry point of the precedence analyser
@@ -54,6 +55,7 @@ void precedence_analyser(T_token *first_token, int token_count,
     PUSH_SYMBOL(PREC_TOP);
 
     T_token *token = first_token;
+    read_tokens = 1;
     while (token != NULL || !prec_stack_is_empty(stack)) {
         T_tokenType input_tt = token ? token->type : TT_eof;
         T_tokenType stack_tt = prec_stack_get_top_token_type(stack);
@@ -106,7 +108,6 @@ void precedence_analyser(T_token *first_token, int token_count,
  * @return A pointer to next token to be processed
  */
 static T_token* get_next_token(T_token *cur_token, int token_count) {
-    static int read_tokens = 1;
     if (read_tokens == token_count) {
         return NULL;
     }
@@ -140,7 +141,7 @@ void add_float(token_vector v, double i) {
 
 int main() {
     token_vector v = token_vec_init();
-    add_int(v, 10);
+    /*add_int(v, 10);
     add_token(v, TT_plus);
     add_token(v, TT_lBracket);
     add_int(v, 5);
@@ -148,11 +149,14 @@ int main() {
     add_float(v, 3);
     add_token(v, TT_mul);
     add_int(v, 2);
-    add_token(v, TT_rBracket);
+    add_token(v, TT_rBracket);*/
+    add_float(v, 6);
+    add_token(v, TT_greater);
+    add_int(v, 4);
 
     symbol_tab = table_init(RANGE);
 
-    T_symbol *lval = create_var_uniq(is_double);
+    T_symbol *lval = create_var_uniq(is_bool);
 
     ilist *list = list_init();
     precedence_analyser(&v->arr[0], v->last, lval, symbol_tab, NULL, list);
