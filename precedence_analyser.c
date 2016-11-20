@@ -82,6 +82,8 @@ void precedence_analyser(T_token *first_token, int token_count,
             //fprintf(stderr, "Chybí operátor\n");
             terminate(SYNTAX_ERROR);
         }
+        //prec_stack_print(stack);
+        //printf("---------------\n");
     }
 
     T_symbol *result = prec_stack_get_result(stack);
@@ -140,16 +142,20 @@ int main() {
     token_vector v = token_vec_init();
     add_int(v, 10);
     add_token(v, TT_plus);
+    add_token(v, TT_lBracket);
     add_int(v, 5);
     add_token(v, TT_plus);
     add_float(v, 3);
     add_token(v, TT_mul);
     add_int(v, 2);
+    add_token(v, TT_rBracket);
 
     symbol_tab = table_init(RANGE);
 
+    T_symbol *lval = create_var_uniq(is_double);
+
     ilist *list = list_init();
-    precedence_analyser(&v->arr[0], v->last, NULL, symbol_tab, NULL, list);
+    precedence_analyser(&v->arr[0], v->last, lval, symbol_tab, NULL, list);
 
     token_vec_delete(v);
     return 0;

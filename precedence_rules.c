@@ -21,7 +21,7 @@ T_prec_rule rules[RULES_COUNT] = {
     {3, TT_empty, TT_greater, TT_empty, rule_bool},
     {3, TT_empty, TT_lessEq, TT_empty, rule_bool},
     {3, TT_empty, TT_greatEq, TT_empty, rule_bool},
-    {3, TT_lBracket, TT_empty, TT_rBracket, rule_brackets},
+    {3, TT_rBracket, TT_empty, TT_lBracket, rule_brackets},
     {1, TT_id, TT_empty, TT_empty, rule_i_to_exp},
     {1, TT_int, TT_empty, TT_empty, rule_i_to_exp},
     {1, TT_double, TT_empty, TT_empty, rule_i_to_exp},
