@@ -140,6 +140,7 @@ void interpret_loop(ilist *instr_list)
     T_data_type dtype;
 
     T_instr *ins = instr_list->first;
+//    while (ins) {print_instr(ins);ins = ins->next;}
     while (true) {
 
         if (ins == NULL) {
@@ -236,10 +237,19 @@ void interpret_loop(ilist *instr_list)
                 break;
 
             case TI_sort:
-            case TI_find:
-            case TI_compare:
-            case TI_substr:
                 // TODO
+                break;
+            case TI_find:
+                // TODO
+                break;
+            case TI_compare:
+                // TODO
+                break;
+            case TI_substr:
+                op1 = stack_top(main_stack);
+                stack_pop(main_stack);
+                substr(get_var(ins->op1), get_var(ins->op2), get_var(op1),
+                       get_var(ins->dest));
                 break;
             case TI_push:
                 stack_push(main_stack, ins->op1);
