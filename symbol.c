@@ -138,7 +138,7 @@ T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
 
     // checking data type
     // int to double accepted
-    if (sym->attr.var->data_type == is_int && dtype == is_double)
+    if (sym->attr.var->data_type != is_str && dtype != is_str)
         return sym;
 
     if (sym->attr.var->data_type != dtype) {

@@ -149,8 +149,7 @@ void interpret_loop(ilist *instr_list)
     T_data_type dtype;
 
     T_instr *ins = instr_list->first;
-    while (ins) {print_instr(ins);ins = ins->next;}
-    while (false) {
+    while (true) {
 
         if (ins == NULL) {
             if (act_frame->dtype == is_void) {
@@ -220,8 +219,6 @@ void interpret_loop(ilist *instr_list)
                    clear_buffer(dest);
                    dest->attr.var->value.str = get_str(op1->attr.var->value.str);
                 }
-                // TODO
-                // copy_value(dest, op1);
                 break;
 
             case TI_print:
@@ -263,12 +260,15 @@ void interpret_loop(ilist *instr_list)
             case TI_sort:
                 // TODO
                 break;
+
             case TI_find:
                 // TODO
                 break;
+
             case TI_compare:
                 compare(get_var(ins->op1), get_var(ins->op2), get_var(ins->dest));
                 break;
+
             case TI_substr:
                 op1 = stack_top(main_stack);
                 // last parameter on stack
@@ -276,12 +276,15 @@ void interpret_loop(ilist *instr_list)
                 substr(get_var(ins->op1), get_var(ins->op2), get_var(op1),
                        get_var(ins->dest));
                 break;
+
             case TI_push:
                 stack_push(main_stack, ins->op1);
                 break;
+
             case TI_push_var:
                 stack_push(main_stack, get_var(ins->op1));
                 break;
+
 
             case TI_call:
                 create_frame(ins->op1);

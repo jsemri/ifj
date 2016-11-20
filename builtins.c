@@ -166,6 +166,24 @@ void length(T_symbol *sym1, T_symbol *result)
 void concat(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
 {{{
 
+    if (!is_init(sym1) || !is_init(sym2))
+    {
+        terminate(8);
+    }
+
+    char *s1 = sym1->attr.var->value.str;
+    char *s2 = sym2->attr.var->value.str;
+    char *str = calloc(strlen(s1) + strlen(s2) + 1,1);
+
+    if (!str)
+        terminate(99);
+
+    strcpy(str, s1);
+    strcpy(str + strlen(str), s2);
+
+    clear_buffer(result);
+    result->attr.var->value.str = str;
+    result->attr.var->initialized = true;
 }}}
 
 
