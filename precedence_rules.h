@@ -47,8 +47,6 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count,
  */
 T_symbol *convert(T_symbol *in, T_data_type new_type, ilist *instr_list);
 
-bool init_exp_table();
-
 T_symbol *rule_brackets(T_prec_stack_entry terms[3],
                         T_symbol_table *ltable, T_symbol *act_class,
                         ilist *instr_list);

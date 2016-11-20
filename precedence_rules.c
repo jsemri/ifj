@@ -48,7 +48,6 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count,
     }
     // No rule can be applied:
     //printf("-- Nic nevyhovuje\n");
-    printf("Tady bude konec..\n");
     FAIL_RULE(2);
     return NULL;
 }
