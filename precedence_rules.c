@@ -232,6 +232,7 @@ T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3],
     else if (terms[0].ptr.token->type == TT_double) {
         //printf("[INST] Nový symbol: double=%g\n", terms[0].ptr.token->attr.d);
         CREATE_SYMBOL(symbol, is_double);
+        //add_constant
         // TODO Přidat instrukci..
         return symbol;
     }

@@ -64,6 +64,7 @@ void precedence_analyser(T_token *first_token, int token_count,
         // FIXME Přetypovat result na typ lvalue.
         result = convert(result, lvalue->attr.var->data_type, instr_list);
         create_instr(instr_list, TI_mov, result, NULL, lvalue);
+        lvalue->attr.var->initialized = true;
         //printf("[INST] Ulož výsledek do lValue\n");
     }
     else {
