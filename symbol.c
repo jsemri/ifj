@@ -150,16 +150,7 @@ T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
 T_symbol *add_constant(T_value *value, struct T_Hash_symbol_table *symbol_tab,
                        T_data_type dtype)
 {{{
-
-    static char w1, w2, w3;
-
-    char buf[] = "&|a4ejg82|";
-    w1 = rand() % 255 + 1;
-    w2 = rand() % 149 + 1;
-    w3 = rand() % 255 + 1;
-    buf[0] = w1;buf[1] = w2; buf[2] = w3;
-    T_symbol *sym = create_var(get_str(buf), dtype);
-
+    T_symbol *sym = create_var_uniq(dtype);
 
     sym->attr.var->value = *value;
     value->str = NULL;
