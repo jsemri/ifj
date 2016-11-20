@@ -51,9 +51,9 @@ void math_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1, T_symbol *op2
         x = op1->attr.var->value.n;
 
     if (is_real(op2))
-        y = op1->attr.var->value.d;
+        y = op2->attr.var->value.d;
     else
-        y = op1->attr.var->value.n;
+        y = op2->attr.var->value.n;
 
 
     switch (itype) {
@@ -89,7 +89,8 @@ void math_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1, T_symbol *op2
 }}}
 
 
-void compare_instr(T_instr_type itype, T_symbol *op1, T_symbol *op2)
+void compare_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1,
+                   T_symbol *op2)
 {{{
     // check if both initialized
     if (!is_init(op1) || !is_init(op2)) {
@@ -102,12 +103,12 @@ void compare_instr(T_instr_type itype, T_symbol *op1, T_symbol *op2)
     if (is_real(op1))
         x = op1->attr.var->value.d;
     else
-        y = op1->attr.var->value.n;
+        x = op1->attr.var->value.n;
 
     if (is_real(op2))
-        x = op1->attr.var->value.d;
+        y = op2->attr.var->value.d;
     else
-        y = op1->attr.var->value.n;
+        y = op2->attr.var->value.n;
 
     switch (itype) {
 
@@ -136,8 +137,8 @@ void compare_instr(T_instr_type itype, T_symbol *op1, T_symbol *op2)
             break;
     }
     // logic value stored only in accumulator
-    acc->attr.var->data_type = is_int;
-    acc->attr.var->value.n = res;
+    dest->attr.var->data_type = is_int;
+    dest->attr.var->value.n = res;
 }}}
 
 void interpret_loop(ilist *instr_list)
@@ -192,7 +193,8 @@ void interpret_loop(ilist *instr_list)
             case TI_lessEq:
             case TI_greater:
             case TI_greaterEq:
-                compare_instr(ins->itype, get_var(ins->op1), get_var(ins->op2));
+                compare_instr(ins->itype, get_var(ins->dest), get_var(ins->op1),
+                              get_var(ins->op2));
                 break;
             case TI_mov:
                 dest = get_var(ins->dest);
