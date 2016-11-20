@@ -97,7 +97,7 @@ T_symbol *create_var_uniq(T_data_type dtype)
     static int uniq_var_capacity = 16;
 
     if (uniq_var_counter == uniq_var_capacity) {
-        uniq_var_counter -= uniq_var_capacity;
+        uniq_var_counter = 0;
         uniq_var_capacity *= 16;
         uniq_var_size++;
     }
