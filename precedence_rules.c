@@ -5,6 +5,8 @@
 #include "precedence_analyser_stack.h"
 #include "precedence_rules.h"
 #include "globals.h"
+#include "token.h"
+#include "symbol.h"
 #include <stdlib.h>
 
 #define RULES_COUNT 15
@@ -52,7 +54,7 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count,
     return NULL;
 }
 
-#define ALLOWED_CONVERSIONS_SIZE 6
+#define ALLOWED_CONVERSIONS_SIZE 2
 
 /**
  * The list of valid conversions
@@ -69,8 +71,8 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count,
  */
 T_data_type ALLOWED_CONVERSIONS[ALLOWED_CONVERSIONS_SIZE] = {
     is_int, is_double,
-    is_int, is_str,
-    is_double, is_str,
+    //is_int, is_str,
+    //is_double, is_str,
 };
 
 /**
@@ -115,7 +117,7 @@ T_symbol *convert(T_symbol *in, T_data_type new_type, ilist *instr_list) {
     }
 
     CREATE_SYMBOL(out, new_type);
-    ADD_INSTR(TI_convert, out, in, NULL);
+    ADD_INSTR(TI_mov, out, in, NULL);
     //printf("[INST] Přetypování\n");
 
     return out;
@@ -176,8 +178,8 @@ T_symbol *rule_concat(T_prec_stack_entry terms[3],
     if (!CHECK_TYPE(s1, is_str) && !CHECK_TYPE(s2, is_str))
         return rule_arith(terms, ltable, act_class, instr_list);
 
-    s1 = convert(s1, is_str, instr_list);
-    s2 = convert(s2, is_str, instr_list);
+    //s1 = convert(s1, is_str, instr_list);
+    //s2 = convert(s2, is_str, instr_list);
 
     //printf("[INST] Spojení řetězců\n");
 
@@ -225,19 +227,15 @@ T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3],
 
     if (terms[0].ptr.token->type == TT_int) {
         //printf("[INST] Nový symbol: int=%d\n", terms[0].ptr.token->attr.n);
-        CREATE_SYMBOL(symbol, is_int);
-        // TODO Přidat instrukci..
-        return symbol;
+        return add_constant(&terms[0].ptr.token->attr, symbol_tab, is_int);
     }
     else if (terms[0].ptr.token->type == TT_double) {
         //printf("[INST] Nový symbol: double=%g\n", terms[0].ptr.token->attr.d);
-        CREATE_SYMBOL(symbol, is_double);
-        //add_constant
-        // TODO Přidat instrukci..
-        return symbol;
+        return add_constant(&terms[0].ptr.token->attr, symbol_tab, is_double);
     }
     else {
         // Unexpected token
         FAIL_RULE(2);
+        return NULL;
     }
 }

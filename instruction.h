@@ -39,7 +39,6 @@ typedef enum {
     TI_find,        // id/- id/v id/v
     TI_sort,        // id/- id/v -
     TI_lab,
-    TI_convert,     // casts int -> double, int/double -> string
 } T_instr_type;
 
 /// Structure of instruction.
