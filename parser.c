@@ -621,6 +621,7 @@ int parse()
 {{{
 
     part = 0;
+    row = 1;
 
     if (!(token = token_new()) ) {
         return INTERNAL_ERROR;
