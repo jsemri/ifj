@@ -30,4 +30,8 @@ void clear_buffer(T_symbol *sym);
 
 void concat(T_symbol *sym1, T_symbol *sym2, T_symbol *result);
 
+void sort(T_symbol *sym, T_symbol *result);
+
+void find(T_symbol *sym1, T_symbol *sym2, T_symbol *result);
+
 #endif

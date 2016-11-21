@@ -209,4 +209,36 @@ void concat(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
     result->attr.var->initialized = true;
 }}}
 
+void sort(T_symbol *sym, T_symbol *result)
+{{{
+
+    if (!is_init(sym))
+    {
+        terminate(8);
+    }
+
+    char *str = get_str(sym->attr.var->value.str);
+    // TODO sort str
+    clear_buffer(result);
+    result->attr.var->value.str = /*sort(str)*/str;
+    result->attr.var->initialized = true;
+}}}
+
+void find(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
+{{{
+
+    if (!is_init(sym1) || !is_init(sym2))
+    {
+        terminate(8);
+    }
+
+    // TODO add find()
+    if (is_real(result)) {
+//        result->attr.var->value.d = ;
+    }
+    else {
+  //      result->attr.var->value.n = ;
+    }
+    result->attr.var->initialized = true;
+}}}
 
