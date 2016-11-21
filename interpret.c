@@ -12,6 +12,7 @@
 #define act_frame ((T_frame*)(stack_top(frame_stack)))
 #define is_real(s) (s->attr.var->data_type == is_double)
 #define is_integer(s) (s->attr.var->data_type == is_int)
+#define is_boolean(s) (s->attr.var->data_type == is_bool)
 #define is_init(s) (s->attr.var->initialized)
 
 T_stack *frame_stack;
@@ -55,7 +56,6 @@ void math_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1, T_symbol *op2
     else
         y = op2->attr.var->value.n;
 
-
     switch (itype) {
         case TI_add:
             if (is_real(dest))
@@ -97,7 +97,7 @@ void compare_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1,
         puts("8 by compare instr");
         terminate(8);
     }
-
+    acc->attr.var->data_type = is_bool;
     int res;
     double x, y;
     if (is_real(op1))
@@ -137,15 +137,14 @@ void compare_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1,
             break;
     }
     // logic value stored only in accumulator
-    dest->attr.var->data_type = is_int;
-    dest->attr.var->value.n = res;
+    dest->attr.var->data_type = is_bool;
+    dest->attr.var->value.b = res;
 }}}
 
 void interpret_loop(ilist *instr_list)
 {{{
 
-    // finding a register
-    acc->attr.var->data_type = is_void;
+    //acc->attr.var->data_type = is_void;
     T_symbol *op1, *dest;
     T_data_type dtype;
 
@@ -206,7 +205,6 @@ void interpret_loop(ilist *instr_list)
                     puts("8 by mov");
                     terminate(8);
                 }
-
                 if (is_real(dest)) {
                     double x = is_real(op1) ? op1->attr.var->value.d :
                                               op1->attr.var->value.n;
@@ -217,10 +215,14 @@ void interpret_loop(ilist *instr_list)
                                               op1->attr.var->value.n;
                     dest->attr.var->value.n = x;
                 }
-                else {
-                   clear_buffer(dest);
-                   dest->attr.var->value.str = get_str(op1->attr.var->value.str);
+                else if (is_boolean(dest)) {
+                    dest->attr.var->value.b = op1->attr.var->value.b;
                 }
+                else {
+                    clear_buffer(dest);
+                    dest->attr.var->value.str = get_str(op1->attr.var->value.str);
+                }
+                dest->attr.var->initialized = true;
                 break;
 
             case TI_print:
@@ -299,8 +301,9 @@ void interpret_loop(ilist *instr_list)
 
             case TI_jmpz:
                 // check accumulator where result is stored
-                if (acc)
+                if (!acc->attr.var->value.b)
                     ins = ins->op1;
+                acc->attr.var->data_type = act_frame->dtype;
                 break;
 
             case TI_ret:
@@ -315,7 +318,7 @@ void interpret_loop(ilist *instr_list)
                 stack_pop(main_stack);
                 remove_frame_from_stack(frame_stack);
                 // return value already in acc
-                break;
+                continue;
 
             default:
                 break;

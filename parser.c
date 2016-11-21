@@ -487,7 +487,6 @@ static void stat()
                     if (token->type == TT_eof) {
                          terminate(SYNTAX_ERROR);
                     }
-
                     return;
                 }
             default:

@@ -509,13 +509,15 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
 
     create_instr(L, TI_call, fsym, 0, 0);
 
+    list_insert_last(L, return_label);
+
     if (dest) {
         create_instr(L, TI_mov, acc, NULL, dest);
     }
 
     // inserting label, where to return from function
     // this instruction should be in stack
-    list_insert_last(L, return_label);
+    //list_insert_last(L, return_label);
     return 0;
 }}}
 
@@ -763,11 +765,10 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                     if (tv->size == 1 ) {
                         terminate(SYNTAX_ERROR);
                     }
-
+                    acc->attr.var->data_type = is_bool;
                     // result will be stored in accumulator
                     precedence_analyser(tv->arr, tv->last-1, acc, local_tab,
                                         actual_class, instr_list );
-
                     // XXX last token in tvect is ')'
                     token_vec_delete(tv);
 
@@ -827,9 +828,9 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                     }
                     // return value will be stored in accumulator
                     acc->attr.var->data_type = dtype;
-                    precedence_analyser(tv->arr, tv->last-1, acc, local_tab,
-                                        actual_class, instr_list );
 
+                    precedence_analyser(tv->arr, tv->last, acc, local_tab,
+                                        actual_class, instr_list );
                     token_vec_delete(tv);
                     create_instr(instr_list, TI_ret, 0, 0, 0);
                     return;
