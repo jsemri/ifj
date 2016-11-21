@@ -255,6 +255,9 @@ T_symbol *rule_concat(T_prec_stack_entry terms[3],
     if (!CHECK_TYPE(s1, is_str) && !CHECK_TYPE(s2, is_str))
         return rule_arith(terms, ltable, act_class, instr_list);
 
+    if (CHECK_TYPE(s1, is_bool) || CHECK_TYPE(s2, is_bool))
+        terminate(TYPE_ERROR);
+
     //s1 = convert(s1, is_str, instr_list);
     //s2 = convert(s2, is_str, instr_list);
 
@@ -328,12 +331,13 @@ T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3],
     }
 
     if (terms[0].ptr.token->type == TT_int) {
-        //printf("[INST] Nový symbol: int=%d\n", terms[0].ptr.token->attr.n);
         return add_constant(&terms[0].ptr.token->attr, symbol_tab, is_int);
     }
     else if (terms[0].ptr.token->type == TT_double) {
-        //printf("[INST] Nový symbol: double=%g\n", terms[0].ptr.token->attr.d);
         return add_constant(&terms[0].ptr.token->attr, symbol_tab, is_double);
+    }
+    else if (terms[0].ptr.token->type == TT_string) {
+        return add_constant(&terms[0].ptr.token->attr, symbol_tab, is_str);
     }
     else {
         // Unexpected token

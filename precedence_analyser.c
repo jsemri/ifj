@@ -149,13 +149,19 @@ int main0() {
     add_token(v, TT_mul);
     add_int(v, 2);
     add_token(v, TT_rBracket);*/
-    add_float(v, 6);
-    add_token(v, TT_greater);
-    add_int(v, 4);
+    //add_float(v, 6);
+    //add_token(v, TT_greater);
+    //add_int(v, 4);
 
     symbol_tab = table_init(RANGE);
+    T_token *token = token_new();
+    token->type = TT_string;
+    token->attr.str = "Ahoj";
+    token_push_back(v, token);
+    add_token(v, TT_plus);
+    add_int(v, 3);
 
-    T_symbol *lval = create_var_uniq(is_bool);
+    T_symbol *lval = create_var_uniq(is_str);
 
     ilist *list = list_init();
     precedence_analyser(&v->arr[0], v->last, lval, symbol_tab, NULL, list);
