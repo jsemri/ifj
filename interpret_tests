@@ -20,6 +20,6 @@ for i in $DIR; do
   fi
 done
 
-rm tmp.java
+rm tmp.java *.class
 
 
