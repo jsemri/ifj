@@ -59,3 +59,12 @@ void list_succ(ilist *L) {
     if (L->act)
         L->act = L->act->next;
 }
+
+void list_merge(ilist *L1, ilist *L2) {
+    if (L1->first)
+        L1->last->next = L2->first;
+    else
+        L1->first = L2->first;
+    L1->last = L2->last;
+}
+

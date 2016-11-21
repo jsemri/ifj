@@ -10,5 +10,6 @@ void list_delete(ilist *L);
 void list_free(ilist **L);
 void list_first(ilist *L);
 void list_succ(ilist *L);
+void list_merge(ilist *L1, ilist *L2);
 
 #endif
