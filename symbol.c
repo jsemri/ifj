@@ -169,7 +169,7 @@ T_symbol *symbol_copy(T_symbol *sym)
     char *id = get_str(sym->id);
      // only variable
     new_symbol = create_var(id, sym->attr.var->data_type);
-    if (new_symbol->attr.var->data_type == is_str) {
+    if (new_symbol->attr.var->data_type == is_str && sym->attr.var->value.str) {
         new_symbol->attr.var->value.str = get_str(sym->attr.var->value.str);
     }
     else {
