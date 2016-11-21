@@ -342,11 +342,22 @@ void interpret(T_symbol *run)
     frame_stack = stack_init();
     main_stack = stack_init();
 
+    T_instr *last = glist->last;
     // merging global list with run()
     list_merge(glist, run->attr.func->func_ilist);
     // creating frame for main function run()
     create_frame(run);
     interpret_loop(glist);
+
+    // dividing lists
+    if (last) {
+        last->next = NULL;
+        glist->last = last;
+    }
+    else {
+        glist->first = NULL;
+        glist->last = NULL;
+    }
 
     // removing stacks
     stack_remove(&frame_stack, true);

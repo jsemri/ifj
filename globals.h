@@ -47,6 +47,10 @@ extern int part;
 extern const char *fun;
 extern unsigned gins;
 
+// for lexer
+extern char *char_vector;
+extern int vector_size;
+
 struct T_pool {
     void **first;
     void **last;

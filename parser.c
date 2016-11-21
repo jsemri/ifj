@@ -46,6 +46,10 @@ int row;
 const char *fun;
 int part;
 
+// for lexer
+char *char_vector;
+int vector_size = 32;
+
 // each function represents a nonterminal symbol in LL(1) table
 static void prog();
 static void body();
@@ -641,6 +645,8 @@ int parse()
 
     // insert ifj16 class
     fill_ifj16();
+    if (!(char_vector = calloc(vector_size ,1)))
+        terminate(99);
 
     /*
        lexical + syntax analysis
@@ -672,6 +678,7 @@ int parse()
     table_remove(&symbol_tab);
     token_free(&token);
     list_free(&glist);
+    free(char_vector);
     return 0;
 }}}
 

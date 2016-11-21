@@ -4,7 +4,7 @@
 #include "scanner.h"
 #include <ctype.h>
 #include "token.h"
-#include "string.h"
+#include <string.h>
 #include "globals.h"
 #include "debug.h"
 #include "symbol.h"
@@ -15,6 +15,28 @@
 FILE *source;
 T_token *token;
 int row;
+// char vector
+char *char_vector;
+// vector max size
+int vector_size;
+// actual size
+int len;
+
+void push_char(int c) {
+    if (len >= vector_size) {
+        void *ptr = realloc(char_vector,(vector_size *= 2));
+        if (!ptr)
+            terminate(99);
+        char_vector = ptr;
+        memset(char_vector + len, 0, vector_size - len);
+    }
+    char_vector[len++] = c;
+}
+
+void clear() {
+    len = 0;
+    memset(char_vector, 0, vector_size);
+}
 
 const char *KEYWORDS[KEYW_COUNT] = {
     "void", "int", "double", "String", "boolean",
@@ -36,15 +58,12 @@ int is_next_eof() {
 }
 
 #define return return show_token(0) +
-#define SIZE 1024
 int get_token() {
     T_state state = S_start;
     int c; //read character
     token_clear(token);
-    char buf[SIZE] = "";
+    clear();
     int b1, b2; // for octal numbers
-    unsigned counter = 0;
-
     // Reads chars from a file until EOF occurs
     while((c = fgetc(source)) != EOF) {
         switch (state) {
@@ -94,13 +113,13 @@ int get_token() {
                 } else if (c == '&'){
                     state = S_and;
                 } else if (isalpha(c) || c == '_' || c == '$') {    // ID starts with _$a-Z
-                    buf[counter++] = c;
+                    push_char(c);
                     state = S_ID;
                 } else if (c == '"') {
                     state = S_string;
                 } else if (isdigit(c)) {
                     state = S_int;
-                    buf[counter++] = c;
+                    push_char(c);
                 } else {
                     terminate(LEX_ERROR);
                 }
@@ -109,18 +128,18 @@ int get_token() {
             /*_________Numbers________*/
             case S_int:
                 if (isdigit(c)) {
-                    buf[counter++] = c;     // add number to a string
+                    push_char(c);     // add number to a string
                 } else if (c == '.') {
                     state = S_double;
-                    buf[counter++] = c;     // add the dot into the string
+                    push_char(c);     // add the dot into the string
                 } else if (c == 'e' || c == 'E') {
                     state = S_doubleExp;
-                    buf[counter++] = c;
+                    push_char(c);
                 } else {
                     ungetc(c, source);          // last char was not valid, end of ID, undo last char
 
                     token->type = TT_int;
-                    token->attr.n = (int) strtol(buf, NULL, 10); //return string value in int
+                    token->attr.n = (int) strtol(char_vector, NULL, 10);
 
 
                     return 0;
@@ -130,7 +149,7 @@ int get_token() {
             case S_double:
                 if (isdigit(c)) {
                     state = S_double2;
-                    buf[counter++] = c;
+                    push_char(c);
                 } else {
                     terminate(LEX_ERROR);
                 }
@@ -138,15 +157,15 @@ int get_token() {
 
             case S_double2:
                 if (isdigit(c)) {
-                    buf[counter++] = c; // add into string and stay
+                    push_char(c); // add into string and stay
                 } else if (c == 'e' || c == 'E') {
                     state = S_doubleExp;
-                    buf[counter++] = c;
+                    push_char(c);
                 } else {
                     ungetc(c, source);            // last char was not valid, end of ID, undo last char
 
                     token->type = TT_double;
-                    token->attr.d = strtod(buf, NULL); //return string value in int
+                    token->attr.d = strtod(char_vector, NULL); //return string value in int
 
                     return 0;
                 }
@@ -155,10 +174,10 @@ int get_token() {
             case S_doubleExp:
                 if (c == '+' || c == '-') {
                     state = S_doubleExp2;
-                    buf[counter++] = c;
+                    push_char(c);
                 } else if (isdigit(c)) {
                     state = S_doubleExp3;
-                    buf[counter++] = c;
+                    push_char(c);
                 } else {
                     terminate(LEX_ERROR);
                 }
@@ -167,7 +186,7 @@ int get_token() {
             case S_doubleExp2:
                 if (isdigit(c)) {
                     state = S_doubleExp3;
-                    buf[counter++] = c;
+                    push_char(c);
                 } else {
                     terminate(LEX_ERROR);
                 }
@@ -175,12 +194,12 @@ int get_token() {
 
             case S_doubleExp3:
                 if (isdigit(c)) {
-                    buf[counter++] = c; // add into string and stay in this state
+                    push_char(c); // add into string and stay in this state
                 } else {
                     ungetc(c, source);            // last char was not valid, end of ID, undo last char
 
                     token->type = TT_double;
-                    token->attr.d = strtod(buf, NULL);
+                    token->attr.d = strtod(char_vector, NULL);
 
 
                     return 0;
@@ -193,13 +212,13 @@ int get_token() {
                     state = S_stringBackSlash;
                 } else if (c == '"') {
                     token->type = TT_string;
-                    token->attr.str = get_str(buf);
+                    token->attr.str = get_str(char_vector);
                     return 0;
                 } else if (c == '\n' || c == EOF) {
                     row++;
                     terminate(LEX_ERROR);
                 } else {
-                    buf[counter++] = c;
+                    push_char(c);
                 }
                 break;
 
@@ -209,15 +228,15 @@ int get_token() {
                     terminate(LEX_ERROR);
                 }
                 else if (c == 'n') {
-                    buf[counter++] = '\n';
+                    push_char('\n');
                     state = S_string;
                 }
                 else if (c == 't'){
-                    buf[counter++] = '\t';
+                    push_char('\t');
                     state = S_string;
                 }
                 else if (c == '\\') {
-                    buf[counter++] = '\\';
+                    push_char('\\');
                 }
                 else if (c <= '3' && c>= '0') {
                     b1 = c - '0';
@@ -240,7 +259,7 @@ int get_token() {
             case S_octal2:
                 if (is_oct(c)) {
                     c = c - '0' + b1 + b2;
-                    buf[counter++] = c;
+                    push_char(c);
                     state = S_string;
                 }
                 else
@@ -251,47 +270,47 @@ int get_token() {
             /*_________ID________*/
             case S_ID:
                 if (isalnum(c) || c == '_' || c == '$') {
-                    buf[counter++] = c;     // add char to str, the ID is valid
+                    push_char(c);     // add char to str, the ID is valid
                 }
                 else if (c == '.') {
                     int i;
                     // checking if id is keyword
                     for (i = 0; i < KEYW_COUNT &&
-                            strcmp(buf, KEYWORDS[i]); i++);
+                            strcmp(char_vector, KEYWORDS[i]); i++);
                     if (i != KEYW_COUNT) {
                         terminate(LEX_ERROR);
                     }
 
-                    buf[counter++] = c;
+                    push_char(c);
                     state = S_FULL_ID;
                 }
                 else {
                     ungetc(c, source);            // last char was not valid, end of ID, undo last char
                     for (int i = 0; i < KEYW_COUNT; i++) {
-                        if (strcmp(buf, KEYWORDS[i]) == 0) {
+                        if (strcmp(char_vector, KEYWORDS[i]) == 0) {
                             token->type = TT_keyword;
                             token->attr.keyword = i;
                             return 0;
                         }
                     }
                     token->type = TT_id;
-                    token->attr.str = get_str(buf);
+                    token->attr.str = get_str(char_vector);
                     return 0;
                 }
                 break;
             /*________FULL ID________*/
             case S_FULL_ID:
                 if (isalnum(c) || c == '_' || c== '$') {
-                    buf[counter++] = c;
+                    push_char(c);
                 }
-                else if (buf[counter-1] == '.' && isspace(c)) {
+                else if (char_vector[len-1] == '.' && isspace(c)) {
                     // space between dot and identifiers
                     terminate(LEX_ERROR);
                 }
                 else
                 {
                     ungetc(c, source);
-                    char *ptr = strchr(buf, '.');
+                    char *ptr = strchr(char_vector, '.');
                     ptr++;
                     int i;
                     // checking if id is keyword
@@ -301,7 +320,7 @@ int get_token() {
                         terminate(LEX_ERROR);
                     }
 
-                    token->attr.str = get_str(buf);
+                    token->attr.str = get_str(char_vector);
                     token->type = TT_fullid;
                     return 0;
                 }
