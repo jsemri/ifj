@@ -8,6 +8,25 @@
 #include <stdlib.h>
 
 #define RULES_COUNT 15
+/**
+ * The list of valid rules
+ *
+ * The first number in the stuct represents number of elements of the rule.
+ * 2-4 element is the expected type of the token, or TT_empty if an expression
+ * is expected here.
+ * The last member of the struct is a pointer to the function that will simulate
+ * this rule.
+ *
+ * For example, rule: E -> E + E will be represented by:
+ *                         ^ | ^
+ *               1st element | 3rd element
+ *                           ^
+ *                       2nd element
+ *
+ * {3, TT_empty, TT_plus,    , TT_empty    , func_ptr}
+ *     ^^^^^^^ | ^^^^^^^     | ^^^^^^^^    |
+ * 3rd element | 2nd element | 1st element |
+ */
 T_prec_rule rules[RULES_COUNT] = {
     {3, TT_empty, TT_plus, TT_empty, rule_concat},
     {3, TT_empty, TT_minus, TT_empty, rule_arith},
@@ -28,12 +47,22 @@ T_prec_rule rules[RULES_COUNT] = {
 
 #define CONV_TERM_TO_TT(i) (terms[i].type == PREC_TOKEN ? \
                             terms[i].ptr.token->type : TT_empty)
-#define FAIL_RULE(code) terminate(code)
 #define CREATE_SYMBOL(symbol, type) T_symbol *symbol = create_var_uniq(type); \
                                     table_insert(symbol_tab, symbol)
 #define ADD_INSTR(type, dst, s1, s2) create_instr(instr_list, type, s1, s2, dst)
 #define CHECK_TYPE(symbol, type) ((symbol)->attr.var->data_type == type)
 
+
+/**
+ * Simulates a rule
+ * @param terms The input terms.
+ * @param count The number of valid input terms (max 3)
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this rule
+ */
 T_symbol *execute_rule(T_prec_stack_entry terms[3], int count,
                        T_symbol_table *ltable, T_symbol *act_class,
                        ilist *instr_list) {
@@ -47,7 +76,7 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count,
     }
     // No rule can be applied:
     //printf("-- Nic nevyhovuje\n");
-    FAIL_RULE(2);
+    terminate(SYNTAX_ERROR);
     return NULL;
 }
 
@@ -120,6 +149,15 @@ T_symbol *convert(T_symbol *in, T_data_type new_type, ilist *instr_list) {
     return out;
 }
 
+/**
+ * Converts both numbers to int (if both numbers are) or to double (if one of
+ * the numbers is double). If one of the symbols is not a number,
+ * terminate(TYPE_ERROR) will be called.
+ * @param s1 The first number
+ * @param s2 The second number
+ * @param instr_list The instruction list
+ * @return The new data type of both symbols (either is_int or is_double)
+ */
 static T_data_type cast_nums(T_symbol **s1, T_symbol **s2, ilist *instr_list) {
     if (CHECK_TYPE(*s1, is_int) && CHECK_TYPE(*s2, is_int))
         // Both operands are int, result will be int
@@ -129,6 +167,15 @@ static T_data_type cast_nums(T_symbol **s1, T_symbol **s2, ilist *instr_list) {
     return is_double;
 }
 
+/**
+ * Simalates rule: E -> (E)
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
 T_symbol *rule_brackets(T_prec_stack_entry terms[3],
                         T_symbol_table *ltable, T_symbol *act_class,
                         ilist *instr_list) {
@@ -139,7 +186,20 @@ T_symbol *rule_brackets(T_prec_stack_entry terms[3],
     return terms[1].ptr.symbol;
 }
 
-
+/**
+ * Simalates rules: E -> E < E
+ *                  E -> E <= E
+ *                  E -> E > E
+ *                  E -> E >= E
+ *                  E -> E == E
+ *                  E -> E != E
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
 T_symbol *rule_bool(T_prec_stack_entry terms[3],
                     T_symbol_table *ltable, T_symbol *act_class,
                     ilist *instr_list) {
@@ -173,6 +233,19 @@ T_symbol *rule_bool(T_prec_stack_entry terms[3],
     return symbol;
 }
 
+/**
+ * Simalates rule: E -> E + E
+ *
+ * The function supports both numeric addiction and String concatination.
+ * (in case of numerical addiction, rule_arith will be called)
+ *
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
 T_symbol *rule_concat(T_prec_stack_entry terms[3],
                       T_symbol_table *ltable, T_symbol *act_class,
                       ilist *instr_list) {
@@ -193,6 +266,19 @@ T_symbol *rule_concat(T_prec_stack_entry terms[3],
     return symbol;
 }
 
+/**
+ * Simalates rules: E -> E + E (addiction only, String concatination
+ *                              is not supported)
+ *                  E -> E - E
+ *                  E -> E * E
+ *                  E -> E / E
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
 T_symbol *rule_arith(T_prec_stack_entry terms[3],
                      T_symbol_table *ltable, T_symbol *act_class,
                      ilist *instr_list) {
@@ -222,7 +308,15 @@ T_symbol *rule_arith(T_prec_stack_entry terms[3],
     return symbol;
 }
 
-
+/**
+ * Simalates rule: E -> i
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
 T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3],
                         T_symbol_table *ltable, T_symbol *act_class,
                         ilist *instr_list) {
@@ -243,7 +337,7 @@ T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3],
     }
     else {
         // Unexpected token
-        FAIL_RULE(2);
+        terminate(2);
         return NULL;
     }
 }
