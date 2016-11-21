@@ -9,6 +9,7 @@
 #include "stack.h"
 #include <stdlib.h>
 #include <stdbool.h>
+#include "debug.h"
 
 T_symbol_table *symbol_tab;
 FILE *source;
@@ -81,6 +82,8 @@ void terminate(int err_code) {
     list_free(&glist);
     fclose(source);
     table_remove(&symbol_tab);
+
+    print_error(err_code);
 
     exit(err_code);
 }

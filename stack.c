@@ -9,6 +9,7 @@
 #define INIT_SIZE   64
 #define GROWTH      2
 
+#define db puts("abcd")
 
 T_stack *main_stack;
 T_stack *frame_stack;
@@ -69,7 +70,6 @@ void copy_value(T_symbol *dst, T_symbol *src) {
         puts("uninitialized parameter");
         terminate(8);
     }
-
     switch (v1->data_type) {
         case is_int:
             v1->value.n = v1->data_type == is_double ?
@@ -87,7 +87,8 @@ void copy_value(T_symbol *dst, T_symbol *src) {
         case is_void:
             puts("void parameter");
             terminate(8);
-        default:
+        case is_bool:
+            v1->value.b = v2->value.b;
             break;
     }
     // raising initialization flag

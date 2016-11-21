@@ -41,6 +41,11 @@ static int in_block = 0;
 // pointer to actual class
 static T_symbol *actual_class;
 
+// debug
+int row;
+const char *fun;
+int part;
+
 // each function represents a nonterminal symbol in LL(1) table
 static void prog();
 static void body();
@@ -58,7 +63,7 @@ static void st_else2();
 // PROG -> BODY eof
 static void prog()
 {{{
-    enter(__func__);
+    fun = __func__;
     body();
 }}}
 
@@ -67,7 +72,7 @@ static void prog()
 static void body()
 {{{
 
-    enter(__func__);
+    fun = __func__;
     // must read, because of recursion... (or not ?)
     get_token();
 
@@ -92,7 +97,7 @@ static void body()
 */
 static void class()
 {{{
-    enter(__func__);
+    fun = __func__;
     // going for id
     get_token();
 
@@ -131,7 +136,7 @@ static void class()
 */
 static void cbody()
 {{{
-    enter(__func__);
+    fun = __func__;
     unsigned dtype;     // data type
     // static or '}'
     get_token();
@@ -180,7 +185,7 @@ static void cbody()
 */
 static void cbody2(char *iden, T_data_type dtype)
 {{{
-    enter(__func__);
+    fun = __func__;
     // '=' or ';' or '(' expected
     get_token();
 
@@ -208,9 +213,10 @@ static void cbody2(char *iden, T_data_type dtype)
         if (tv->last == 1 || token->type != TT_semicolon )
             terminate(SYNTAX_ERROR);
 
+        part = 2;
         precedence_analyser(tv->arr, tv->last-1, sym, symbol_tab, actual_class,
                             glist);
-
+        part = 0;
         token_vec_delete(tv);
 
     }
@@ -227,7 +233,7 @@ static void cbody2(char *iden, T_data_type dtype)
 */
 static void func(char *iden, T_data_type dtype)
 {{{
-    enter(__func__);
+    fun = __func__;
     // creating a function
     T_symbol *sym = create_func(iden, dtype);
     sym->member_class = actual_class;
@@ -242,7 +248,7 @@ static void func(char *iden, T_data_type dtype)
 */
 static void par(T_symbol *symbol)
 {{{
-    enter(__func__);
+    fun = __func__;
     // reading for ')' or type
     get_token();
 
@@ -337,7 +343,7 @@ static void par(T_symbol *symbol)
 // FBODY -> ;
 static void fbody()
 {{{
-    enter(__func__);
+    fun = __func__;
     get_token();
 
     if (token->type != TT_lCurlBracket) {
@@ -352,7 +358,7 @@ static void fbody()
 // ST_LIST -> STAT STLIST
 static void st_list()
 {{{
-    enter(__func__);
+    fun = __func__;
     // read only if '{' or ';'
     if (token->type == TT_lCurlBracket || token->type == TT_rCurlBracket ||
         token->type == TT_semicolon || token->type == TT_keyword) {
@@ -383,7 +389,7 @@ static void st_list()
 // STAT -> many...
 static void stat()
 {{{
-    enter(__func__);
+    fun = __func__;
     int bc = 0;
     // while|for|if|return|continue|break|types
     if (token->type == TT_keyword) {
@@ -487,7 +493,6 @@ static void stat()
                     if (token->type == TT_eof) {
                          terminate(SYNTAX_ERROR);
                     }
-
                     return;
                 }
             default:
@@ -545,7 +550,7 @@ static void stat()
 // ELSE2 -> { ST_LIST }
 static void st_else()
 {{{
-    enter(__func__);
+    fun = __func__;
 
     get_token();
 
@@ -567,7 +572,7 @@ static void st_else()
 // ELSE2 -> if ( EXPR ) { ST_LIST } ELSE
 static void st_else2()
 {{{
-    enter(__func__);
+    fun = __func__;
 
     get_token();
 
@@ -614,6 +619,8 @@ static void st_else2()
 
 int parse()
 {{{
+
+    part = 0;
 
     if (!(token = token_new()) ) {
         return INTERNAL_ERROR;

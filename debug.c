@@ -7,14 +7,40 @@
 #include "instruction.h"
 
 
+int part;
+const char *fun;
+int row;
+unsigned gins;
+
+
+static char *arr2[] = {"parser", "semantic_a", "precedence"};
+
+void print_error(int ec) {
+    if (part != 3) {
+        if (part != 2)
+            fprintf(stderr, "Terminated with code: %d\n"
+                    "error line: %d\n"
+                    "error part: %s\n"
+                    "error function: %s\n", ec, row, arr2[part], fun);
+    }
+    else {
+        interpret_error(ec);
+    }
+}
+
 static char *ins_arr[] = {
         "MOV", "ADD", "SUB", "MUL", "DIV",
         "CONCAT", "EQUAL", "NOTEQ","LESS", "LESSEQ",
         "GREATER", "GREATEREQ", "JMP","JMPZ", "RET",
         "CALL", "PUSH","PUSH_var", "READINT", "READDOUBLE",
         "READSTR", "PRINT", "LENGTH", "SUBSTR", "COMPARE", "FIND",
-        "SORT", "LAB", "CONVERT"
+        "SORT", "LAB"
 };
+
+void interpret_error(int ec) {
+    fprintf(stderr, "Terminated with code: %d\nBy instruction: %s\n", ec,
+        ins_arr[gins]);
+}
 
 void print_instr(T_instr *ins) {
     printf("|%s|\n", ins_arr[ins->itype] );

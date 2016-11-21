@@ -41,6 +41,12 @@ extern T_token *token;
 // used when token vector cannot be freed
 extern token_vector global_token_vector;
 
+// for debug
+extern int row;
+extern int part;
+extern const char *fun;
+extern unsigned gins;
+
 struct T_pool {
     void **first;
     void **last;
