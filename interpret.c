@@ -15,6 +15,10 @@
 #define is_boolean(s) (s->attr.var->data_type == is_bool)
 #define is_init(s) (s->attr.var->initialized)
 
+#define dd puts("da")
+#define db puts("db")
+#define dc puts("dc")
+
 T_stack *frame_stack;
 T_stack *main_stack;
 T_symbol *acc;
@@ -153,12 +157,13 @@ void interpret_loop(ilist *instr_list)
     T_instr *ins = instr_list->first;
     while (true) {
 
+        // looks similar to RET but it is necessary - void func without return
         if (ins == NULL) {
             if (act_frame->dtype == is_void) {
                 // end of run()
                 // in frame stack ought to be only run local table
                 if (frame_stack->used == 0) {
-                   // puts("end of run()");
+                    puts("end of run()");
                     return;
                 }
                 // jump out of function
@@ -176,7 +181,7 @@ void interpret_loop(ilist *instr_list)
 
         // just for debug
         gins = ins->itype;
-    //    print_instr(ins);
+        print_instr(ins);
 
 
         switch (ins->itype) {
@@ -188,7 +193,7 @@ void interpret_loop(ilist *instr_list)
                          get_var(ins->op2));
                 break;
             case TI_concat:
-                concat(get_var(ins->dest), get_var(ins->op1), get_var(ins->op2));
+                concat(get_var(ins->op1), get_var(ins->op2), get_var(ins->dest));
                 break;
             case TI_equal:
             case TI_notequal:
@@ -312,11 +317,12 @@ void interpret_loop(ilist *instr_list)
 
             case TI_ret:
                 // getting an address of next jump
-                if (acc->attr.var->data_type != is_void &&
-                    act_frame->dtype == is_void)
+                if (frame_stack->used == 0)
                 {
-                    terminate(8);
+                    // last return from run() - jump nowhere
+                    return;
                 }
+                // getting return label
                 ins = stack_top(main_stack);
                 stack_pop(main_stack);
                 remove_frame_from_stack(frame_stack);
@@ -337,9 +343,11 @@ void interpret(T_symbol *run)
     part = 3;
     frame_stack = stack_init();
     main_stack = stack_init();
+
+//    interpret_loop(glist);
+//    TODO merge glist + run->ilist
     // creating frame for main function run()
     create_frame(run);
-//    interpret_loop(glist);
     interpret_loop(run->attr.func->func_ilist);
 
 
