@@ -32,6 +32,11 @@ static bool get_token_flag = false;
 #define get_token()  (get_token_flag ? (get_token_flag = false) : get_token())
 #define unget_token() get_token_flag = true
 
+#define db puts("db")
+#define dc puts("dc")
+#define dd puts("dd")
+#define da puts("da")
+
 // global variables
 ilist *glist;
 T_symbol_table *symbol_tab;
@@ -467,7 +472,8 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
     if (dest) {
         T_data_type d1 = fsym->attr.func->data_type;
         T_data_type d2 = dest->attr.var->data_type;
-        if ( d1 != d2 && (d1 != is_int || d2 != is_double ))
+        if ( (d1 == is_str && d2 != is_str) ||
+             (d2 == is_str && d1 != is_str) )
             terminate(TYPE_ERROR);
     }
 
@@ -708,7 +714,6 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                         // redefinition
                         terminate(DEFINITION_ERROR);
                     }
-
                     // creating a new variable symbol
                     T_symbol *sym = create_var(token->attr.str, dtype);
                     // discredit free call on token
@@ -719,7 +724,6 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
 
                     // ';' or '='
                     get_token();
-
                     if (token->type == TT_semicolon) {
                         return;
                     }
@@ -837,8 +841,9 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                     // return value will be stored in accumulator
                     acc->attr.var->data_type = dtype;
                     part = 2;
-                    precedence_analyser(tv->arr, tv->last, acc, local_tab,
-                                        actual_class, instr_list );
+                    if (dtype != is_void)
+                        precedence_analyser(tv->arr, tv->last, acc, local_tab,
+                                            actual_class, instr_list );
                     part = 1;
                     token_vec_delete(tv);
                     create_instr(instr_list, TI_ret, 0, 0, 0);
@@ -976,7 +981,7 @@ static void st_else2(T_symbol_table *local_tab, ilist *instr_list)
 
 int second_throughpass() {
     part = 1;
-    row = 0;
+    row = 1;
     acc = table_find_simple(symbol_tab, "|accumulator|",NULL);
     prog();
     //print_table(symbol_tab);
