@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NOCLR='\033[0m'
+
+IFJ=testsuites/ifj16.java
+DIR=testsuites/interpret/*
+
+for i in $DIR; do
+  cat $IFJ $i > tmp.java
+  javac tmp.java
+  out="`java ifj16`"
+  res="`./ifj $i`"
+  if [ "$res" == "$out" ];then
+    printf "${GREEN}OK${NOCLR}\n"
+  else
+    printf "${RED}Wrong${NOCLR} - $i\n"
+  fi
+done
+
+rm tmp.java
+
+
