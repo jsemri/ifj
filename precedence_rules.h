@@ -20,6 +20,17 @@ typedef struct {
     T_symbol* (*func)(T_prec_stack_entry[], T_symbol_table*, T_symbol*, ilist*);
 } T_prec_rule;
 
+
+/**
+ * Simulates a rule
+ * @param terms The input terms.
+ * @param count The number of valid input terms (max 3)
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this rule
+ */
 T_symbol *execute_rule(T_prec_stack_entry terms[3], int count,
                        T_symbol_table *ltable, T_symbol *act_class,
                        ilist *instr_list);
@@ -49,22 +60,80 @@ T_symbol *execute_rule(T_prec_stack_entry terms[3], int count,
  */
 T_symbol *convert(T_symbol *in, T_data_type new_type, ilist *instr_list);
 
+/**
+ * Simalates rule: E -> (E)
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
 T_symbol *rule_brackets(T_prec_stack_entry terms[3],
                         T_symbol_table *ltable, T_symbol *act_class,
                         ilist *instr_list);
 
+/**
+ * Simalates rules: E -> E < E
+ *                  E -> E <= E
+ *                  E -> E > E
+ *                  E -> E >= E
+ *                  E -> E == E
+ *                  E -> E != E
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
 T_symbol *rule_bool(T_prec_stack_entry terms[3],
                     T_symbol_table *ltable, T_symbol *act_class,
                     ilist *instr_list);
 
+/**
+ * Simalates rule: E -> E + E
+ *
+ * The function supports both numeric addiction and String concatination.
+ * (in case of numerical addiction, rule_arith will be called)
+ *
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
 T_symbol *rule_concat(T_prec_stack_entry terms[3],
                       T_symbol_table *ltable, T_symbol *act_class,
                       ilist *instr_list);
 
+/**
+ * Simalates rules: E -> E + E (addiction only, String concatination
+ *                              is not supported)
+ *                  E -> E - E
+ *                  E -> E * E
+ *                  E -> E / E
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
 T_symbol *rule_arith(T_prec_stack_entry terms[3],
                      T_symbol_table *ltable, T_symbol *act_class,
                      ilist *instr_list);
 
+/**
+ * Simalates rule: E -> i
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
 T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3],
                         T_symbol_table *ltable, T_symbol *act_class,
                         ilist *instr_list);
