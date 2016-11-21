@@ -72,7 +72,7 @@ void func_remove(T_symbol *sym)
 
 void var_remove(T_symbol *sym)
 {{{
-    if (sym->attr.var->data_type && sym->attr.var->value.str)
+    if (sym->attr.var->data_type == is_str && sym->attr.var->value.str)
         free(sym->attr.var->value.str);
     free(sym->id);
     free(sym->attr.var);
@@ -102,7 +102,7 @@ T_symbol *create_var_uniq(T_data_type dtype)
         uniq_var_size++;
     }
 
-    char *str = malloc((size_t) uniq_var_size);
+    char *str = calloc((size_t) uniq_var_size + 1, 1);
     int rem = uniq_var_counter;
     for (int i = uniq_var_size - 2; i >= 0; i--) {
         str[i] = (char) ('a' + (rem & 15));
