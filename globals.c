@@ -82,6 +82,8 @@ void terminate(int err_code) {
     fclose(source);
     table_remove(&symbol_tab);
 
+    print_error(err_code);
+
     exit(err_code);
 }
 

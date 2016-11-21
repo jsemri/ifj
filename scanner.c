@@ -14,6 +14,8 @@
 
 FILE *source;
 T_token *token;
+int row;
+
 const char *KEYWORDS[KEYW_COUNT] = {
     "void", "int", "double", "String", "boolean",
     "break", "class", "continue", "do", "else",
@@ -48,7 +50,8 @@ int get_token() {
         switch (state) {
             case S_start:
                 if (isspace(c)) {
-                    ;    // Ignores whitespaces, do nothing
+                    if (c == '\n')
+                        row++;
                 } else if (c == '+') {
                     token->type = TT_plus;
                     return 0;
@@ -193,6 +196,7 @@ int get_token() {
                     token->attr.str = get_str(buf);
                     return 0;
                 } else if (c == '\n' || c == EOF) {
+                    row++;
                     terminate(LEX_ERROR);
                 } else {
                     buf[counter++] = c;
@@ -201,6 +205,7 @@ int get_token() {
 
             case S_stringBackSlash:
                 if (c == '\n' || c == EOF) {
+                    row++;
                     terminate(LEX_ERROR);
                 }
                 else if (c == 'n') {
@@ -379,6 +384,7 @@ int get_token() {
 
             case S_commentLine:
                 if (c == '\n') {
+                    row++;
                     state = S_start;
                 }
                 break;

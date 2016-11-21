@@ -20,6 +20,9 @@ T_stack *main_stack;
 T_symbol *acc;
 ilist *glist;
 
+unsigned gins;
+int part;
+
 T_symbol *get_var(T_symbol *var)
 {{{
     if (!var)
@@ -41,7 +44,6 @@ void math_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1, T_symbol *op2
 {{{
     // check if both are initialized
     if (!is_init(op1) || !is_init(op2)) {
-        puts("8 by math instr");
         terminate(8);
     }
 
@@ -94,7 +96,6 @@ void compare_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1,
 {{{
     // check if both initialized
     if (!is_init(op1) || !is_init(op2)) {
-        puts("8 by compare instr");
         terminate(8);
     }
     acc->attr.var->data_type = is_bool;
@@ -139,6 +140,7 @@ void compare_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1,
     // logic value stored only in accumulator
     dest->attr.var->data_type = is_bool;
     dest->attr.var->value.b = res;
+    dest->attr.var->initialized = true;
 }}}
 
 void interpret_loop(ilist *instr_list)
@@ -172,6 +174,8 @@ void interpret_loop(ilist *instr_list)
             }
         }
 
+        // just for debug
+        gins = ins->itype;
         print_instr(ins);
 
 
@@ -202,7 +206,6 @@ void interpret_loop(ilist *instr_list)
                 if (op1->attr.var->data_type == is_void ||
                     !is_init(op1))
                 {
-                    puts("8 by mov");
                     terminate(8);
                 }
                 if (is_real(dest)) {
@@ -232,7 +235,6 @@ void interpret_loop(ilist *instr_list)
                     T_symbol *out = stack_top(main_stack);
                     out = get_var(out);
                     if (!is_init(out)) {
-                        puts("8 from print");
                         terminate(8);
                     }
                     // XXX print it whole once
@@ -311,7 +313,6 @@ void interpret_loop(ilist *instr_list)
                 if (acc->attr.var->data_type != is_void &&
                     act_frame->dtype == is_void)
                 {
-                    puts("8 by return");
                     terminate(8);
                 }
                 ins = stack_top(main_stack);
@@ -331,6 +332,7 @@ void interpret_loop(ilist *instr_list)
 
 void interpret(T_symbol *run)
 {{{
+    part = 3;
     frame_stack = stack_init();
     main_stack = stack_init();
     // creating frame for main function run()

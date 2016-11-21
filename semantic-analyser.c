@@ -41,6 +41,11 @@ T_token *token;
 static T_symbol *actual_class;
 static T_symbol *actual_func;
 
+// for debug
+int row;
+const char *fun;
+int part;
+
 // each function represents a nonterminal symbol in LL(1) table
 static void prog();
 static void body();
@@ -129,7 +134,7 @@ static char *arr_ifj16[] = {
 
 void check_par_syntax(T_token *it, int tcount, int exp_toks)
 {{{
-
+    fun = __func__;
     int state = 0;
     while (tcount >= 0) {
         tcount--;
@@ -181,6 +186,7 @@ void check_par_syntax(T_token *it, int tcount, int exp_toks)
 int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     T_symbol_table *local_tab)
 {{{
+    fun = __func__;
     // getting function name
     char *func_id = strchr(it->attr.str, '.') + 1;
     int i;
@@ -435,6 +441,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
 int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     T_symbol_table *local_tab)
 {{{
+    fun = __func__;
     // table_find is able to derive from ifj16.readInt pointer to class ifj16
     T_symbol *fsym = table_find(symbol_tab, it->attr.str, actual_class);
 
@@ -534,7 +541,7 @@ bool check_if_func(T_token *it)
 // PROG -> BODY eof
 static void prog()
 {{{
-    enter(__func__);
+    fun = __func__;
 
     body();
 }}}
@@ -543,7 +550,7 @@ static void prog()
 // BODY -> e
 static void body()
 {{{
-    enter(__func__);
+    fun = __func__;
     get_token();
 
     // `class` or `eof` expected
@@ -557,7 +564,7 @@ static void body()
 */
 static void class()
 {{{
-    enter(__func__);
+    fun = __func__;
     // going for id
     get_token();
 
@@ -575,7 +582,7 @@ static void class()
 */
 static void cbody()
 {{{
-    enter(__func__);
+    fun = __func__;
     // static or '}'
     get_token();
 
@@ -599,17 +606,14 @@ static void cbody()
 */
 static void cbody2()
 {{{
-    enter(__func__);
+    fun = __func__;
     // '=' or ';' or '(' expected
     get_token();
 
     // variable
     if (token->type == TT_assign || token->type == TT_semicolon) {
 
-        // cannot be called function XXX
-        // error 6 - static variable in initialization
         token_vector tv = read_to_semic();
-        // call precedence
         token_vec_delete(tv);
     }
     else {
@@ -622,7 +626,7 @@ static void cbody2()
 */
 static void func()
 {{{
-    enter(__func__);
+    fun = __func__;
     // just read parameters
     par();
     // process body
@@ -636,7 +640,7 @@ static void func()
 */
 static void par()
 {{{
-    enter(__func__);
+    fun = __func__;
     while (token->type != TT_rBracket)
         get_token();
 }}}
@@ -645,7 +649,7 @@ static void par()
 // FBODY -> ;
 static void fbody()
 {{{
-    enter(__func__);
+    fun = __func__;
     get_token();
 
     st_list();
@@ -656,7 +660,7 @@ static void fbody()
 // ST_LIST -> STAT STLIST
 static void st_list()
 {{{
-    enter(__func__);
+    fun = __func__;
     // read only if '{' or ';'
     if (token->type == TT_lCurlBracket || token->type == TT_rCurlBracket ||
         token->type == TT_semicolon || token->type == TT_keyword) {
@@ -684,7 +688,7 @@ static void st_list()
 // STAT -> many...
 static void stat(T_symbol_table *local_tab, ilist *instr_list)
 {{{
-    enter(__func__);
+    fun = __func__;
     // while|for|if|return|continue|break|types
     if (token->type == TT_keyword) {
         switch(token->attr.keyword) {
@@ -733,9 +737,11 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                         }
                         else if (tv->last > 0) {
                             // at least one value
+                            part = 2;
                             precedence_analyser(tv->arr, tv->last, sym,
                                                 local_tab, actual_class,
                                                 instr_list );
+                            part = 1;
                         }
                         else {
                             terminate(SYNTAX_ERROR);
@@ -767,8 +773,10 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                     }
                     acc->attr.var->data_type = is_bool;
                     // result will be stored in accumulator
+                    part = 2;
                     precedence_analyser(tv->arr, tv->last-1, acc, local_tab,
                                         actual_class, instr_list );
+                    part = 1;
                     // XXX last token in tvect is ')'
                     token_vec_delete(tv);
 
@@ -828,9 +836,10 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                     }
                     // return value will be stored in accumulator
                     acc->attr.var->data_type = dtype;
-
+                    part = 2;
                     precedence_analyser(tv->arr, tv->last, acc, local_tab,
                                         actual_class, instr_list );
+                    part = 1;
                     token_vec_delete(tv);
                     create_instr(instr_list, TI_ret, 0, 0, 0);
                     return;
@@ -882,8 +891,10 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                 handle_function(it, tcount, instr_list, sym, local_tab);
             }
             else if (tv->last >= 3) {
+                part = 2;
                 precedence_analyser(it, tv->last - 2, sym, local_tab,
                                     actual_class, instr_list );
+                part = 1;
             }
             else {
                 terminate(SYNTAX_ERROR);
@@ -905,7 +916,7 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
 // ELSE2 -> { ST_LIST }
 static void st_else(T_symbol_table *local_tab, ilist *instr_list)
 {{{
-    enter(__func__);
+    fun = __func__;
 
     get_token();
     // `else {`
@@ -921,7 +932,7 @@ static void st_else(T_symbol_table *local_tab, ilist *instr_list)
 // ELSE2 -> if ( EXPR ) { ST_LIST } ELSE
 static void st_else2(T_symbol_table *local_tab, ilist *instr_list)
 {{{
-    enter(__func__);
+    fun = __func__;
 
     // '(' read
     get_token();
@@ -932,8 +943,10 @@ static void st_else2(T_symbol_table *local_tab, ilist *instr_list)
     }
 
     // result will be stored in accumulator
+    part = 2;
     precedence_analyser(tv->arr, tv->last-1, acc, local_tab, actual_class,
                         instr_list );
+    part = 1;
 
     token_vec_delete(tv);
 
@@ -962,6 +975,8 @@ static void st_else2(T_symbol_table *local_tab, ilist *instr_list)
 }}}
 
 int second_throughpass() {
+    part = 1;
+    row = 0;
     acc = table_find_simple(symbol_tab, "|accumulator|",NULL);
     prog();
     //print_table(symbol_tab);
