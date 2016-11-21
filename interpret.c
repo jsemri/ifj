@@ -163,7 +163,6 @@ void interpret_loop(ilist *instr_list)
                 // end of run()
                 // in frame stack ought to be only run local table
                 if (frame_stack->used == 0) {
-                    puts("end of run()");
                     return;
                 }
                 // jump out of function
@@ -174,14 +173,13 @@ void interpret_loop(ilist *instr_list)
             }
             else {
                 // no return at function of non void return type
-                puts("8 by no return at end of non void fnc");
                 terminate(8);
             }
         }
 
         // just for debug
         gins = ins->itype;
-        print_instr(ins);
+//        print_instr(ins);
 
 
         switch (ins->itype) {
@@ -344,12 +342,11 @@ void interpret(T_symbol *run)
     frame_stack = stack_init();
     main_stack = stack_init();
 
-//    interpret_loop(glist);
-//    TODO merge glist + run->ilist
+    // merging global list with run()
+    list_merge(glist, run->attr.func->func_ilist);
     // creating frame for main function run()
     create_frame(run);
-    interpret_loop(run->attr.func->func_ilist);
-
+    interpret_loop(glist);
 
     // removing stacks
     stack_remove(&frame_stack, true);

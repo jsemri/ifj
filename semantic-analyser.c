@@ -136,6 +136,7 @@ static char *arr_ifj16[] = {
 #define is_rbrac(t) (t->type == TT_rBracket)
 #define is_lbrac(t) (t->type == TT_lBracket)
 #define is_plus(t) (t->type == TT_plus)
+#define is_number(t) (t->type == TT_int || t->type == TT_double)
 
 void check_par_syntax(T_token *it, int tcount, int exp_toks)
 {{{
@@ -206,16 +207,16 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
             {{{
                 // no parameters
                 check_par_syntax(it, tcount - 2, 1);
-        /*        if (tcount != 3 || it->type != TT_rBracket) {
-                    terminate(TYPE_ERROR);
-                }*/
                 // a = readInt();
                 T_data_type dtype;
-                dtype = i == b_readI ? is_int : is_double;
-                dtype = i == b_readS ? is_str : dtype;
-                if (dest)
+                if (dest) {
                     dtype = dest->attr.var->data_type;
-                if (i == b_readI && dtype != is_str) {
+                }
+                else {
+                    dtype = i == b_readI ? is_int : is_double;
+                    dtype = i == b_readS ? is_str : dtype;
+                }
+                if (i == b_readI && dtype == is_int) {
                     create_instr(L, TI_readInt, NULL, NULL, dest);
                 }
                 else if (i == b_readD && dtype == is_double) {
@@ -354,7 +355,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
 
                 if (is_iden(it2)) {
                     sym2 = is_defined(it2->attr.str, local_tab, actual_class,
-                                     is_str);
+                                      is_str);
                 }
                 else if (it2->type == TT_string) {
                     sym2 = add_constant(&it2->attr, symbol_tab, is_str);
@@ -401,7 +402,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     sym2 = is_defined(it2->attr.str, local_tab, actual_class,
                                      is_int);
                 }
-                else if (it2->type == TT_int) {
+                else if (is_number(it2)) {
                     sym2 = add_constant(&it2->attr, symbol_tab, is_int);
                 }
                 else
@@ -409,11 +410,11 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
 
                 // third parameter - must be int
                 T_symbol *sym3;
-                if (is_iden(it)) {
+                if (is_iden(it3)) {
                     sym3 = is_defined(it3->attr.str, local_tab, actual_class,
                                      is_int);
                 }
-                else if (it3->type == TT_int) {
+                else if (is_number(it3)) {
                     sym3 = add_constant(&it3->attr, symbol_tab, is_int);
                 }
                 else
