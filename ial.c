@@ -7,19 +7,11 @@
 // initialization of symbol table
 T_symbol_table *table_init(unsigned size)
 {{{
-    T_symbol_table* table = malloc(sizeof(T_symbol_table) +
-                                   size * sizeof(T_symbol));
-    if (table == NULL)
-        return NULL;
-
-    table->size = size;
-
-    for (unsigned i = 0; i < size; i++)
-    {
-        table->arr[i] = NULL;
-    }
-
-    return table;
+    T_symbol_table *ptr = calloc(sizeof(T_symbol_table) +
+                                 size*sizeof(T_symbol), 1);
+    if (ptr)
+        ptr->size = size;
+    return ptr;
 }}}
 
 
@@ -37,10 +29,10 @@ T_symbol *table_insert(T_symbol_table *stab, T_symbol *s)
 // hash- determines an index to hash table
 unsigned hash(const char *key, unsigned size)
 {{{
-    unsigned int h=0;
-    const unsigned char *p;
-    for (p=(const unsigned char*)key; *p!='\0'; p++)
-        h = 65599*h + *p;
+    unsigned  h = 0;
+    int c;
+    while ((c = *key++))
+        h = c + (h << 6) + (h << 16) - h;
     return h % size;
 }}}
 
