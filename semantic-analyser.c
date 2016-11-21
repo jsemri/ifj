@@ -137,6 +137,7 @@ static char *arr_ifj16[] = {
 #define is_lbrac(t) (t->type == TT_lBracket)
 #define is_plus(t) (t->type == TT_plus)
 #define is_number(t) (t->type == TT_int || t->type == TT_double)
+#define is_integer(t) (t->type == TT_int )
 
 void check_par_syntax(T_token *it, int tcount, int exp_toks)
 {{{
@@ -402,7 +403,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     sym2 = is_defined(it2->attr.str, local_tab, actual_class,
                                      is_int);
                 }
-                else if (is_number(it2)) {
+                else if (is_integer(it2)) {
                     sym2 = add_constant(&it2->attr, symbol_tab, is_int);
                 }
                 else
@@ -414,7 +415,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     sym3 = is_defined(it3->attr.str, local_tab, actual_class,
                                      is_int);
                 }
-                else if (is_number(it3)) {
+                else if (is_integer(it3)) {
                     sym3 = add_constant(&it3->attr, symbol_tab, is_int);
                 }
                 else
@@ -470,6 +471,7 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
     int pcount = fsym->attr.func->par_count;
 
     // type control
+    // TODO check destination data type
     if (dest) {
         T_data_type d1 = fsym->attr.func->data_type;
         T_data_type d2 = dest->attr.var->data_type;
@@ -481,7 +483,6 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
     // parameters
     T_symbol **pars = (T_symbol**)fsym->attr.func->arguments;
     // handling parameters
-//    it++;it++;  // skipping function id and '('
     int exp_tc = pcount > 1 ? 2*pcount : pcount + 1;
     check_par_syntax(it + 2, tcount - 2, exp_tc);
     T_instr *return_label = instr_init(TI_lab,0,0,0);
@@ -504,11 +505,10 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
         else if (it->type == TT_string && dtype == is_str) {
             sym = add_constant(&it->attr, symbol_tab, is_str);
         }
-        else if (it->type == TT_int && dtype == is_int) {
+        else if (is_integer(it) && dtype == is_int) {
             sym = add_constant(&it->attr, symbol_tab, is_int);
         }
-        else if ((it->type == TT_int || it->type == TT_double)
-                  && dtype == is_double)
+        else if (is_number(it) && dtype == is_double)
         {
             sym = add_constant(&it->attr, symbol_tab, is_double);
         }
