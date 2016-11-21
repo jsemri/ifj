@@ -9,6 +9,7 @@
 #include "stack.h"
 #include <stdlib.h>
 #include <stdbool.h>
+#include "debug.h"
 
 T_symbol_table *symbol_tab;
 FILE *source;
