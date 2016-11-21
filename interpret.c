@@ -176,7 +176,7 @@ void interpret_loop(ilist *instr_list)
 
         // just for debug
         gins = ins->itype;
-        print_instr(ins);
+    //    print_instr(ins);
 
 
         switch (ins->itype) {
@@ -219,7 +219,9 @@ void interpret_loop(ilist *instr_list)
                     dest->attr.var->value.n = x;
                 }
                 else if (is_boolean(dest)) {
-                    dest->attr.var->value.b = op1->attr.var->value.b;
+                    bool p = (op1->attr.var->value.b || op1->attr.var->value.n
+                              || op1->attr.var->value.d);
+                    dest->attr.var->value.b = p;
                 }
                 else {
                     clear_buffer(dest);
