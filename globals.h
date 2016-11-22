@@ -51,6 +51,9 @@ extern unsigned gins;
 extern char *char_vector;
 extern int vector_size;
 
+// for dividing merged lists
+extern T_instr *div_point;
+
 struct T_pool {
     void **first;
     void **last;

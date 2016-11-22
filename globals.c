@@ -19,6 +19,7 @@ token_vector global_token_vector;
 T_stack *frame_stack;
 T_stack *main_stack;
 char *char_vector;
+T_instr *div_point;
 
 struct T_pool pool = {NULL, NULL, 0};
 #define POOL_SIZE 100
@@ -80,6 +81,18 @@ void terminate(int err_code) {
     //prec_stack_free();
     stack_remove(&frame_stack, true);
     stack_remove(&main_stack, false);
+    // dividing lists
+    if (glist) {
+        if (div_point) {
+            div_point->next = NULL;
+            glist->last = div_point;
+        }
+        else {
+            glist->first = NULL;
+            glist->last = NULL;
+        }
+    }
+
     list_free(&glist);
     fclose(source);
     table_remove(&symbol_tab);
