@@ -3,6 +3,8 @@
 # colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+GRAY='\033[90m'
+BOLD='\033[01m'
 NOCLR='\033[0m'
 
 # testing error detections
@@ -15,18 +17,27 @@ TEST[4]=type_errors
 # syntax tests
 
 for ((i=1; i <= COUNT ; i++));do
-
-    echo "${TEST[$i]}:"|sed 's/_/ /g'|awk '{print toupper($0)}'
+    echo -e $BOLD
+    echo "==== ${TEST[$i]} ($i) ===="|sed 's/_/ /g'|awk '{print toupper($0)}'
+    echo -ne $NOCLR
     DIR=testsuites/errors/"$i"_${TEST[$i]}/*
 
     for sample in $DIR;do
-
-        ./ifj $sample 2> /dev/null
+        
+        out=$(./ifj "$sample" 2>/dev/null)
         result="`echo $?`"
-        if [ $result -eq $i ]; then
-            printf "${GREEN}OK${NOCLR}\n"
-        else
-            printf "${RED}Wrong${NOCLR} - $sample\n"
+        name=$(echo "$sample" | grep -o "/[^/]*$" | tr -d "/" | sed s/.java$// \
+               | tr "-" " " | sed "s/ \([0-9][0-9]*\)$/ #\1/")
+        if [ $result -ne $i ]; then
+            if [ "$1" == "-q" ]; then
+                printf "%-74s[${RED}FAIL$NOCLR]\n" "${name^}"
+            else
+                printf "$BOLD%-74s$NOCLR[${RED}FAIL$NOCLR]\n" "${name^}"
+            fi
+        elif [ -n "$out" ]; then
+            printf "%-74s[${RED}FAIL$NOCLR]\n" "${name^} - vypisuje na stdout!"
+        elif [ "$1" != "-q" ]; then
+            printf "$GRAY%-74s$NOCLR[$GREEN OK $NOCLR]\n" "${name^}"
         fi
     done
 done
