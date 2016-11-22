@@ -26,6 +26,7 @@ ilist *glist;
 
 unsigned gins;
 int part;
+T_instr *div_point;
 
 T_symbol *get_var(T_symbol *var)
 {{{
@@ -269,11 +270,11 @@ void interpret_loop(ilist *instr_list)
                 break;
 
             case TI_sort:
-                // TODO
+                sort(get_var(ins->op1), get_var(ins->dest));
                 break;
 
             case TI_find:
-                // TODO
+                find(get_var(ins->op1), get_var(ins->op2), get_var(ins->dest));
                 break;
 
             case TI_compare:
@@ -342,7 +343,7 @@ void interpret(T_symbol *run)
     frame_stack = stack_init();
     main_stack = stack_init();
 
-    T_instr *last = glist->last;
+    div_point = glist->last;
     // merging global list with run()
     list_merge(glist, run->attr.func->func_ilist);
     // creating frame for main function run()
@@ -350,9 +351,9 @@ void interpret(T_symbol *run)
     interpret_loop(glist);
 
     // dividing lists
-    if (last) {
-        last->next = NULL;
-        glist->last = last;
+    if (div_point) {
+        div_point->next = NULL;
+        glist->last = div_point;
     }
     else {
         glist->first = NULL;

@@ -2,6 +2,7 @@
 #include "globals.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "ial.h" 
 
 #define BUF_SIZE 32
 #define is_real(s) (s->attr.var->data_type == is_double)
@@ -218,9 +219,9 @@ void sort(T_symbol *sym, T_symbol *result)
     }
 
     char *str = get_str(sym->attr.var->value.str);
-    // TODO sort str
+    heap_sort(str);
     clear_buffer(result);
-    result->attr.var->value.str = /*sort(str)*/str;
+    result->attr.var->value.str = str;
     result->attr.var->initialized = true;
 }}}
 
@@ -232,13 +233,16 @@ void find(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
         terminate(8);
     }
 
-    // TODO add find()
+    char *s1 = sym1->attr.var->value.str;
+    char *s2 = sym2->attr.var->value.str;
+
     if (is_real(result)) {
-//        result->attr.var->value.d = ;
+        result->attr.var->value.d = find_kmp(s1, s2);
     }
     else {
-  //      result->attr.var->value.n = ;
+        result->attr.var->value.n = find_kmp(s1, s2);
     }
+
     result->attr.var->initialized = true;
 }}}
 

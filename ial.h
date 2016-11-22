@@ -58,11 +58,29 @@ void table_remove(T_symbol_table **stab);
 /**
  * \brief Functions sorts strings.
  *
- * @param   src    			Pointer to string.
- * @param   dest   			Pointer to string, where sorted string will be stored.
+ * @param   str    Pointer to string.
  *
- * @return  HEAPSORT_OK     If success.
- * @return  HEAPSORT_FAIL   If duplication of new new string failed.
  */
+void heap_sort(char *str);
+
+/**
+ * \brief Function for heapsort, reeastablishment of heap.
+ * @param   string   Pointer to string.
+ * @param   left     Index of the most left node.
+ * @param   right    Index of the most righ node.
+ */
+void sift_down(char *str, int left, int right);
+
+/**
+ * \brief Function finds substring in string using Knuth-Morris-Pratt algorithm
+ *		  and returns its position.
+ *        If substring is not found, function returns -1.
+ *
+ * @param   string      Pointer to string.
+ * @param   pattern     Pointer to substring.
+ *
+ * @return  Index of first occurrence substring in string.
+ */
+int find_kmp(char *str, char *pattern);
 
 #endif

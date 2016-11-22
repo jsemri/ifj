@@ -117,3 +117,79 @@ void table_remove(T_symbol_table **stab)
         *stab = NULL;
     }
 }}}
+
+
+void heap_sort(char *str)
+{{{
+	int n = strlen(str) - 1;
+	int left = n / 2;
+	int right = n;
+	char tmp;
+    //establishment of heap
+    for (int i = left; i >= 0; i--) {
+        sift_down(str, i, right);
+    }
+    //heap-sort
+    for (right = n; right >= 1; right--) {
+        tmp = str[0];
+        str[0] = str[right];
+        str[right] = tmp;
+        sift_down(str, 0, right - 1);
+    }
+}}}
+
+void sift_down(char *str, int left, int right)
+{{{
+    int i = left;
+    int j = 2 * i; //left son index
+    char tmp = str[i];
+    bool cont = j <= right;
+
+    while (cont) {
+        if (j < right)
+            if (str[j] < str[j + 1]) {
+                j = j + 1;
+            } // if
+        if (tmp >= str[j])
+            cont = false;
+        else {
+            str[i] = str[j];
+            i = j;
+            j = 2 * i;
+            cont = j <= right;
+        }
+    }
+    str[i] = tmp;
+}}}
+
+int find_kmp(char *str, char *pattern)
+{{{
+    unsigned k;
+    int r;
+    int fail_vector[strlen(pattern)];
+
+    fail_vector[0] = -1;
+    for (k = 1; k < strlen(pattern); k++) {
+        r = fail_vector[k-1];
+        while ((r > -1) && (pattern[r] != pattern[k-1]))
+            r = fail_vector[r];
+        fail_vector[k] = r + 1;
+    }
+
+    unsigned string_index = 0;
+    unsigned pattern_index = 0;
+
+    while ((string_index < strlen(str)) && (pattern_index < strlen(pattern))) {
+        if ((pattern_index == 0) || (str[string_index] == pattern[pattern_index])) {
+            string_index++;
+            pattern_index++;
+        }
+        else
+            pattern_index = fail_vector[pattern_index];
+    }
+    if (pattern_index == strlen(pattern))
+        return string_index - strlen(pattern);
+    else
+        return -1;
+}}}
+
