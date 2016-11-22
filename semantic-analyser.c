@@ -471,12 +471,11 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
     int pcount = fsym->attr.func->par_count;
 
     // type control
-    // TODO check destination data type
     if (dest) {
         T_data_type d1 = fsym->attr.func->data_type;
         T_data_type d2 = dest->attr.var->data_type;
-        if ( (d1 == is_str && d2 != is_str) ||
-             (d2 == is_str && d1 != is_str) )
+        // d1 == d2 || (d1 = in_int && d2 = is_double)
+        if ( d1 != d2 && (d1 != is_int  || d2 !=is_double) )
             terminate(TYPE_ERROR);
     }
 

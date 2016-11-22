@@ -72,11 +72,11 @@ void copy_value(T_symbol *dst, T_symbol *src) {
     }
     switch (v1->data_type) {
         case is_int:
-            v1->value.n = v1->data_type == is_double ?
+            v1->value.n = v2->data_type == is_double ?
                           v2->value.d : v2->value.n;
             break;
         case is_double:
-            v1->value.d = v1->data_type == is_double ?
+            v1->value.d = v2->data_type == is_double ?
                           v2->value.d : v2->value.n;
             break;
         case is_str:
