@@ -1,6 +1,6 @@
 class Main {
     static void run(int a, double b) {
-    	int a = 5;
+    	int c = 5;
         ifj16.compare("fdas", a); // invalid parameter type
     }
 }
