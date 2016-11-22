@@ -104,11 +104,12 @@ T_symbol *create_var_uniq(T_data_type dtype)
 
     char *str = calloc((size_t) uniq_var_size + 1, 1);
     int rem = uniq_var_counter;
-    for (int i = uniq_var_size - 2; i >= 0; i--) {
+    // must differ form identifiers
+    str[0]='*';
+    for (int i = uniq_var_size - 1; i >= 1; i--) {
         str[i] = (char) ('a' + (rem & 15));
         rem = rem >> 4;
     }
-    str[uniq_var_size] = 0;
     uniq_var_counter++;
 
     return create_var(str, dtype);
@@ -124,6 +125,11 @@ T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
     if (!sym || sym->symbol_type != is_var) {
         // variable not found in local table
         sym = table_find(symbol_tab, iden, actual_class);
+        // only case if initializing static variable with static one
+        // which was not initialized before
+        if (sym && !sym->attr.var->initialized) {
+            terminate(SEMANTIC_ERROR);
+        }
     }
 
     // symbol is not variable or was not found
