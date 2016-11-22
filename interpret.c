@@ -86,6 +86,10 @@ void math_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1, T_symbol *op2
             break;
 
         default:
+            // zero division error
+            if (y == 0)
+                terminate(9);
+
             if (is_real(dest))
                 dest->attr.var->value.d = x / y;
             else
