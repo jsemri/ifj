@@ -42,13 +42,15 @@ for ((i=1; i <= COUNT ; i++));do
         if [ $result -ne $i ]; then
             # Return code does not match
             if [ "$1" == "-q" ]; then
-                printf "%-74s[${RED}FAIL$NOCLR]\n" "${name^}"
+                printf "%-74s[${RED}FAIL$NOCLR]\n" \
+                       "${name^} (return code: $result)"
             else
-                printf "$BOLD%-74s$NOCLR[${RED}FAIL$NOCLR]\n" "${name^}"
+                printf "$BOLD%-74s$NOCLR[${RED}FAIL$NOCLR]" \
+                       "${name^} (return code: $result)"
             fi
         elif [ $i -lt 7 ] && [ -n "$out" ]; then
             # Something was written out to stdout
-            printf "%-74s[${RED}FAIL$NOCLR]\n" "${name^} - vypisuje na stdout!"
+            printf "%-74s[${RED}FAIL$NOCLR]\n" "${name^} (vypisuje na stdout)"
         elif [ "$1" != "-q" ]; then
             # Test was successful, print if the script wan not run in quiet mode
             printf "$GRAY%-74s$NOCLR[$GREEN OK $NOCLR]\n" "${name^}"
