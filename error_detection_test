@@ -17,7 +17,7 @@ TEST[4]=type_errors
 for ((i=1; i <= COUNT ; i++));do
 
     echo "${TEST[$i]}:"|sed 's/_/ /g'|awk '{print toupper($0)}'
-    DIR=testsuites/errors/${TEST[$i]}/*
+    DIR=testsuites/errors/"$i"_${TEST[$i]}/*
 
     for sample in $DIR;do
 

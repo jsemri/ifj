@@ -35,3 +35,6 @@
 *.html
 *.gcno
 *.gcda
+
+# Naše binárka:
+ifj
