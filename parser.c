@@ -68,6 +68,13 @@ static void st_else2();
 static void prog()
 {{{
     fun = __func__;
+    // checking if file empty
+    int c = fgetc(source);
+    if (c == EOF) {
+        terminate(DEFINITION_ERROR);
+    }
+    ungetc(c, source);
+
     body();
 }}}
 
@@ -207,22 +214,15 @@ static void cbody2(char *iden, T_data_type dtype)
             return;
 
         // just reading everything till `;`
-  //      token_vector tv = token_vec_init();
         int cnt = 0;
         while (token->type != TT_semicolon && token->type != TT_eof) {
             get_token();cnt++;
-//            token_push_back(tv, token);
         }
 
         // id = ; or no ';'
-        if (cnt == 1 || token->type != TT_semicolon )
+        if (cnt == 1 || token->type != TT_semicolon ) {
             terminate(SYNTAX_ERROR);
-
-/*        part = 2;
-        precedence_analyser(tv->arr, tv->last-1, sym, symbol_tab, actual_class,
-                            glist);
-        part = 0;
-        token_vec_delete(tv);*/
+        }
 
     }
     else if (token->type == TT_lBracket) {
@@ -657,12 +657,12 @@ int parse()
     // checking Main class and run() function
     T_symbol *Mainclass = table_find(symbol_tab, "Main", NULL);
     if (!Mainclass) {
-        terminate(SEMANTIC_ERROR);  // definition error? XXX
+        terminate(DEFINITION_ERROR);
     }
 
     T_symbol *run_func = table_find(symbol_tab, "run", Mainclass);
     if (!run_func || run_func->symbol_type != is_func) {
-        terminate(SEMANTIC_ERROR);  // definition error? XXX
+        terminate(DEFINITION_ERROR);
     }
 
     if (fseek(source, 0, SEEK_SET)) {

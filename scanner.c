@@ -208,22 +208,31 @@ int get_token() {
 
             /*_________String________*/
             case S_string:
+                if (is_next_eof())
+                    terminate(LEX_ERROR);
+
                 if (c == '\\') {
                     state = S_stringBackSlash;
-                } else if (c == '"') {
+                }
+                else if (c == '"') {
                     token->type = TT_string;
                     token->attr.str = get_str(char_vector);
                     return 0;
-                } else if (c == '\n' || c == EOF) {
+                }
+                else if (c == '\n') {
                     row++;
                     terminate(LEX_ERROR);
-                } else {
+                }
+                else {
                     push_char(c);
                 }
                 break;
 
             case S_stringBackSlash:
-                if (c == '\n' || c == EOF) {
+                if (is_next_eof())
+                    terminate(LEX_ERROR);
+
+                if (c == '\n') {
                     row++;
                     terminate(LEX_ERROR);
                 }
@@ -248,6 +257,9 @@ int get_token() {
                 break;
 
             case S_octal1:
+                if (is_next_eof())
+                    terminate(LEX_ERROR);
+
                 if (is_oct(c)) {
                     b2 = c - '0';
                     state = S_octal2;
@@ -257,6 +269,9 @@ int get_token() {
                 break;
 
             case S_octal2:
+                if (is_next_eof())
+                    terminate(LEX_ERROR);
+
                 if (is_oct(c)) {
                     c = c - '0' + b1 + b2;
                     push_char(c);
