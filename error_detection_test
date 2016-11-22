@@ -9,34 +9,48 @@ NOCLR='\033[0m'
 
 # testing error detections
 
-COUNT=4
+COUNT=10
 TEST[1]=lexical_errors
 TEST[2]=syntax_errors
 TEST[3]=definition_errors
 TEST[4]=type_errors
+TEST[6]=other_semantic_errors
+TEST[7]=input_errors
+TEST[8]=uninitialized_errors
+TEST[9]=zero_div_errors
+TEST[10]=other_runtime_errors
 # syntax tests
 
 for ((i=1; i <= COUNT ; i++));do
+    if [ -z "${TEST[$i]}" ]; then
+        # Skips error #5
+        continue
+    fi
+    
+    # Print header with error type and number
     echo -e $BOLD
     echo "==== ${TEST[$i]} ($i) ===="|sed 's/_/ /g'|awk '{print toupper($0)}'
     echo -ne $NOCLR
     DIR=testsuites/errors/"$i"_${TEST[$i]}/*
 
+    # Run tests:
     for sample in $DIR;do
-        
         out=$(./ifj "$sample" 2>/dev/null)
         result="`echo $?`"
         name=$(echo "$sample" | grep -o "/[^/]*$" | tr -d "/" | sed s/.java$// \
                | tr "-" " " | sed "s/ \([0-9][0-9]*\)$/ #\1/")
         if [ $result -ne $i ]; then
+            # Return code does not match
             if [ "$1" == "-q" ]; then
                 printf "%-74s[${RED}FAIL$NOCLR]\n" "${name^}"
             else
                 printf "$BOLD%-74s$NOCLR[${RED}FAIL$NOCLR]\n" "${name^}"
             fi
-        elif [ -n "$out" ]; then
+        elif [ $i -lt 7 ] && [ -n "$out" ]; then
+            # Something was written out to stdout
             printf "%-74s[${RED}FAIL$NOCLR]\n" "${name^} - vypisuje na stdout!"
         elif [ "$1" != "-q" ]; then
+            # Test was successful, print if the script wan not run in quiet mode
             printf "$GRAY%-74s$NOCLR[$GREEN OK $NOCLR]\n" "${name^}"
         fi
     done
