@@ -31,11 +31,16 @@ for ((i=1; i <= COUNT ; i++));do
     echo -e $BOLD
     echo "==== ${TEST[$i]} ($i) ===="|sed 's/_/ /g'|awk '{print toupper($0)}'
     echo -ne $NOCLR
-    DIR=testsuites/errors/"$i"_${TEST[$i]}/*
+    DIR=testsuites/errors/"$i"_${TEST[$i]}/*.java
 
     # Run tests:
     for sample in $DIR;do
-        out=$(./ifj "$sample" 2>/dev/null)
+        input_file=$(echo "$sample" | sed "s/java$/txt/")
+        if [ -f "$input_file" ]; then
+            out=$(cat "$input_file" | ./ifj "$sample" 2>/dev/null)
+        else
+            out=$(./ifj "$sample" 2>/dev/null)
+        fi
         result="`echo $?`"
         name=$(echo "$sample" | grep -o "/[^/]*$" | tr -d "/" | sed s/.java$// \
                | tr "-" " " | sed "s/ \([0-9][0-9]*\)$/ #\1/")
