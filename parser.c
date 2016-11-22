@@ -207,21 +207,22 @@ static void cbody2(char *iden, T_data_type dtype)
             return;
 
         // just reading everything till `;`
-        token_vector tv = token_vec_init();
+  //      token_vector tv = token_vec_init();
+        int cnt = 0;
         while (token->type != TT_semicolon && token->type != TT_eof) {
-            get_token();
-            token_push_back(tv, token);
+            get_token();cnt++;
+//            token_push_back(tv, token);
         }
 
         // id = ; or no ';'
-        if (tv->last == 1 || token->type != TT_semicolon )
+        if (cnt == 1 || token->type != TT_semicolon )
             terminate(SYNTAX_ERROR);
 
-        part = 2;
+/*        part = 2;
         precedence_analyser(tv->arr, tv->last-1, sym, symbol_tab, actual_class,
                             glist);
         part = 0;
-        token_vec_delete(tv);
+        token_vec_delete(tv);*/
 
     }
     else if (token->type == TT_lBracket) {
@@ -674,7 +675,6 @@ int parse()
     }
 
     interpret(run_func);
-
     table_remove(&symbol_tab);
     token_free(&token);
     list_free(&glist);

@@ -617,10 +617,18 @@ static void cbody2()
     get_token();
 
     // variable
-    if (token->type == TT_assign || token->type == TT_semicolon) {
+    if (token->type == TT_assign) {
 
         token_vector tv = read_to_semic();
+        part = 2;
+        precedence_analyser(tv->arr+1, tv->last-1, actual_func, symbol_tab, actual_class,
+                            glist);
+        actual_func->attr.var->initialized = true;
+        part = 0;
         token_vec_delete(tv);
+    }
+    else if (token->type == TT_semicolon) {
+        return;
     }
     else {
         func();
