@@ -412,8 +412,7 @@ int get_token() {
                 if (c == '*') {
                     state = S_commentBlockStar;
                 } else if (is_next_eof()) {
-                    token->type = TT_eof;
-                    return 0;
+                    terminate(LEX_ERROR);
                 }
                 break;
 
@@ -423,8 +422,7 @@ int get_token() {
                 } else if (c == '/') {
                     state = S_start;
                 } else if (is_next_eof()) {
-                    token->type = TT_eof;
-                    return 0;
+                    terminate(LEX_ERROR);
                 } else {
                     state = S_commentBlock;
                 }
