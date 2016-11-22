@@ -58,3 +58,4 @@ for ((i=1; i <= COUNT ; i++));do
     done
 done
 
+echo # An empty line at the end of the script
