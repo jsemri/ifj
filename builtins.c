@@ -46,7 +46,7 @@ void read_stdin(T_symbol *result, T_data_type dtype)
 
     if (dtype == is_int) {
         int n = (int)strtol(buf, &endptr, 10);
-        if ( *endptr && !count ) {
+        if ( *endptr || !count ) {
             free(buf);
             terminate(7);
         }
@@ -62,7 +62,7 @@ void read_stdin(T_symbol *result, T_data_type dtype)
     }
     else if (dtype == is_double) {
         double d = strtod(buf, &endptr);
-        if (!count && *endptr) {
+        if (!count || *endptr) {
             free(buf);
             terminate(7);
         }
