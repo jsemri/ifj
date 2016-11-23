@@ -23,3 +23,21 @@ done
 rm tmp.java *.class
 
 
+# tests with *.out
+
+DIR=testsuites/tests_output/*.ifj16.java
+
+for i in $DIR; do
+  res="`./ifj $i`"
+  ofile="`echo "$i"|sed 's/ifj16.java/out/g'`"
+  out="`cat $ofile`"
+  if [ "$res" == "$out" ];then
+    printf "${GREEN}OK${NOCLR}\n"
+  else
+    printf "${RED}Wrong${NOCLR} - $i\n"
+    echo "$out"
+  fi
+
+done
+
+
