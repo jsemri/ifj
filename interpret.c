@@ -1,3 +1,20 @@
+/*
+ * IFJ 2016
+ * FIT VUT Brno
+ * IFJ16 Interpret Project
+ *
+ * Authors:
+ * Jakub   Semric     - xsemri00
+ * Peter   Rusinak    - xrusin03
+ * Krystof Rykala     - xrykal00
+ * Martin  Mikan      - xmikan00
+ * Martin  Polakovic  - xpolak33
+ *
+ * Unless otherwise stated, all code is licenced under a
+ * GNU General Public License v2.0
+ *
+ */
+
 #include "interpret.h"
 #include "instruction.h"
 #include "stack.h"
@@ -14,10 +31,6 @@
 #define is_integer(s) (s->attr.var->data_type == is_int)
 #define is_boolean(s) (s->attr.var->data_type == is_bool)
 #define is_init(s) (s->attr.var->initialized)
-
-#define dd puts("da")
-#define db puts("db")
-#define dc puts("dc")
 
 T_stack *frame_stack;
 T_stack *main_stack;

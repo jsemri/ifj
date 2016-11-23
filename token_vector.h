@@ -1,3 +1,20 @@
+/*
+ * IFJ 2016
+ * FIT VUT Brno
+ * IFJ16 Interpret Project
+ *
+ * Authors:
+ * Jakub   Semric     - xsemri00
+ * Peter   Rusinak    - xrusin03
+ * Krystof Rykala     - xrykal00
+ * Martin  Mikan      - xmikan00
+ * Martin  Polakovic  - xpolak33
+ *
+ * Unless otherwise stated, all code is licenced under a
+ * GNU General Public License v2.0
+ *
+ */
+
 /**
  * @file token_vector.h
  * @brief File contains structure and functions of token vector.

@@ -1,3 +1,20 @@
+/*
+ * IFJ 2016
+ * FIT VUT Brno
+ * IFJ16 Interpret Project
+ *
+ * Authors:
+ * Jakub   Semric     - xsemri00
+ * Peter   Rusinak    - xrusin03
+ * Krystof Rykala     - xrykal00
+ * Martin  Mikan      - xmikan00
+ * Martin  Polakovic  - xpolak33
+ *
+ * Unless otherwise stated, all code is licenced under a
+ * GNU General Public License v2.0
+ *
+ */
+
 #include "debug.h"
 #include "globals.h"
 #include "token.h"
@@ -47,7 +64,6 @@ void print_instr(T_instr *ins) {
 }
 
 
-#ifdef DEBUG_TABLES
 static char *arr[] = {"class", "func", "var"};
 static char *dtypes[] = {"void", "int", "double", "String" };
 
@@ -88,17 +104,7 @@ void print_table(T_symbol_table *st) {
         printf("||\n");
     }
 }
-#else
-void print_function(T_symbol *func) {
-    (void)func;
-}
-void print_table(T_symbol_table *st) {
-    (void)st;
-}
-#endif
 
-
-#ifdef REC_DEBUG
 // variables for each function:
 static int prog;
 static int body;
@@ -200,18 +206,7 @@ int leave(const char *fi, int rc) {
     fprintf(stderr, "Leaving a function: %s() %d\n", fi, var);
     return rc;
 }
-#else
-void enter(const char *fi) {
-    (void)fi;
-}
 
-int leave(const char *fi, int rc) {
-    (void)fi;
-    return rc;
-}
-#endif
-
-#ifdef SHOW_TOKEN
 int show_token(int rc) {
     printf("Getting token: ");
     if (token->type != TT_empty) {
@@ -387,9 +382,4 @@ int show_token(int rc) {
     }
     return rc;
 }
-#else
-int show_token(int rc) {
-    return rc;
-}
-#endif
 
