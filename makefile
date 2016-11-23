@@ -20,5 +20,10 @@ release: $(OBJ_FILES)
 	$(CC) $(CFLAGS) $^ -o $(PROJ)
 
 clean:
-	rm -f $(PROJ) $(OBJ_FILES)
+	rm -f $(PROJ) $(OBJ_FILES) *.gcda *.gcno *.html
+pack:
+	zip xsemri00.zip *.c *.h makefile rozdeleni dokumentace.pdf
+
+pack_test:
+	zip -r xsemri00+tests.zip *.c *.h makefile testsuites error_detection_test interpret_tests
 

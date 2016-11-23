@@ -15,12 +15,6 @@
  *
  */
 
-/*
- *  parser.c
- *  Jakub Semric
- *
- */
-
 #include "token.h"
 #include <stdio.h>
 #include "string.h"
@@ -48,11 +42,6 @@ static bool get_token_flag = false;
 
 #define get_token()  (get_token_flag ? (get_token_flag = false) : get_token())
 #define unget_token() get_token_flag = true
-
-#define db puts("db")
-#define dc puts("dc")
-#define dd puts("dd")
-#define da puts("da")
 
 // global variables
 ilist *glist;
