@@ -13,4 +13,5 @@ y = 4
 z = 3
 Area = 6
 Perimetry = 12
-0.5
+Sqrt(0.25) = 0.5
+Pow(5, -2) = 0.04

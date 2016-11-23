@@ -7,7 +7,10 @@ class Main {
         Triangle.set(5,4,3);
         Triangle.print();
         double res = Math.sqrt(0.25);
-        ifj16.print(res + "\n");
+        ifj16.print("Sqrt(0.25) = " + res + "\n");
+        int exp = 0 - 2;
+        res = Math.pow(5, exp);
+        ifj16.print("Pow(5, -2) = " + res + "\n");
         return;
     }
 }
@@ -89,5 +92,21 @@ class Math {
             i = i - 1;
         }
         return y;
+    }
+    static double pow(double x, int i) {
+        double res = 1;
+        if (i <= 0) {
+            while (i < 0) {
+                res = res/x;
+                i = i + 1;
+            }
+        }
+        else if ( i > 0) {
+            while (i >= 1) {
+                res = x*res;
+                i = i-1;
+            }
+        }
+        return res;
     }
 }
