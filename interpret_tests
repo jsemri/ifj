@@ -29,7 +29,7 @@ DIR=testsuites/tests_output/*.ifj16.java
 
 for i in $DIR; do
   res="`./ifj $i`"
-  ofile="`echo "$i"|sed 's/ifj16.java/out/g'`"
+  ofile="`echo "$i"|sed 's/ifj16.java/output/g'`"
   out="`cat $ofile`"
   if [ "$res" == "$out" ];then
     printf "${GREEN}OK${NOCLR}\n"

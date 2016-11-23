@@ -50,7 +50,7 @@ for ((i=1; i <= COUNT ; i++));do
                 printf "%-74s[${RED}FAIL$NOCLR]\n" \
                        "${name^} (return code: $result)"
             else
-                printf "$BOLD%-74s$NOCLR[${RED}FAIL$NOCLR]" \
+                printf "$BOLD%-74s$NOCLR[${RED}FAIL$NOCLR]\n" \
                        "${name^} (return code: $result)"
             fi
         elif [ $i -lt 7 ] && [ -n "$out" ]; then
