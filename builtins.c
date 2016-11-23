@@ -1,12 +1,30 @@
+/*
+ * IFJ 2016
+ * FIT VUT Brno
+ * IFJ16 Interpret Project
+ *
+ * Authors:
+ * Jakub   Semric     - xsemri00
+ * Peter   Rusinak    - xrusin03
+ * Krystof Rykala     - xrykal00
+ * Martin  Mikan      - xmikan00
+ * Martin  Polakovic  - xpolak33
+ *
+ * Unless otherwise stated, all code is licenced under a
+ * GNU General Public License v2.0
+ *
+ */
+
 #include "symbol.h"
 #include "globals.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "ial.h" 
+#include "ial.h"
 
 #define BUF_SIZE 32
 #define is_real(s) (s->attr.var->data_type == is_double)
 #define is_init(s) (s->attr.var->initialized)
+
 
 void clear_buffer(T_symbol *sym)
 {{{

@@ -1,4 +1,21 @@
 /*
+ * IFJ 2016
+ * FIT VUT Brno
+ * IFJ16 Interpret Project
+ *
+ * Authors:
+ * Jakub   Semric     - xsemri00
+ * Peter   Rusinak    - xrusin03
+ * Krystof Rykala     - xrykal00
+ * Martin  Mikan      - xmikan00
+ * Martin  Polakovic  - xpolak33
+ *
+ * Unless otherwise stated, all code is licenced under a
+ * GNU General Public License v2.0
+ *
+ */
+
+/*
  * globals.h
  *
  */
@@ -30,7 +47,6 @@
 // symbol table array length
 #define RANGE 8
 
-// FIXME Put here all global variables which are used across most of the modules
 
 extern T_stack *frame_stack;   // local tables will be copied here
 extern T_stack *main_stack;

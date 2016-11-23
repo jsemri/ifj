@@ -1,3 +1,20 @@
+/*
+ * IFJ 2016
+ * FIT VUT Brno
+ * IFJ16 Interpret Project
+ *
+ * Authors:
+ * Jakub   Semric     - xsemri00
+ * Peter   Rusinak    - xrusin03
+ * Krystof Rykala     - xrykal00
+ * Martin  Mikan      - xmikan00
+ * Martin  Polakovic  - xpolak33
+ *
+ * Unless otherwise stated, all code is licenced under a
+ * GNU General Public License v2.0
+ *
+ */
+
 /**
  * @file instruction.h
  * @brief Contains instructions.
@@ -59,7 +76,7 @@ typedef struct T_ilist {
 
 
 /**
- * @brief Creates and inserts instruction to a instruction list.
+ * Creates and inserts instruction to a instruction list.
  *
  * @param L instruction list
  * @param itype instruction type
@@ -71,7 +88,7 @@ void *create_instr( ilist *L, T_instr_type itype, void *op1, void *op2,
                    void *dest);
 
 /**
- * @brief Creates instruction.
+ * Creates instruction.
  *
  * @param itype instruction type
  * @param op1 first operand

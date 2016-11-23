@@ -1,3 +1,20 @@
+/*
+ * IFJ 2016
+ * FIT VUT Brno
+ * IFJ16 Interpret Project
+ *
+ * Authors:
+ * Jakub   Semric     - xsemri00
+ * Peter   Rusinak    - xrusin03
+ * Krystof Rykala     - xrykal00
+ * Martin  Mikan      - xmikan00
+ * Martin  Polakovic  - xpolak33
+ *
+ * Unless otherwise stated, all code is licenced under a
+ * GNU General Public License v2.0
+ *
+ */
+
 /**
  * @file ial.h
  * @brief Contains symbol table.
@@ -19,7 +36,7 @@ typedef struct T_Hash_symbol_table {
 unsigned hash(const char *key, unsigned size);
 
 /**
- * @brief Initializes symbol table.
+ * Initializes symbol table.
  *
  * @param size length of list array
  * @return Pointer to new symbol table, NULL if allocation fails.
@@ -37,10 +54,18 @@ T_symbol_table *table_init(unsigned size);
  */
 T_symbol *table_find(T_symbol_table *stab, char *key, T_symbol *mclass);
 
+/**
+ * Search for symbol with `key` and member class `mclass`.
+ *
+ * @param stab pointer to symbol table
+ * @param key identifier name
+ * @param mclass pointer to a member class
+ * @return Pointer to the searched symbol, NULL if symbol was not found.
+ */
 T_symbol *table_find_simple(T_symbol_table *stab, char *key, T_symbol *mclass);
 
 /**
- * @brief Inserts symbol item to symbol table.
+ * Inserts symbol item to symbol table.
  *
  * @param stab pointer to symbol table
  * @param s symbol to insert
@@ -64,7 +89,7 @@ void table_remove(T_symbol_table **stab);
 void heap_sort(char *str);
 
 /**
- * \brief Function for heapsort, reeastablishment of heap.
+ * Function for heapsort, reeastablishment of heap.
  * @param   string   Pointer to string.
  * @param   left     Index of the most left node.
  * @param   right    Index of the most righ node.
@@ -72,9 +97,8 @@ void heap_sort(char *str);
 void sift_down(char *str, int left, int right);
 
 /**
- * \brief Function finds substring in string using Knuth-Morris-Pratt algorithm
- *		  and returns its position.
- *        If substring is not found, function returns -1.
+ * Function finds substring in string using Knuth-Morris-Pratt algorithm
+ * and returns its position.
  *
  * @param   string      Pointer to string.
  * @param   pattern     Pointer to substring.
