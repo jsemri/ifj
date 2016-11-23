@@ -46,8 +46,8 @@ T_symbol *get_var(T_symbol *var)
     if (!var)
         return NULL;
 
-    // if constant
-    if (var->attr.var->is_const)
+    // if constant or static variable
+    if (var->attr.var->is_const || var->member_class)
         return var;
 
     T_symbol *ret_var;
