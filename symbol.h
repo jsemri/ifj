@@ -1,3 +1,26 @@
+/*
+ * IFJ 2016
+ * FIT VUT Brno
+ * IFJ16 Interpret Project
+ *
+ * Authors:
+ * Jakub   Semric     - xsemri00
+ * Peter   Rusinak    - xrusin03
+ * Krystof Rykala     - xrykal00
+ * Martin  Mikan      - xmikan00
+ * Martin  Polakovic  - xpolak33
+ *
+ * Unless otherwise stated, all code is licenced under a
+ * GNU General Public License v2.0
+ *
+ */
+
+/**
+ * @file symbol.h
+ * Symbol functions.
+ *
+ */
+
 #ifndef SYMBOL_H
 #define SYMBOL_H
 
@@ -26,10 +49,10 @@ typedef enum {
 /// Function attributes.
 /// Variable attributes.
 typedef struct {
-    T_data_type data_type;          // data type
-    bool initialized;
-    bool is_const;                  // 0 if constant
-    T_value value;                  // value of variable
+    T_data_type data_type;      // data type
+    bool initialized;           // initialization flag
+    bool is_const;              // 0 if constant
+    T_value value;              // value of variable
 } T_var_symbol;
 
 /// Function attributes.
@@ -45,11 +68,11 @@ typedef struct {
 
 /// Structure of symbol.
 typedef struct T_symbol {
-    char *id;                // symbol identifier, first key
+    char *id;                      // symbol identifier, first key
     T_symbol_type symbol_type;     // symbol type
     union {
-        T_var_symbol *var;
-        T_func_symbol *func;
+        T_var_symbol *var;          // variable
+        T_func_symbol *func;        // function
     } attr;                         // symbol attribute
     struct T_symbol *member_class;  // member class, second key
     struct T_symbol *next;          // next symbol in list
@@ -65,7 +88,7 @@ typedef struct T_symbol {
 T_symbol *create_symbol(char *id, T_symbol_type stype);
 
 /**
- * @brief Creates a symbol - variable.
+ * Creates a symbol - variable.
  *
  * @param id Name of the variable
  * @param dtype data type
@@ -74,18 +97,29 @@ T_symbol *create_symbol(char *id, T_symbol_type stype);
 T_symbol *create_var(char *id, T_data_type dtype);
 
 /**
- * @brief Creates a symbol - variable with an arbitrary name.
+ * Creates a symbol - variable with an arbitrary name.
  *
  * @param dtype data type
  * @return valid pointer on success
  */
 T_symbol *create_var_uniq(T_data_type dtype);
 
+/**
+ * Deletes a symbol of function type.
+ *
+ * @param sym deleted symbol.
+ */
 void func_remove(T_symbol *sym);
+
+/**
+ * Deletes a symbol of variable type.
+ *
+ * @param sym deleted symbol.
+ */
 void var_remove(T_symbol *sym);
 
 /**
- * @brief Creates a function.
+ * Creates a function.
  *
  * @param dtype data type
  * @return valid pointer on success
@@ -119,16 +153,34 @@ T_symbol *add_constant(T_value *value, struct T_Hash_symbol_table*,
                        T_data_type dtype);
 
 /**
- * @brief Deletes whole table and sets it's pointer to NULL.
+ * Deletes whole table.
  *
  * @param loc_stab pointer to symbol table
  */
 void local_table_remove(struct T_Hash_symbol_table **loc_stab);
 
+
+/**
+ * Copies a symbol.
+ *
+ * @param sym source symbol
+ * @return copied symbol
+ */
 T_symbol *symbol_copy(T_symbol *sym);
 
+/**
+ * Creates register and ifj16 class.
+ *
+ * @return 0 on success
+ */
 int fill_ifj16();
 
+/**
+ * Copies a string.
+ *
+ * @param sym source string
+ * @return copied string
+ */
 char *get_str(const char *src);
 
 #endif

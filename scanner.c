@@ -1,3 +1,20 @@
+/*
+ * IFJ 2016
+ * FIT VUT Brno
+ * IFJ16 Interpret Project
+ *
+ * Authors:
+ * Jakub   Semric     - xsemri00
+ * Peter   Rusinak    - xrusin03
+ * Krystof Rykala     - xrykal00
+ * Martin  Mikan      - xmikan00
+ * Martin  Polakovic  - xpolak33
+ *
+ * Unless otherwise stated, all code is licenced under a
+ * GNU General Public License v2.0
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,7 +74,6 @@ int is_next_eof() {
     return ret_value;
 }
 
-#define return return show_token(0) +
 int get_token() {
     T_state state = S_start;
     int c; //read character
@@ -108,11 +124,11 @@ int get_token() {
                     state = S_assignOrEqual;
                 } else if (c == '!') {
                     state = S_notOrNotEqual;
-                } else if (c == '|') {
+                }/* else if (c == '|') {
                     state = S_or;
                 } else if (c == '&'){
                     state = S_and;
-                } else if (isalpha(c) || c == '_' || c == '$') {    // ID starts with _$a-Z
+                }*/ else if (isalpha(c) || c == '_' || c == '$') {    // ID starts with _$a-Z
                     push_char(c);
                     state = S_ID;
                 } else if (c == '"') {
@@ -379,9 +395,10 @@ int get_token() {
                     token->type = TT_notEq;
                     return 0;
                 } else {
-                    ungetc(c, source);            // Just =, undo last char
+                  /*  ungetc(c, source);            // Just =, undo last char
                     token->type = TT_not;
-                    return 0;
+                    return 0;*/
+                    terminate(LEX_ERROR);
                 }
                 break;
 
