@@ -45,7 +45,7 @@
 #define INTERNAL_ERROR 99
 
 // symbol table array length
-#define RANGE 8
+#define RANGE 64
 
 
 extern T_stack *frame_stack;   // local tables will be copied here

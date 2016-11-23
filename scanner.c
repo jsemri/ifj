@@ -115,6 +115,10 @@ int get_token() {
                     token->type = TT_rCurlBracket;
                     return 0;
                 } else if (c == '/') {
+                    if (is_next_eof()) {
+                        token->type = TT_div;
+                        return 0;
+                    }
                     state = S_commentOrDiv;                 // comment (block, line) or division
                 } else if (c == '<') {
                     state = S_lesserOrLesserEqual;          // < or <=
@@ -426,6 +430,8 @@ int get_token() {
                     state = S_commentLine;
                 } else if (c == '*') {
                     state = S_commentBlock;
+                    if (is_next_eof())
+                        terminate(1);
                 } else {                    // it is division
                     token->type = TT_div;
                     ungetc(c, source);      // we need to return that one char we checked
@@ -443,19 +449,26 @@ int get_token() {
             case S_commentBlock:
                 if (c == '*') {
                     state = S_commentBlockStar;
-                } else if (is_next_eof()) {
+                    if (is_next_eof())
+                        terminate(1);
+                }
+                else if (is_next_eof()) {
                     terminate(LEX_ERROR);
                 }
                 break;
 
             case S_commentBlockStar:
                 if (c == '*') {
-                    ;
-                } else if (c == '/') {
+                    if (is_next_eof())
+                        terminate(1);
+                }
+                else if (c == '/') {
                     state = S_start;
-                } else if (is_next_eof()) {
+                }
+                else if (is_next_eof()) {
                     terminate(LEX_ERROR);
-                } else {
+                }
+                else {
                     state = S_commentBlock;
                 }
                 break;
