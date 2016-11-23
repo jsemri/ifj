@@ -24,7 +24,7 @@
 #include "globals.h"
 #include <stdlib.h>
 
-#define RULES_COUNT 15
+#define RULES_COUNT 16
 /**
  * The list of valid rules
  *
@@ -57,6 +57,7 @@ T_prec_rule rules[RULES_COUNT] = {
     {3, TT_empty, TT_greatEq, TT_empty, rule_bool},
     {3, TT_rBracket, TT_empty, TT_lBracket, rule_brackets},
     {1, TT_id, TT_empty, TT_empty, rule_i_to_exp},
+    {1, TT_fullid, TT_empty, TT_empty, rule_i_to_exp},
     {1, TT_int, TT_empty, TT_empty, rule_i_to_exp},
     {1, TT_double, TT_empty, TT_empty, rule_i_to_exp},
     {1, TT_string, TT_empty, TT_empty, rule_i_to_exp},
@@ -342,7 +343,8 @@ T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3],
                         ilist *instr_list) {
     (void) instr_list;
 
-    if (terms[0].ptr.token->type == TT_id) {
+    if (terms[0].ptr.token->type == TT_id
+        || terms[0].ptr.token->type == TT_fullid) {
         return is_defined(terms[0].ptr.token->attr.str, ltable, act_class,
                           is_void);
     }

@@ -141,7 +141,8 @@ T_precedence_state get_precedence(T_tokenType stack_token,
  * @return Index of the token
  */
 static int get_table_index(T_tokenType token) {
-    if (token == TT_double || token == TT_id || token == TT_string)
+    if (token == TT_double || token == TT_id || token == TT_string ||
+            token == TT_fullid)
         token = TT_int;
     for (int i = 0; i < ALLOWED_TOKENS_SIZE; i++) {
         if (allowed_tokens[i] == token) {

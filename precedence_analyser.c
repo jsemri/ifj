@@ -136,7 +136,7 @@ static T_token* get_next_token(T_token *cur_token, int token_count) {
  *
  * TODO Move elsewhere
  */
-
+/*
 void add_token(token_vector v, T_tokenType type) {
     T_token *token = token_new();
     token->type = type;
@@ -155,9 +155,9 @@ void add_float(token_vector v, double i) {
     token_push_back(v, token);
 }
 
-int main0() {
+/ *int main0() {
     token_vector v = token_vec_init();
-    /*add_int(v, 10);
+    / *add_int(v, 10);
     add_token(v, TT_plus);
     add_token(v, TT_lBracket);
     add_int(v, 5);
@@ -165,7 +165,7 @@ int main0() {
     add_float(v, 3);
     add_token(v, TT_mul);
     add_int(v, 2);
-    add_token(v, TT_rBracket);*/
+    add_token(v, TT_rBracket);* /
     //add_float(v, 6);
     //add_token(v, TT_greater);
     //add_int(v, 4);
@@ -185,4 +185,4 @@ int main0() {
 
     token_vec_delete(v);
     return 0;
-}
+}*/
