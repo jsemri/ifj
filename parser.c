@@ -376,11 +376,8 @@ static void st_list()
 {{{
     fun = __func__;
     // read only if '{' or ';'
-    if (token->type == TT_lCurlBracket || token->type == TT_rCurlBracket ||
-        token->type == TT_semicolon || token->type == TT_keyword) {
-        // expecting whatever what is statement
-        get_token();
-    }
+    get_token();
+
     // keyword
     if (token->type == TT_keyword || token->type == TT_id ||
         token->type == TT_fullid)
