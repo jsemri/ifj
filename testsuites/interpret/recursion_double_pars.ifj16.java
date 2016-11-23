@@ -19,6 +19,6 @@ class Rec {
     static int a = 0;
     static int foo(double p) {
         a = a + 1;
-        return p;
+        return a;
     }
 }
