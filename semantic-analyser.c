@@ -244,7 +244,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 T_symbol *sym;
                 // print() - no parameters
                 if (is_rbrac(it))
-                    terminate(DEFINITION_ERROR);   // FIXME TYPE_ERROR ???
+                    terminate(TYPE_ERROR);   // FIXME DEF_ERROR ???
 
                 bool is_atleast_one_str;
                 int count = 0;
