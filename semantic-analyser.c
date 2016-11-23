@@ -630,15 +630,16 @@ static void cbody2()
     // variable
     if (token->type == TT_assign) {
 
+        actual_func->attr.var->is_def = true;
         token_vector tv = read_to_semic();
         part = 2;
         precedence_analyser(tv->arr+1, tv->last-1, actual_func, symbol_tab, actual_class,
                             glist);
-        actual_func->attr.var->initialized = true;
         part = 0;
         token_vec_delete(tv);
     }
     else if (token->type == TT_semicolon) {
+        actual_func->attr.var->is_def = true;
         return;
     }
     else {
@@ -720,7 +721,6 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
 
                     unsigned dtype = token->attr.keyword;   // data type
                     // increasing local variable count
-                    actual_func->attr.func->local_count++;
 
                     // id in token
                     get_token();

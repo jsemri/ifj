@@ -51,6 +51,7 @@ typedef enum {
 typedef struct {
     T_data_type data_type;      // data type
     bool initialized;           // initialization flag
+    bool is_def;                // definition flag
     bool is_const;              // 0 if constant
     T_value value;              // value of variable
 } T_var_symbol;
@@ -62,7 +63,6 @@ typedef struct {
     ilist *func_ilist;          // instruction list
     unsigned par_count;         // number of parameters
     void **arguments;           // pointer to parameters in local table
-    unsigned local_count;                       // local variable count
     struct T_Hash_symbol_table *local_table;    // local symbol table
 } T_func_symbol;
 
