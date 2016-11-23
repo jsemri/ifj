@@ -4,12 +4,12 @@ class Main {
     static int c;
     static void run() {
 
-        bar.foo(a, b); 
+        bar.foo(a, b);
     }
 }
 
 class bar {
-    static void foo(a, b) {
+    static void foo(int a, int b) {
         d=a; //using undeclared parameter in called function
     }
 }
