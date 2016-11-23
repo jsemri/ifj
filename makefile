@@ -8,7 +8,7 @@ SRC_FILES=$(wildcard *.c)
 HEADERS=$(wildcard *.h)
 OBJ_FILES=$(patsubst %.c, %.o, $(SRC_FILES))
 
-.PHONY: all clean
+.PHONY: all clean release pack pack_test
 
 all: release
 
@@ -27,3 +27,5 @@ pack:
 pack_test:
 	zip -r xsemri00+tests.zip *.c *.h makefile testsuites error_detection_test interpret_tests
 
+test:
+	./error_detection_test; ./interpret_tests
