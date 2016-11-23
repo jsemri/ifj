@@ -142,7 +142,7 @@ static char *arr_ifj16[] = {
 #define is_rbrac(t) (t->type == TT_rBracket)
 #define is_lbrac(t) (t->type == TT_lBracket)
 #define is_plus(t) (t->type == TT_plus)
-#define is_number(t) (t->type == TT_int || t->type == TT_double)
+#define is_real(t) (t->type == TT_double)
 #define is_integer(t) (t->type == TT_int )
 
 void check_par_syntax(T_token *it, int tcount, int exp_toks)
@@ -260,7 +260,9 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                                                actual_class, is_void);
                     }
                     else if (is_const(it)) {
-                        sym = add_constant(&it->attr, symbol_tab, is_str);
+                        T_data_type dtype = is_real(it) ? is_double : is_int;
+                        dtype = (it->type == TT_string) ? is_str : dtype;
+                        sym = add_constant(&it->attr, symbol_tab, dtype);
                     }
                     else {
                         terminate(SYNTAX_ERROR);
@@ -513,8 +515,11 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
         else if (is_integer(it) && dtype == is_int) {
             sym = add_constant(&it->attr, symbol_tab, is_int);
         }
-        else if (is_number(it) && dtype == is_double)
+        else if (is_integer(it) && dtype == is_double)
         {
+            sym = add_constant(&it->attr, symbol_tab, is_int);
+        }
+        else if (is_real(it) && dtype == is_double){
             sym = add_constant(&it->attr, symbol_tab, is_double);
         }
         else {
