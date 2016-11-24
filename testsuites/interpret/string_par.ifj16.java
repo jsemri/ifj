@@ -1,7 +1,7 @@
 class Main {
     static void run() {
         String str = "bca";
-        str = str_expand(str, 10);
+        str = str_expand(str, 6);
         ifj16.print(str + "\n");
     }
     static String str_expand(String str, int exp ) {
