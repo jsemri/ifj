@@ -215,7 +215,7 @@ static void cbody2(char *iden, T_data_type dtype)
     if (token->type == TT_assign || token->type == TT_semicolon) {
 
         if (dtype == is_void) {
-            terminate(TYPE_ERROR);
+            terminate(2);
         }
         // creating symbol as variable
         T_symbol *sym = create_var(iden, dtype);
@@ -299,7 +299,7 @@ static void par(T_symbol *symbol)
     // allocating pointer to arguments
     void **arguments = calloc(1,sizeof(void*)*fptr->par_count);
     if (!arguments) {
-        terminate(SYNTAX_ERROR);
+        terminate(99);
     }
 
     unsigned i = 0; // parameter count
@@ -313,7 +313,7 @@ static void par(T_symbol *symbol)
             dtype = tptr->attr.keyword;
             // XXX maybe other error code ???
             if (dtype == TK_void)
-                terminate(TYPE_ERROR);
+                terminate(SYNTAX_ERROR);
         }
         else {
             free(arguments);
