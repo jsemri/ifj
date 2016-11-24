@@ -16,7 +16,7 @@
  */
 
 /**
- * @file semantic-analyser.h
+ * @file semantic_analyser.h
  * Checks semantic of source code and builds instruction list.
  */
 

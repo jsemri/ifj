@@ -27,7 +27,7 @@
 #include "debug.h"
 #include "instruction.h"
 #include "ial.h"
-#include "semantic-analyser.h"
+#include "semantic_analyser.h"
 #include "symbol.h"
 #include "ilist.h"
 #include "interpret.h"
