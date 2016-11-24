@@ -22,10 +22,10 @@ release: $(OBJ_FILES)
 clean:
 	rm -f $(PROJ) $(OBJ_FILES) *.gcda *.gcno *.html
 pack:
-	zip xsemri00.zip *.c *.h makefile rozdeleni dokumentace.pdf
+	zip xsemri00.zip *.c *.h Makefile rozdeleni dokumentace.pdf
 
 pack_test:
-	zip -r xsemri00+tests.zip *.c *.h makefile testsuites error_detection_test interpret_tests
+	zip -r xsemri00+tests.zip *.c *.h Makefile testsuites error_detection_test interpret_tests
 
 test:
 	./error_detection_test; ./interpret_tests
