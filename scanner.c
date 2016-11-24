@@ -266,6 +266,7 @@ int get_token() {
                 }
                 else if (c == '\\') {
                     push_char('\\');
+                    state = S_string;
                 }
                 else if (c <= '3' && c>= '0') {
                     b1 = c - '0';
@@ -293,7 +294,7 @@ int get_token() {
                     terminate(LEX_ERROR);
 
                 if (is_oct(c)) {
-                    c = c - '0' + b1 + b2;
+                    c = c - '0' + (b1*64) + (b2*8);
                     push_char(c);
                     state = S_string;
                 }
