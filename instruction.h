@@ -71,7 +71,6 @@ typedef struct T_instruction {
 typedef struct T_ilist {
     T_instr *first; // first item
     T_instr *last;  // last item
-    T_instr *act;   // active item
 } ilist;
 
 
