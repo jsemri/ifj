@@ -24,18 +24,6 @@ ilist* list_init() {
     return calloc(1, sizeof(ilist));
 }
 
-// inserting instruction as first
-void list_insert_first(ilist *L, T_instr *ins) {
-
-    if (L->first) {
-        ins->next = L->first;
-    }
-    else {
-        L->last = ins;
-    }
-    L->first = ins;
-}
-
 // pushing instruction back
 void list_insert_last(ilist *L, T_instr *ins) {
 
@@ -66,15 +54,6 @@ void list_free(ilist **L) {
         free(*L);
         *L = NULL;
     }
-}
-
-void list_first(ilist *L) {
-    L->act = L->first;
-}
-
-void list_succ(ilist *L) {
-    if (L->act)
-        L->act = L->act->next;
 }
 
 void list_merge(ilist *L1, ilist *L2) {
