@@ -479,7 +479,7 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
     int pcount = fsym->attr.func->par_count;
 
     // type control
-    if (dest) {
+    if (dest && fsym->attr.func->data_type != is_void) {
         T_data_type d1 = fsym->attr.func->data_type;
         T_data_type d2 = dest->attr.var->data_type;
         // d1 == d2 || (d1 = in_int && d2 = is_double)
