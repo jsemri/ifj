@@ -19,12 +19,82 @@
 #include "globals.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <stdbool.h>
 #include "ial.h"
 
 #define BUF_SIZE 32
 #define is_real(s) (s->attr.var->data_type == is_double)
 #define is_init(s) (s->attr.var->initialized)
 
+
+// finite state machine for checking syntax of input
+bool check_double(char *str)
+{{{
+    int c;
+    char state = 's';
+
+    while ((c = *str++)) {
+        switch (state) {
+            // s - starting state
+            case 's':
+                if (isdigit(c))
+                    state = 'i';
+                else
+                    return false;
+                break;
+
+            // i - integer
+            case 'i':
+                if (isdigit(c))
+                    continue;
+                else if (c == '.')
+                    state = 'd';
+                else if (c == 'e' || c == 'E')
+                    state = 'e';
+                else
+                    return false;
+                break;
+
+            // d - dot
+            case 'd':
+                if (isdigit(c))
+                    state = 't';
+                else
+                    return false;
+                break;
+
+            // t - tenth
+            case 't':
+                if (isdigit(c))
+                    continue;
+                else if (c == 'e' || c == 'E')
+                    state = 'e';
+                else
+                    return false;
+                break;
+
+            // e - expomemt
+            case 'e':
+                if (c == '+' || c == '-' || isdigit(c))
+                    state = 'n';
+                else
+                    return false;
+                break;
+            // n - number of exponent
+            case 'n':
+                if (isdigit(c))
+                    continue;
+                else
+                    return false;
+
+            default:
+                return false;
+        }
+    }
+
+    return (state == 'n' || state == 't');
+}}}
 
 void clear_buffer(T_symbol *sym)
 {{{
@@ -63,11 +133,19 @@ void read_stdin(T_symbol *result, T_data_type dtype)
     buf[count] = 0;
 
     if (dtype == is_int) {
+        for (unsigned i = 0;i < strlen(buf);i++) {
+            if(!isdigit(buf[i])) {
+                free(buf);
+                terminate(7);
+            }
+        }
+
         int n = (int)strtol(buf, &endptr, 10);
         if ( *endptr || !count ) {
             free(buf);
             terminate(7);
         }
+
         free(buf);
         if (result) {
             // double or int
@@ -79,18 +157,16 @@ void read_stdin(T_symbol *result, T_data_type dtype)
 
     }
     else if (dtype == is_double) {
+
         double d = strtod(buf, &endptr);
-        if (!count || *endptr) {
+        if (!count || *endptr || !check_double(buf)) {
             free(buf);
             terminate(7);
         }
+
         free(buf);
         if (result) {
-            // double or int
-            if (is_real(result))
-                result->attr.var->value.d = d;
-            else
-                result->attr.var->value.n = d;
+            result->attr.var->value.d = d;
         }
     }
     else {
