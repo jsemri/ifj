@@ -1,0 +1,113 @@
+[TEST 1] Délka prázného řetězce
+0
+
+[TEST 2] Délka řetězce o jednom znaku
+1
+
+[TEST 3] Délka řetězce o 12 znacích
+12
+
+[TEST 4] Substring: prázdný řetězec
+
+
+[TEST 5] Substring: nula znaků z delšího řetězce
+
+
+[TEST 6] Substring: nula znaků z delšího řetězce #2
+
+
+[TEST 7] Substring: První znak
+L
+
+[TEST 8] Substring: Poslední znak
+m
+
+[TEST 9] Substring: Znaky uprostřed
+em
+
+[TEST 10] Substring: Celý řetězec
+Lorem ipsum
+
+[TEST 11] Porovnání řetězců: dva prázdný
+0
+
+[TEST 12] Porovnání řetězců: první prázdný
+-1
+
+[TEST 13] Porovnání řetězců: druhý prázdný
+1
+
+[TEST 14] Porovnání řetězců: dva stejný
+0
+
+[TEST 15] Porovnání řetězců: první má znak navíc
+1
+
+[TEST 16] Porovnání řetězců: druhý má znak navíc
+-1
+
+[TEST 17] Porovnání řetězců: první menší
+-1
+
+[TEST 18] Porovnání řetězců: první větší
+1
+
+[TEST 19] Hledání podřetězce: dva prázdný
+0
+
+[TEST 20] Hledání podřetězce: první prázdný
+-1
+
+[TEST 21] Hledání podřetězce: druhý prázdný
+0
+
+[TEST 22] Hledání podřetězce: dva stejný
+0
+
+[TEST 23] Hledání podřetězce: první má znak navíc
+0
+
+[TEST 24] Hledání podřetězce: druhý má znak navíc
+-1
+
+[TEST 25] Hledání podřetězce: první menší
+-1
+
+[TEST 26] Hledání podřetězce: první větší
+-1
+
+[TEST 27] Hledání podřetězce: na začátku
+0
+
+[TEST 28] Hledání podřetězce: nutnost se vrátit
+5
+
+[TEST 29] Hledání podřetězce: další vracení
+13
+
+[TEST 30] Hledání podřetězce: na konci
+18
+
+[TEST 31] Hledání podřetězce: skoro na konci, ale znak chybí
+-1
+
+[TEST 32] Seřazení textu: prázdný řetězec
+ -> 
+
+[TEST 33] Seřazení textu: jeden znak
+A -> A
+
+[TEST 34] Seřazení textu: několik stejných znaků
+!!!!!!!!!! -> !!!!!!!!!!
+
+[TEST 35] Seřazení textu: již seřazený řetězec
+cennost -> cennost
+
+[TEST 36] Seřazení textu: opačně seřazený řetězec
+tsoledb -> bdelost
+
+[TEST 37] Seřazení textu: opakující se znaky
+tamara -> aaamrt
+
+[TEST 38] Seřazení textu: normální řetězec
+V saline bylo 42 lidi. ->     .24Vabdeiiilllnosy
