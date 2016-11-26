@@ -288,7 +288,8 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     }
                 }
                 // at least one parameter has to be string
-                if (!is_atleast_one_str)
+                // if more parameters
+                if (!is_atleast_one_str && count > 1)
                     terminate(TYPE_ERROR);
 
                 //if (!is_rbrac(it))
@@ -850,7 +851,7 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                     if ( (tv->last == 0 && dtype != is_void) ||
                          (tv->last != 0 && dtype == is_void) )
                     {
-                        terminate(DEFINITION_ERROR);
+                        terminate(4);
                     }
                     // return value will be stored in accumulator
                     acc->attr.var->data_type = dtype;
