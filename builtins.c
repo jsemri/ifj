@@ -171,10 +171,17 @@ void read_stdin(T_symbol *result, T_data_type dtype)
     }
     else {
         // clearing buffer
-        clear_buffer(result);
-        result->attr.var->value.str = buf;
+        if (result) {
+            clear_buffer(result);
+            result->attr.var->value.str = buf;
+        }
+        else {
+            free(buf);
+        }
     }
-    result->attr.var->initialized = true;
+
+    if (result)
+        result->attr.var->initialized = true;
 }}}
 
 void substr(T_symbol *sym1, T_symbol *sym2, T_symbol *sym3, T_symbol *result)
@@ -214,9 +221,15 @@ void substr(T_symbol *sym1, T_symbol *sym2, T_symbol *sym3, T_symbol *result)
     for (int j = 0;j < n;j++)
         res[j] = buf[i+j];
 
-    clear_buffer(result);
-    result->attr.var->value.str = res;
-    result->attr.var->initialized = true;
+    if (result) {
+        clear_buffer(result);
+        result->attr.var->value.str = res;
+        result->attr.var->initialized = true;
+    }
+    else {
+        free(res);
+    }
+
 }}}
 
 
@@ -231,12 +244,15 @@ void compare(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
     cmp = cmp > 0 ? 1 : cmp;
     cmp = cmp < 0 ? -1 : cmp;
 
-    if (is_real(result))
-        result->attr.var->value.d = cmp;
-    else
-        result->attr.var->value.n = cmp;
+    if (result) {
+        if (is_real(result))
+            result->attr.var->value.d = cmp;
+        else
+            result->attr.var->value.n = cmp;
 
-    result->attr.var->initialized = true;
+        result->attr.var->initialized = true;
+    }
+
 }}}
 
 
@@ -250,12 +266,15 @@ void length(T_symbol *sym1, T_symbol *result)
 
     int len = strlen(sym1->attr.var->value.str);
 
-    if (is_real(result))
-        result->attr.var->value.d = len;
-    else
-        result->attr.var->value.n = len;
+    if (result) {
+        if (is_real(result))
+            result->attr.var->value.d = len;
+        else
+            result->attr.var->value.n = len;
 
-    result->attr.var->initialized = true;
+        result->attr.var->initialized = true;
+    }
+
 }}}
 
 void concat(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
@@ -299,9 +318,15 @@ void concat(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
     strcpy(str, s1);
     strcpy(str + strlen(str), s2);
 
-    clear_buffer(result);
-    result->attr.var->value.str = str;
-    result->attr.var->initialized = true;
+    if (result) {
+        clear_buffer(result);
+        result->attr.var->value.str = str;
+        result->attr.var->initialized = true;
+    }
+    else {
+        free(str);
+    }
+
 }}}
 
 void sort(T_symbol *sym, T_symbol *result)
@@ -314,9 +339,15 @@ void sort(T_symbol *sym, T_symbol *result)
 
     char *str = get_str(sym->attr.var->value.str);
     heap_sort(str);
-    clear_buffer(result);
-    result->attr.var->value.str = str;
-    result->attr.var->initialized = true;
+    if (result) {
+        clear_buffer(result);
+        result->attr.var->value.str = str;
+        result->attr.var->initialized = true;
+    }
+    else {
+        free(str);
+    }
+
 }}}
 
 void find(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
@@ -330,13 +361,15 @@ void find(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
     char *s1 = sym1->attr.var->value.str;
     char *s2 = sym2->attr.var->value.str;
 
-    if (is_real(result)) {
-        result->attr.var->value.d = find_kmp(s1, s2);
-    }
-    else {
-        result->attr.var->value.n = find_kmp(s1, s2);
-    }
+    if (result) {
+        if (is_real(result)) {
+            result->attr.var->value.d = find_kmp(s1, s2);
+        }
+        else {
+            result->attr.var->value.n = find_kmp(s1, s2);
+        }
 
-    result->attr.var->initialized = true;
+        result->attr.var->initialized = true;
+    }
 }}}
 
