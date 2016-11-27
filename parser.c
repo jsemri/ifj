@@ -159,7 +159,7 @@ static void class()
 static void cbody()
 {{{
     fun = __func__;
-    unsigned dtype;     // data type
+    unsigned dtype = 0;     // data type
     // static or '}'
     get_token();
 
@@ -307,10 +307,9 @@ static void par(T_symbol *symbol)
     T_token *tptr = tv->arr;
     while (tptr->type != TT_rBracket) {
         // data type
-        unsigned dtype;
+        unsigned dtype = tptr->attr.keyword;
         // data type expected
         if (tptr->type == TT_keyword && tptr->attr.keyword < TK_boolean) {
-            dtype = tptr->attr.keyword;
             // XXX maybe other error code ???
             if (dtype == TK_void)
                 terminate(SYNTAX_ERROR);

@@ -80,6 +80,7 @@ int get_token() {
     token_clear(token);
     clear();
     int b1, b2; // for octal numbers
+    b1 = 0; b2 = 0;
     // Reads chars from a file until EOF occurs
     while((c = fgetc(source)) != EOF) {
         switch (state) {

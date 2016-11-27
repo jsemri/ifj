@@ -190,8 +190,7 @@ void substr(T_symbol *sym1, T_symbol *sym2, T_symbol *sym3, T_symbol *result)
     // TODO overlapping
 
     // checking initialization flag
-    if (!is_init(sym1) || !is_init(sym2) || !is_init(sym3))
-    {
+    if (!is_init(sym1) || !is_init(sym2) || !is_init(sym3)) {
         terminate(8);
     }
 
@@ -235,8 +234,7 @@ void substr(T_symbol *sym1, T_symbol *sym2, T_symbol *sym3, T_symbol *result)
 
 void compare(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
 {{{
-    if (!is_init(sym1) || !is_init(sym2))
-    {
+    if (!is_init(sym1) || !is_init(sym2)) {
         terminate(8);
     }
 
@@ -259,8 +257,7 @@ void compare(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
 void length(T_symbol *sym1, T_symbol *result)
 {{{
 
-    if (!is_init(sym1))
-    {
+    if (!is_init(sym1)) {
         terminate(8);
     }
 
@@ -280,8 +277,7 @@ void length(T_symbol *sym1, T_symbol *result)
 void concat(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
 {{{
 
-    if (!is_init(sym1) || !is_init(sym2))
-    {
+    if (!is_init(sym1) || !is_init(sym2)) {
         terminate(8);
     }
 
@@ -332,8 +328,7 @@ void concat(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
 void sort(T_symbol *sym, T_symbol *result)
 {{{
 
-    if (!is_init(sym))
-    {
+    if (!is_init(sym)) {
         terminate(8);
     }
 
@@ -353,8 +348,7 @@ void sort(T_symbol *sym, T_symbol *result)
 void find(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
 {{{
 
-    if (!is_init(sym1) || !is_init(sym2))
-    {
+    if (!is_init(sym1) || !is_init(sym2)) {
         terminate(8);
     }
 

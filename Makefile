@@ -1,7 +1,7 @@
 CC=gcc
 
 COVERAGE_FLAGS= -std=c99 -Wall -Wextra -pedantic -fprofile-arcs -ftest-coverage -fPIC -O0
-CFLAGS= -std=c99 -Wall -Wextra -pedantic -g
+CFLAGS= -std=c99 -Wall -Wextra -pedantic -O2 -g
 PROJ=ifj
 
 SRC_FILES=$(wildcard *.c)
@@ -25,7 +25,7 @@ pack:
 	zip xsemri00.zip *.c *.h Makefile rozdeleni dokumentace.pdf
 
 pack_test:
-	zip -r xsemri00+tests.zip *.c *.h Makefile testsuites error_detection_test interpret_tests
+	zip -r xsemri00_tests.zip *.c *.h Makefile testsuites error_detection_test interpret_tests
 
 test:
 	./error_detection_test; ./interpret_tests

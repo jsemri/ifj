@@ -241,7 +241,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
             {{{
                 // token count excluding `id (`
                 tcount--;
-                T_symbol *sym;
+                T_symbol *sym = 0;
                 // print() - no parameters
                 if (is_rbrac(it))
                     terminate(TYPE_ERROR);   // FIXME DEF_ERROR ???
@@ -306,7 +306,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
             // str (str) | int (str)
             {{{
                 check_par_syntax(it, tcount - 2, 2);
-                T_symbol *sym;
+                T_symbol *sym = 0;
                 T_instr_type ins = i == b_sort ? TI_sort : TI_length;
                 // checking destination data type if any
                 if (dest) {
@@ -338,7 +338,8 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
             {{{
 
                 check_par_syntax(it, tcount - 2, 4);
-                T_symbol *sym1, *sym2;
+                T_symbol *sym1 = 0;
+                T_symbol *sym2 = 0;
                 // checking data type
                 if (dest) {
                     T_data_type dtype = dest->attr.var->data_type;
@@ -381,7 +382,8 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
             {{{
                 // str (str|int|int)
                 check_par_syntax(it, tcount - 2, 6);
-                T_symbol *sym1, *sym2;
+                T_symbol *sym1 = 0;
+                T_symbol *sym2 = 0;
                 // checking data type
                 if (dest) {
                     T_data_type dtype = dest->attr.var->data_type;
@@ -419,7 +421,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     terminate(TYPE_ERROR);
 
                 // third parameter - must be int
-                T_symbol *sym3;
+                T_symbol *sym3 = 0;
                 if (is_iden(it3)) {
                     sym3 = is_defined(it3->attr.str, local_tab, actual_class,
                                      is_int);
@@ -501,7 +503,7 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
     tcount =-2;it--;
     for (int j = pcount-1; j >= 0;j--) {
         // parameter
-        T_symbol *sym;
+        T_symbol *sym = 0;
         // data type of each parameter
         T_data_type dtype = pars[j]->attr.var->data_type;
 
