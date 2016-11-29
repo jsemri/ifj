@@ -55,6 +55,15 @@ T_symbol_table *table_init(unsigned size);
 T_symbol *table_find(T_symbol_table *stab, char *key, T_symbol *mclass);
 
 /**
+ * Search for symbol with `key`.
+ *
+ * @param stab pointer to symbol table
+ * @param key identifier name
+ * @return Pointer to the searched symbol, NULL if symbol was not found.
+ */
+T_symbol *table_find_local(T_symbol_table *stab, char *key);
+
+/**
  * Search for symbol with `key` and member class `mclass`.
  *
  * @param stab pointer to symbol table

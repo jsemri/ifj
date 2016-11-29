@@ -53,7 +53,7 @@ T_symbol *get_var(T_symbol *var)
     T_symbol *ret_var;
     // first search in active frame - local table
     T_frame *frame = stack_top(frame_stack);
-    ret_var = table_find_simple(frame->local_tab, var->id, NULL);
+    ret_var = table_find_local(frame->local_tab, var->id);
     // local variable or static variable returned
     return ret_var ? ret_var : var;
 }}}

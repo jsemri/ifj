@@ -54,6 +54,21 @@ unsigned hash(const char *key, unsigned size)
 }}}
 
 
+T_symbol *table_find_local(T_symbol_table *stab, char *key)
+{{{
+    unsigned index = hash(key, stab->size);
+    T_symbol* item = stab->arr[index];
+
+    while (item != NULL) {
+        // member class and identifiers have to be same
+        if (strcmp(item->id,key) == 0) {
+            return item;
+        }
+        item = item->next;
+    }
+    return item;
+}}}
+
 T_symbol *table_find_simple(T_symbol_table *stab, char *key, T_symbol *mclass)
 {{{
     unsigned index = hash(key, stab->size);
