@@ -223,6 +223,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     dtype = i == b_readI ? is_int : is_double;
                     dtype = i == b_readS ? is_str : dtype;
                 }
+
                 if (i == b_readI && (dtype == is_int || dtype == is_double)) {
                     create_instr(L, TI_readInt, NULL, NULL, dest);
                 }

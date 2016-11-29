@@ -319,7 +319,7 @@ void concat(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
         s2 = buf2;
     }
 
-    char *str = calloc(strlen(s1) + strlen(s2) + 1,1);
+    char *str = calloc(strlen(s1) + strlen(s2) + 2,1);
 
     if (!str)
         terminate(99);
