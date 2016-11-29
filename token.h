@@ -79,7 +79,8 @@ typedef enum {
     TT_id,              // identifier
     TT_keyword,         // keyword
     TT_fullid,          // id.id
-    TT_eof              // end of file
+    TT_eof,             // end of file
+    TT_bool
 } T_tokenType;
 
 typedef struct {

@@ -264,6 +264,9 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                         dtype = (it->type == TT_string) ? is_str : dtype;
                         sym = add_constant(&it->attr, symbol_tab, dtype);
                     }
+                    else if (it->type == TT_bool) {
+                        sym = add_constant(&it->attr, symbol_tab, is_bool);
+                    }
                     else {
                         terminate(SYNTAX_ERROR);
                     }
@@ -719,6 +722,7 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
             case TK_int:
             case TK_double:
             case TK_String:
+            case TK_boolean:
                 {{{
                     // rule: STAT -> TYPE id ;| = EXPR ;
 

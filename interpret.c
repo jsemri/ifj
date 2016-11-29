@@ -113,6 +113,36 @@ void math_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1, T_symbol *op2
 }}}
 
 
+void logic_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1,
+                   T_symbol *op2)
+{{{
+
+    if (!is_init(op1) || (op2 && !is_init(op2))) {
+        terminate(8);
+    }
+    acc->attr.var->data_type = is_bool;
+    bool res;
+
+    // all operands have to be boolean
+    switch (itype) {
+        case TI_not:
+            res = op1->attr.var->value.b;
+            break;
+
+        case TI_and:
+            res = op1->attr.var->value.b & op2->attr.var->value.b;
+            break;
+
+        case TI_or:
+        default:
+            res = op1->attr.var->value.b | op2->attr.var->value.b;
+            break;
+    }
+    // destination can be only boolean
+    dest->attr.var->value.b = res;
+    dest->attr.var->initialized = true;
+}}}
+
 void compare_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1,
                    T_symbol *op2)
 {{{
@@ -220,6 +250,12 @@ void interpret_loop(ilist *instr_list)
                 compare_instr(ins->itype, get_var(ins->dest), get_var(ins->op1),
                               get_var(ins->op2));
                 break;
+            case TI_and:
+            case TI_or:
+            case TI_not:
+                logic_instr(ins->itype, get_var(ins->dest), get_var(ins->op1),
+                            get_var(ins->op2));
+
             case TI_mov:
                 dest = get_var(ins->dest);
                 op1 = get_var(ins->op1);
@@ -260,15 +296,20 @@ void interpret_loop(ilist *instr_list)
                     if (!is_init(out)) {
                         terminate(8);
                     }
-                    // XXX print it whole once
                     if (out->attr.var->data_type == is_int) {
                         printf("%d", out->attr.var->value.n);
                     }
                     else if (out->attr.var->data_type == is_double) {
                         printf("%g", out->attr.var->value.d);
                     }
-                    else {
+                    else if (out->attr.var->data_type == is_str){
                         printf("%s", out->attr.var->value.str);
+                    }
+                    else {
+                        if (out->attr.var->value.b)
+                            printf("true");
+                        else
+                            printf("false");
                     }
                     stack_pop(main_stack);
                 }

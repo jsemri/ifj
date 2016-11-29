@@ -169,7 +169,7 @@ static void cbody()
         get_token();
 
         // 'data type' expected
-        if (token->type == TT_keyword && token->attr.keyword < TK_boolean) {
+        if (token->type == TT_keyword && token->attr.keyword <= TK_boolean) {
             dtype = token->attr.keyword;
         }
         else {
@@ -309,7 +309,7 @@ static void par(T_symbol *symbol)
         // data type
         unsigned dtype = tptr->attr.keyword;
         // data type expected
-        if (tptr->type == TT_keyword && tptr->attr.keyword < TK_boolean) {
+        if (tptr->type == TT_keyword && tptr->attr.keyword <= TK_boolean) {
             // XXX maybe other error code ???
             if (dtype == TK_void)
                 terminate(SYNTAX_ERROR);
@@ -409,6 +409,7 @@ static void stat()
             case TK_int:
             case TK_double:
             case TK_String:
+            case TK_boolean:
                 {
                     // rule: STAT -> TYPE id ;| = EXPR ;
                     // local variable cannot be declared in block {...}

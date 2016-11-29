@@ -55,6 +55,9 @@ void clear() {
     memset(char_vector, 0, vector_size);
 }
 
+#define TRUE_POS 15
+#define FALSE_POS 10
+
 const char *KEYWORDS[KEYW_COUNT] = {
     "void", "int", "double", "String", "boolean",
     "break", "class", "continue", "do", "else",
@@ -129,11 +132,11 @@ int get_token() {
                     state = S_assignOrEqual;
                 } else if (c == '!') {
                     state = S_notOrNotEqual;
-                }/* else if (c == '|') {
+                } else if (c == '|') {
                     state = S_or;
                 } else if (c == '&'){
                     state = S_and;
-                }*/ else if (isalpha(c) || c == '_' || c == '$') {    // ID starts with _$a-Z
+                } else if (isalpha(c) || c == '_' || c == '$') {    // ID starts with _$a-Z
                     push_char(c);
                     state = S_ID;
                 } else if (c == '"') {
@@ -325,6 +328,12 @@ int get_token() {
                     ungetc(c, source);            // last char was not valid, end of ID, undo last char
                     for (int i = 0; i < KEYW_COUNT; i++) {
                         if (strcmp(char_vector, KEYWORDS[i]) == 0) {
+                            if (i == TRUE_POS || i == FALSE_POS) {
+                                // boolean value found
+                                token->type = TT_bool;
+                                token->attr.b = (i == TRUE_POS);
+                                return 0;
+                            }
                             token->type = TT_keyword;
                             token->attr.keyword = i;
                             return 0;
@@ -401,10 +410,9 @@ int get_token() {
                     token->type = TT_notEq;
                     return 0;
                 } else {
-                  /*  ungetc(c, source);            // Just =, undo last char
+                    ungetc(c, source);            // Just =, undo last char
                     token->type = TT_not;
-                    return 0;*/
-                    terminate(LEX_ERROR);
+                    return 0;
                 }
                 break;
 

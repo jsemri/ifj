@@ -25,6 +25,7 @@
 
 #define BUF_SIZE 32
 #define is_real(s) (s->attr.var->data_type == is_double)
+#define is_integer(s) (s->attr.var->data_type == is_int)
 #define is_init(s) (s->attr.var->initialized)
 
 
@@ -290,8 +291,14 @@ void concat(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
     else {
         if (is_real(sym1))
             snprintf(buf1, BUF_SIZE-1, "%g", sym1->attr.var->value.d);
-        else
+        else if (is_integer(sym1))
             snprintf(buf1, BUF_SIZE-1, "%d", sym1->attr.var->value.n);
+        else {
+            if (sym1->attr.var->value.b)
+                snprintf(buf1, BUF_SIZE-1, "true");
+            else
+                snprintf(buf1, BUF_SIZE-1, "false");
+        }
         s1 = buf1;
     }
 
@@ -301,8 +308,14 @@ void concat(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
     else {
         if (is_real(sym2))
             snprintf(buf2, BUF_SIZE-1, "%g", sym2->attr.var->value.d);
-        else
+        else if (is_integer(sym2))
             snprintf(buf2, BUF_SIZE-1, "%d", sym2->attr.var->value.n);
+        else {
+            if (sym2->attr.var->value.b)
+                snprintf(buf2, BUF_SIZE-1, "true");
+            else
+                snprintf(buf2, BUF_SIZE-1, "false");
+        }
         s2 = buf2;
     }
 
