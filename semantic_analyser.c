@@ -674,8 +674,17 @@ static void func()
 static void par()
 {{{
     fun = __func__;
-    while (token->type != TT_rBracket)
+    while (token->type != TT_rBracket) {
         get_token();
+        if (token->type == TT_id) {
+            // check for id of function in same class
+            T_symbol *Func = table_find(symbol_tab, token->attr.str,
+                                        actual_class);
+            if (Func && Func->symbol_type == is_func) {
+                terminate(DEFINITION_ERROR);
+            }
+        }
+    }
 }}}
 
 // FBODY -> { ST_LIST }
@@ -736,6 +745,14 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                         // redefinition
                         terminate(DEFINITION_ERROR);
                     }
+                    // XXX
+                    // check for id of function in same class
+                    T_symbol *Func = table_find(symbol_tab, token->attr.str,
+                                                actual_class);
+                    if (Func && Func->symbol_type == is_func) {
+                        terminate(DEFINITION_ERROR);
+                    }
+                    // XXX
                     // creating a new variable symbol
                     T_symbol *sym = create_var(token->attr.str, dtype);
                     // discredit free call on token

@@ -6,13 +6,24 @@ GREEN='\033[0;32m'
 NOCLR='\033[0m'
 
 IFJ=testsuites/ifj16.java
-DIR=testsuites/interpret/*
+DIR=testsuites/interpret/*.java*
 
 for i in $DIR; do
+  ifile="`echo "$i"|sed 's/java/input/g'`"
+  if [ ! -f "$ifile" ];then
+    ifile="`echo "$i"|sed 's/ifj16.java/input/g'`"
+  fi
+
   cat $IFJ $i > tmp.java
   javac tmp.java
-  out="`java ifj16`"
-  res="`./ifj $i`"
+  if [ -f "$ifile" ];then
+    res="`./ifj $i < $ifile`"
+    out="`java ifj16 < $ifile`"
+  else
+    res="`./ifj $i`"
+    out="`java ifj16`"
+  fi
+
   if [ "$res" == "$out" ];then
     printf "${GREEN}OK${NOCLR}\n"
   else
@@ -30,9 +41,9 @@ DIR=testsuites/tests_output/*.java
 for i in $DIR; do
   ifile="`echo "$i"|sed 's/java/input/g'`"
   if [ -f "$ifile" ];then
-      res="`./ifj $i < $ifile`"
+    res="`./ifj $i < $ifile`"
   else
-      res="`./ifj $i`"
+    res="`./ifj $i`"
   fi
   ofile="`echo "$i"|sed 's/java/output/g'`"
   out="`cat $ofile`"

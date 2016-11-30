@@ -84,7 +84,6 @@ void copy_value(T_symbol *dst, T_symbol *src) {
     T_var_symbol *v2 = src->attr.var;
     // uninitialized value or return value from void function
     if (!v2->initialized || v2->data_type == is_void) {
-        puts("uninitialized parameter");
         terminate(8);
     }
     switch (v1->data_type) {

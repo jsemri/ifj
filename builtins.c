@@ -112,13 +112,13 @@ void read_stdin(T_symbol *result, T_data_type dtype)
     int c;
     char *endptr;
 
-    if((buf = calloc(count, 1)) == NULL) {
+    if((buf = calloc(size, 1)) == NULL) {
         terminate(99);
     }
 
     while((c = fgetc(stdin)) != EOF && c != '\n') {
         // realloc if needed
-        if(count >= size) {
+        if(count >= size+2) {
             void *ptr;
             if((ptr = realloc(buf, size*2)) == NULL) {
                 free(buf);
@@ -319,7 +319,9 @@ void concat(T_symbol *sym1, T_symbol *sym2, T_symbol *result)
         s2 = buf2;
     }
 
-    char *str = calloc(strlen(s1) + strlen(s2) + 2,1);
+    // due to valgrind there is more space allocated
+    // just to be sure + 9 bytes added
+    char *str = calloc(strlen(s1) + strlen(s2) + 10,1);
 
     if (!str)
         terminate(99);
