@@ -169,7 +169,7 @@ static void cbody()
         get_token();
 
         // 'data type' expected
-        if (token->type == TT_keyword && token->attr.keyword < TK_boolean) {
+        if (token->type == TT_keyword && token->attr.keyword <= TK_boolean) {
             dtype = token->attr.keyword;
         }
         else {
@@ -309,7 +309,7 @@ static void par(T_symbol *symbol)
         // data type
         unsigned dtype = tptr->attr.keyword;
         // data type expected
-        if (tptr->type == TT_keyword && tptr->attr.keyword < TK_boolean) {
+        if (tptr->type == TT_keyword && tptr->attr.keyword <= TK_boolean) {
             // XXX maybe other error code ???
             if (dtype == TK_void)
                 terminate(SYNTAX_ERROR);
@@ -409,6 +409,7 @@ static void stat()
             case TK_int:
             case TK_double:
             case TK_String:
+            case TK_boolean:
                 {
                     // rule: STAT -> TYPE id ;| = EXPR ;
                     // local variable cannot be declared in block {...}
@@ -465,18 +466,20 @@ static void stat()
                     }
 
                     get_token();
-
-                    // if (..) { ....
                     if (token->type != TT_lCurlBracket) {
-                        terminate(SYNTAX_ERROR);
+                        in_block++;
+                        stat();
+                        in_block--;
                     }
-                    // beginning new statement list
-                    in_block++;
-                    st_list();
-                    in_block--;
+                    else {
+                        // beginning new statement list
+                        in_block++;
+                        st_list();
+                        in_block--;
+                    }
                     // end while
                     if (keyword == TK_while) {
-                        return;
+                       return;
                     }
 
                     // if next word is else do call st_else()
@@ -577,7 +580,9 @@ static void st_else()
         st_else2();
     }
     else {
-        terminate(SYNTAX_ERROR);
+        in_block++;
+        stat();
+        in_block--;
     }
 }}}
 
@@ -608,12 +613,16 @@ static void st_else2()
         get_token();
 
         // begining of statement list
-        if (token->type != TT_lCurlBracket) {
-            terminate(SYNTAX_ERROR);
+        if (token->type == TT_lCurlBracket) {
+            in_block++;
+            st_list();
+            in_block--;
         }
-        in_block++;
-        st_list();
-        in_block--;
+        else {
+            in_block++;
+            stat();
+            in_block--;
+        }
         // if next word is else do call st_else()
         get_token();
         if (token->type == TT_keyword && token->attr.keyword == TK_else) {

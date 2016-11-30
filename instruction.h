@@ -56,6 +56,9 @@ typedef enum {
     TI_find,        // id/- id/v id/v
     TI_sort,        // id/- id/v -
     TI_lab,
+    TI_not,         // !
+    TI_or,          // ||
+    TI_and          // &&
 } T_instr_type;
 
 /// Structure of instruction.

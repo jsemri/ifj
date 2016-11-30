@@ -223,6 +223,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                     dtype = i == b_readI ? is_int : is_double;
                     dtype = i == b_readS ? is_str : dtype;
                 }
+
                 if (i == b_readI && (dtype == is_int || dtype == is_double)) {
                     create_instr(L, TI_readInt, NULL, NULL, dest);
                 }
@@ -263,6 +264,9 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                         T_data_type dtype = is_real(it) ? is_double : is_int;
                         dtype = (it->type == TT_string) ? is_str : dtype;
                         sym = add_constant(&it->attr, symbol_tab, dtype);
+                    }
+                    else if (it->type == TT_bool) {
+                        sym = add_constant(&it->attr, symbol_tab, is_bool);
                     }
                     else {
                         terminate(SYNTAX_ERROR);
@@ -719,6 +723,7 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
             case TK_int:
             case TK_double:
             case TK_String:
+            case TK_boolean:
                 {{{
                     // rule: STAT -> TYPE id ;| = EXPR ;
 
@@ -798,15 +803,18 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                     precedence_analyser(tv->arr, tv->last-1, acc, local_tab,
                                         actual_class, instr_list );
                     part = 1;
-                    // XXX last token in tvect is ')'
                     token_vec_delete(tv);
 
                     create_instr(instr_list, TI_jmpz, end_label, 0, 0);
 
                     get_token();    // '{'
 
-                    // beginning new statement list
-                    st_list();
+                    if (token->type != TT_lCurlBracket) {
+                        stat(local_tab, instr_list);
+                    }
+                    else {
+                        st_list();
+                    }
 
                     if (keyword == TK_while) {
                         // jump to condition
@@ -946,8 +954,11 @@ static void st_else(T_symbol_table *local_tab, ilist *instr_list)
         st_list();
     }
     // `else if`
-    else {
+    else if (token->attr.keyword == TK_if) {
         st_else2(local_tab, instr_list);
+    }
+    else {
+        stat(local_tab, instr_list);
     }
 }}}
 
@@ -977,7 +988,10 @@ static void st_else2(T_symbol_table *local_tab, ilist *instr_list)
     // {
     get_token();
     // beginning of statement list
-    st_list();
+    if (token->type == TT_lCurlBracket)
+        st_list();
+    else
+        stat(local_tab, instr_list);
 
     // if next word is else do call st_else()
     get_token();

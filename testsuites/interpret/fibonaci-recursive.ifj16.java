@@ -16,8 +16,7 @@ class Fibonachi {
             tmp = fib(dec2);
             return result + tmp;
         }
-        else {
+        else
             return 1;
-        }
     }
 }
