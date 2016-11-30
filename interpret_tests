@@ -25,17 +25,24 @@ rm tmp.java *.class
 
 # tests with *.out
 
-DIR=testsuites/tests_output/*.ifj16.java
+DIR=testsuites/tests_output/*.java
 
 for i in $DIR; do
-  res="`./ifj $i`"
-  ofile="`echo "$i"|sed 's/ifj16.java/output/g'`"
+  ifile="`echo "$i"|sed 's/java/input/g'`"
+  if [ -f "$ifile" ];then
+      res="`./ifj $i < $ifile`"
+  else
+      res="`./ifj $i`"
+  fi
+  ofile="`echo "$i"|sed 's/java/output/g'`"
   out="`cat $ofile`"
   if [ "$res" == "$out" ];then
     printf "${GREEN}OK${NOCLR}\n"
   else
     printf "${RED}Wrong${NOCLR} - $i\n"
     echo "$out"
+    echo "======="
+    echo "$res"
   fi
 
 done
