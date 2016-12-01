@@ -26,8 +26,6 @@
 #define INIT_SIZE   64
 #define GROWTH      2
 
-#define db puts("abcd")
-
 T_stack *main_stack;
 T_stack *frame_stack;
 
@@ -101,7 +99,6 @@ void copy_value(T_symbol *dst, T_symbol *src) {
             v1->value.str = get_str(v2->value.str);
             break;
         case is_void:
-            puts("void parameter");
             terminate(8);
         case is_bool:
             v1->value.b = v2->value.b;
