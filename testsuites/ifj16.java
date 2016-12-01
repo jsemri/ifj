@@ -23,7 +23,7 @@ class ifj16
 
   public static void print(double d)
   {
-    System.out.print(d);
+      System.out.print(d);
   }
 
   public static int readInt() 
