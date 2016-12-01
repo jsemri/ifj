@@ -275,15 +275,13 @@ void interpret_loop(ilist *instr_list)
                     dest->attr.var->value.n = x;
                 }
                 else if (is_boolean(dest)) {
-                    //bool p = (op1->attr.var->value.b || op1->attr.var->value.n
-                    //          || op1->attr.var->value.d);
-                    //TODO Nestačí bool p = op1->attr.var->value.b; ??
                     bool p = op1->attr.var->value.b;
                     dest->attr.var->value.b = p;
                 }
                 else {
+                    char *str = get_str(op1->attr.var->value.str);
                     clear_buffer(dest);
-                    dest->attr.var->value.str = get_str(op1->attr.var->value.str);
+                    dest->attr.var->value.str = str;
                 }
                 dest->attr.var->initialized = true;
                 break;

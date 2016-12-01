@@ -57,26 +57,57 @@ Program funguje ako konzolová aplikácia, ktorá načíta zdrojový súbor prog
 
 Dokument sa skladá z~viacerých častí. V~kapitole \ref{popis} je popísané riešenie jednotlivých častí interpretu, v~kapitole \ref{algoritmy} sa venujeme použitým algoritmom a v~nasledujúcej kapitole \ref{struktury} dátovým štruktúram. Kapitola \ref{rozsirenia} dokumentuje vypracované rozšírenia, kapitola \ref{testovanie} rozoberá náš postup pri testovaní a kapitola \ref{tim} je zameraná na zhodnotenie našej práce v~tíme. V~poslednej kapitole \ref{zaver} je krátke shrnutie.
 
-\section{Popis riešenia a implementácia jazyka IFJ16} 
+\section{Popis riešenia a implementácia jazyka IFJ16}
 \label{popis}
 
 Projekt sme implementovali z niekoľkých funkčných celkov. V nasledujúcich podkapitolách sú jednotlivé moduly detailne popísané.
 
     \subsection{Lexikálny analyzátor}
     \label{lexer}
+    Lexikálny analyzátor tvorí vstupnú časť interpretu. Model tvorí deterministický konečný automat.
+    Spracováva zdrojový súbor a~identifikuje v ňom platńe lexémy, ktoré posiela syntaktickému analyzátoru vo forme tokenu.
+    Token obsahuje typ lexémy a~v~prípade aj hodnotu ak sa jedná o~celočíselný, desatinný, logický alebo reťazcový literál.
 
-    TODO
+    Konečný automat je implementovaný tak aby vedel spracovat aj jednoduché \texttt{//} a~blokové \texttt{/* */} komentáre.
+    Po ukončení komentáru  automat prejde do začínajúceho stavu a~začne spracovávať nasledujúcu lexému alebo ďalší komentár.
+
+    Model konečného automatu môžete násjť v~prílohe 10.1. % TODO referencia na automat
+
 
     \subsection{Syntaktický a sémantický analyzátor}
     \label{parser}
+    Syntaktický analýzátor (parser) je hlavná časť interpretu. Parser dostáva riadenie hned po otvorení súboru. Má za úlohu nielen
+    preveriť syntax a~sémantiku zdrojového súboru, ale taktiež vkladá inštrukcie do inštrukčnej pásky. Jeho implementácia spočíva
+    v~rekurzívnom zostupe, ktorý je riadený LL(1) gramatikou. % TODO referencia na tabulku
 
-    TODO
+    Keďže jazyk \emph{IFJ16} je podmnožinou jazyka \emph{JAVA SE 8}, ktorého preklad je zložený z dvoch priechodov, je parser zložený
+    taktiež z~dvoch priechodov. Prvý priechod analyzuje program zo syntaktického a~lexikálneho hľadiska, súčastne vkladá do tabuľky
+    symbolov názvy tried, statických funkcií a~premmenných a kontroluje pokus o redefiníciu triedy, funkcie alebo statickej premmennej.
+    Druhý priechod kontroluje semántiku programu, spracováva telá funkcií a~vytvára inštrukčnú pásku.
+
+
 
         \subsubsection{Spracovanie jazykových inštrukcií - rekurzívny zostup}
         \label{rekurzia}
-    
-        TODO
-    
+        Rekurzívny zostup riadený LL(1) gramatikou, bol implementovaný tak, že každý neterminál v~gramatike bol reprezentovaný funkciou,
+        z~ktorej sa postupne volali ďalšie funkcie na základe aktuálneho tokenu a~pravidla v~gramatike. Aktuálne načítaný token zase reprezentoval
+        terminálne symboly gramatiky.
+
+        Druhý priechod je tiež založený na rekurzívnom zostupe, avšak úloha jednotlivých funkcií sa od prvého priechodu značne odlišuje.
+        Pri inicializácii statických premenných sa výraz za \texttt{=} vyhodnotí precedenčnou analýzou a~vložia sa inštrukcie do hlavného
+        inštrukčného listu. Pri analýze funkcií sa postupne vložia ďalšie inštrukcie do inštrukčného listu aktuálne spracovávanej funkcie
+        a~v~prípade vyhodnotenia výrazu (pri príkazoch
+        \texttt{while/if/else if ( \emph{EXP} ), id = \emph{EXP}}) sa predá riadenie precedenčnej analýze.
+
+        V~prípade volania funkcie sa skontroluje existencia funkcie v~členskej triede, počet a~typ parametrov a~v~prípade priradenia
+        návratový typ funkcie a~premennej, do ktorej je volanie priradené.
+        Do inštrukčného listu sa vloží inštrukcia \texttt{CALL}, ktorá uloží na hlavný zásobnik postupne odkaz na parametre
+        volanej funkcie a~inštrukcia \texttt{LAB} iba určí návratový bod, ktorý bude použitý pri skoku z~volanej funkcie.
+
+        Pokiaľ nebola nájdená syntaktická alebo sémantická chyba, po narazení na token typu koniec súboru sa v~tabuľke symbolov nájde
+        trieda \emph{Main} a~funkcia zapuzdrená v~tejto triede \emph{run()} a~spojí sa hlavný inštrukčný list s~inštrukčným listom funkcie
+        \emph{run()}. Pokiaľ požadovane entity boli nájdené analýza končí a riadenie je predané interpretu.
+
         \subsubsection{Precedenčná analýza výrazov}
         \label{precedencna analyza}
     
@@ -84,8 +115,25 @@ Projekt sme implementovali z niekoľkých funkčných celkov. V nasledujúcich p
     
     \subsection{Interpret vnútorného kódu}
     \label{interpret}
+    Interpret postupne vykonáva inštrukcie v~inštrukčnom liste až kým nenarazí na chybu (napr. práca s neinicializovanou premennou)
+    alebo na koniec listu. Každá inštrukcia má osobitnú implementáciu. Interpret aktívne využíva hlavný zásobník a~zásobník rámcov.
+    Lokálne premenné s~ktorými má pracovať  sú v~tabuľke, ktorá je na vrchole zásobníku rámcov. Statické premenné a~konštanty sú spracovávané
+    priamo bez vyhľadania v tabuľke.
+
+       \subsubsection{Volanie a návrat z funkcií}
+       \label{funkcia}
+       Pri inštrukcii volania funkcie \texttt{CALL} sa podľa prvej adresy (3-adresný kód inštrukcie) zistí o~akú funkciu sa jedná
+       a~koľko parametrov je na zásobníku.
+       Vytvorí sa nový rámec s lokálnou tabuľkou skopírovanou z lokálnej tabuľky volanej funkcie a súčastne sa naplnia parametre
+       hodnotamy premenných na zásobníku. Rámec sa uloží na vrchol zásobníku rámcov, potom
+       nasleduje skok na prvú položku inštrukčného listu danej funkcie.
+       Pri inštrukcii \texttt{RET} (príkaz \texttt{return}) nasleduje skok na miesto odkiaľ bola funkcia volaná, takže na inštrukciu za
+       inštrukciou \texttt{CALL} v predošlom liste. Miesto reprezentované inštrukciou \texttt{LAB} je uložené na hlavný zásobník aby sa
+       vedelo, ktorou inštruciou sa má pokračovať. Návratová hodnota funkcie je uložená v~špeciálnych premenných uložených v~globálnej
+       tabuľke symbolov. Jedná sa o emuláciu registrov, ktoré zjednodušujú implementáciu celého interpretu.
+
     
-    TODO
+    
 
 \section{Použité algoritmy} 
 \label{algoritmy}
@@ -104,17 +152,24 @@ TODO
 \label{struktury}
 
         \subsection{Tabuľka s rozptýlenými položkami}
-    
-    TODO
-    
+        Tabuľka s rozptýlenými položkami je implementovaná ako pole jednosmerne viazaných zoznamov symbolov. Symbol obsahuje
+        mimo identifikátora aj ukazatel na členskú triedu. Vyhľadávanie spočíva v nájdení symbolu s~rovnakým identifikátorom
+        a súčastne rovnakou členskou triedou. Toto vyhľadávanie zabráňuje kolíziam symbolov rovnakých mien v rôznych úrovniach.
+        Kedže lokálne premenné nemajú členskú triedu existuje varianta vyhľadávaní v tabuľke iba s jedným kľúčom.
+
+        V interprete sa používaju dve typy tabuliek: lokálna a~globálna. V~globálnej tabuľke sú uložené symboly reprezentujúce
+        triedy, funkcie, konštanty, statické premenné a~registre. V~lokálnej tabuľke, sú uložené iba lokálne premenné a~parametre
+        funkcií, ktoré majú vlastnú tabuľku symbolov.
+
         \subsection{Zásobník}
-    
-    TODO
-    
+        Zásobník je implementovaný ako pole ukazateľov určitej kapacity. Ak vrchol zásbníku spôsobí zaplnenie zásobníku dôjde
+        k automatickej realokácii a zvýšeniu kapacity zásobníku. V~interprete sa používaju dva zásobníky. Jeden z~nich
+        sa používa na uloženie odkazov na miesta skokov a odkazy na parametre funkcií. Druhý zásobník je použitý na ukladanie
+        rámcov, ktoré obsahujú lokálnu tabuľku symbolov.
         \subsection{Reťazec}
-    
-    TODO
-    
+        Reťazec je implementovaný ako jednoduchý ukazateľ na dátový typ \texttt{char}. Tento ukazateľ sa v~prípade potreby
+        realokuje.
+
 \section{Rozšírenia} 
 \label{rozsirenia}
 
