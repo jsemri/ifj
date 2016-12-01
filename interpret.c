@@ -34,7 +34,7 @@
 
 T_stack *frame_stack;
 T_stack *main_stack;
-T_symbol *acc;
+static T_symbol *acc_b;
 ilist *glist;
 
 unsigned gins;
@@ -120,7 +120,6 @@ void logic_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1,
     if (!is_init(op1) || (op2 && !is_init(op2))) {
         terminate(8);
     }
-    acc->attr.var->data_type = is_bool;
     bool res;
 
     // all operands have to be boolean
@@ -150,7 +149,6 @@ void compare_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1,
     if (!is_init(op1) || !is_init(op2)) {
         terminate(8);
     }
-    acc->attr.var->data_type = is_bool;
     int res;
     double x, y;
     if (is_real(op1))
@@ -201,6 +199,7 @@ void interpret_loop(ilist *instr_list)
     //acc->attr.var->data_type = is_void;
     T_symbol *op1, *dest;
     T_data_type dtype;
+    acc_b = table_find_simple(symbol_tab, "|accumulator_bool|",NULL);
 
     T_instr *ins = instr_list->first;
     while (true) {
@@ -227,7 +226,7 @@ void interpret_loop(ilist *instr_list)
 
         // just for debug
         gins = ins->itype;
-//        print_instr(ins);
+      //  print_instr(ins);
 
 
         switch (ins->itype) {
@@ -367,9 +366,8 @@ void interpret_loop(ilist *instr_list)
 
             case TI_jmpz:
                 // check accumulator where result is stored
-                if (!acc->attr.var->value.b)
+                if (!acc_b->attr.var->value.b)
                     ins = ins->op1;
-                acc->attr.var->data_type = act_frame->dtype;
                 break;
 
             case TI_ret:

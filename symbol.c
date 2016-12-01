@@ -208,8 +208,17 @@ int fill_ifj16()
     char *ptr = get_str("ifj16");
     table_insert(symbol_tab, create_symbol(ptr, is_class)); // insert class ifj
     // insert register
-    ptr = get_str("|accumulator|");
-    T_symbol *s = create_var(ptr, is_int);
+    ptr = get_str("|accumulator_bool|");
+    T_symbol *s = create_var(ptr, is_bool);
+    table_insert(symbol_tab, s);
+    ptr = get_str("|accumulator_int|");
+    s = create_var(ptr, is_int);
+    table_insert(symbol_tab, s);
+    ptr = get_str("|accumulator_double|");
+    s = create_var(ptr, is_double);
+    table_insert(symbol_tab, s);
+    ptr = get_str("|accumulator_str|");
+    s = create_var(ptr, is_str);
     table_insert(symbol_tab, s);
     return 0;
 }}}
