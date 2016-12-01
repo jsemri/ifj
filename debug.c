@@ -34,11 +34,10 @@ static char *arr2[] = {"parser", "semantic_a", "precedence"};
 
 void print_error(int ec) {
     if (part != 3) {
-        if (part != 2)
-            fprintf(stderr, "Terminated with code: %d\n"
-                    "error line: %d\n"
-                    "error part: %s\n"
-                    "error function: %s\n", ec, row, arr2[part], fun);
+        fprintf(stderr, "Terminated with code: %d\n"
+                "error line: %d\n"
+                "error part: %s\n"
+                "error function: %s\n", ec, row, arr2[part], fun);
     }
     else {
         interpret_error(ec);
