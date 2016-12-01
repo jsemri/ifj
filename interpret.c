@@ -126,16 +126,16 @@ void logic_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1,
     // all operands have to be boolean
     switch (itype) {
         case TI_not:
-            res = op1->attr.var->value.b;
+            res = !op1->attr.var->value.b;
             break;
 
         case TI_and:
-            res = op1->attr.var->value.b & op2->attr.var->value.b;
+            res = op1->attr.var->value.b && op2->attr.var->value.b;
             break;
 
         case TI_or:
         default:
-            res = op1->attr.var->value.b | op2->attr.var->value.b;
+            res = op1->attr.var->value.b || op2->attr.var->value.b;
             break;
     }
     // destination can be only boolean
@@ -151,7 +151,7 @@ void compare_instr(T_instr_type itype, T_symbol *dest, T_symbol *op1,
         terminate(8);
     }
     acc->attr.var->data_type = is_bool;
-    int res;
+    bool res;
     double x, y;
     if (is_real(op1))
         x = op1->attr.var->value.d;
@@ -255,7 +255,7 @@ void interpret_loop(ilist *instr_list)
             case TI_not:
                 logic_instr(ins->itype, get_var(ins->dest), get_var(ins->op1),
                             get_var(ins->op2));
-
+                break;
             case TI_mov:
                 dest = get_var(ins->dest);
                 op1 = get_var(ins->op1);
@@ -276,8 +276,10 @@ void interpret_loop(ilist *instr_list)
                     dest->attr.var->value.n = x;
                 }
                 else if (is_boolean(dest)) {
-                    bool p = (op1->attr.var->value.b || op1->attr.var->value.n
-                              || op1->attr.var->value.d);
+                    //bool p = (op1->attr.var->value.b || op1->attr.var->value.n
+                    //          || op1->attr.var->value.d);
+                    //TODO Nestačí bool p = op1->attr.var->value.b; ??
+                    bool p = op1->attr.var->value.b;
                     dest->attr.var->value.b = p;
                 }
                 else {

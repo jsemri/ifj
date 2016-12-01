@@ -32,7 +32,7 @@
  * The count of token types supported by this table (this number is used
  * a size of the table).
  */
-#define ALLOWED_TOKENS_SIZE 14
+#define ALLOWED_TOKENS_SIZE 17
 
 
 /**

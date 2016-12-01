@@ -16,6 +16,9 @@ tokens = [
     {'name': ">",  'p': 6},
     {'name': "<=", 'p': 6},
     {'name': ">=", 'p': 6},
+    {'name': "&&", 'p': 10},
+    {'name': "||", 'p': 11},
+    {'name': "!",  'p': 2},
     {'name': "(",  'p': 0},
     {'name': ")",  'p': 0},
     {'name': "i",  'p': 0},
@@ -23,10 +26,13 @@ tokens = [
 ]
 
 assoc = {
+    2: '<',
     3: '>',
     4: '>',
     6: '',
-    7: ''
+    7: '',
+    10: '>',
+    11: '>'
 }
 
 '''
@@ -89,13 +95,13 @@ if mode not in ["txt", "md", "c"]:
 
 def print_header():
     if mode in ["txt", "md"]:
-        out = "   "
+        out = "    "
         for t in tokens:
-            out += " | " + t['name'].ljust(2)
+            out += "| " + t['name'].ljust(2)
 
         print(out)
         print("----{}".format(
-            "{}----".format('|' if mode == 'md' else '+') * len(tokens))
+            "{}---".format('|' if mode == 'md' else '+') * len(tokens))
         )
     else:
         print("T_precedence_state precedence_table[] = {")
@@ -128,7 +134,7 @@ def get_result(stack, scanner):
 def print_cell(stact, token_i, scanner):
     out = get_result(stack, scanner)
     if mode == 'txt':
-        print('| {:3}'.format(out), end="")
+        print('| {:2}'.format(out), end="")
     if mode == 'md':
         print('|{}'.format(md_values[out]), end="")
     if mode == 'c':

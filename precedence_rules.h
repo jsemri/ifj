@@ -97,6 +97,8 @@ T_symbol *rule_brackets(T_prec_stack_entry terms[3],
  *                  E -> E >= E
  *                  E -> E == E
  *                  E -> E != E
+ * Where E is either int or double. Boolean comparisons (eg. E == true) are
+ * not supported, use 'rule_bool_equal' instead.
  * @param terms The input terms.
  * @param ltable The table with local variables
  * @param act_class The current class, if any.
@@ -107,6 +109,49 @@ T_symbol *rule_brackets(T_prec_stack_entry terms[3],
 T_symbol *rule_bool(T_prec_stack_entry terms[3],
                     T_symbol_table *ltable, T_symbol *act_class,
                     ilist *instr_list);
+
+/**
+ * Simalates rules: E -> E == E
+ *                  E -> E != E
+ * Where both expressions on the right side are bool. If not, the rule will be
+ * automatically simulated by function rule_bool.
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
+T_symbol *rule_bool_equal(T_prec_stack_entry terms[3],
+                          T_symbol_table *ltable, T_symbol *act_class,
+                          ilist *instr_list);
+
+/**
+ * Simalates rules: E -> E && E
+ *                  E -> E || E
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
+T_symbol *rule_logical(T_prec_stack_entry terms[3],
+                       T_symbol_table *ltable, T_symbol *act_class,
+                       ilist *instr_list);
+
+/**
+ * Simalates rule: E -> !E
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
+T_symbol *rule_not(T_prec_stack_entry terms[3],
+                   T_symbol_table *ltable, T_symbol *act_class,
+                   ilist *instr_list);
 
 /**
  * Simalates rule: E -> E + E

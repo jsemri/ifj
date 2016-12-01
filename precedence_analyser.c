@@ -25,6 +25,7 @@
 #include "precedence_rules.h"
 #include "globals.h"
 #include "symbol.h"
+#include "token.h"
 #include <stdio.h>
 #include <assert.h>
 
@@ -68,6 +69,7 @@ void precedence_analyser(T_token *first_token, int token_count,
     assert(lvalue != NULL);
     assert(instr_list != NULL);
 
+
     T_prec_stack *stack = prec_stack_new();
     PUSH_SYMBOL(PREC_TOP);
 
@@ -106,7 +108,7 @@ void precedence_analyser(T_token *first_token, int token_count,
     }
 
     T_symbol *result = prec_stack_get_result(stack);
-    //printf("[INST] Ulož výsledek do lValue\n");
+    //printf("[INST] Ulož výsledek z [%s] do [%s]\n", result->id, lvalue->id);
     result = convert(result, lvalue->attr.var->data_type, instr_list);
     create_instr(instr_list, TI_mov, result, NULL, lvalue);
 

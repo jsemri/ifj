@@ -24,7 +24,7 @@
 #include "globals.h"
 #include <stdlib.h>
 
-#define RULES_COUNT 16
+#define RULES_COUNT 20
 /**
  * The list of valid rules
  *
@@ -49,18 +49,22 @@ T_prec_rule rules[RULES_COUNT] = {
     {3, TT_empty, TT_minus, TT_empty, rule_arith},
     {3, TT_empty, TT_div, TT_empty, rule_arith},
     {3, TT_empty, TT_mul, TT_empty, rule_arith},
-    {3, TT_empty, TT_equal, TT_empty, rule_bool},
-    {3, TT_empty, TT_notEq, TT_empty, rule_bool},
+    {3, TT_empty, TT_equal, TT_empty, rule_bool_equal},
+    {3, TT_empty, TT_notEq, TT_empty, rule_bool_equal},
     {3, TT_empty, TT_lesser, TT_empty, rule_bool},
     {3, TT_empty, TT_greater, TT_empty, rule_bool},
     {3, TT_empty, TT_lessEq, TT_empty, rule_bool},
     {3, TT_empty, TT_greatEq, TT_empty, rule_bool},
+    {3, TT_empty, TT_and, TT_empty, rule_logical},
+    {3, TT_empty, TT_or, TT_empty, rule_logical},
     {3, TT_rBracket, TT_empty, TT_lBracket, rule_brackets},
+    {2, TT_empty, TT_not, TT_empty, rule_not},
     {1, TT_id, TT_empty, TT_empty, rule_i_to_exp},
     {1, TT_fullid, TT_empty, TT_empty, rule_i_to_exp},
     {1, TT_int, TT_empty, TT_empty, rule_i_to_exp},
     {1, TT_double, TT_empty, TT_empty, rule_i_to_exp},
     {1, TT_string, TT_empty, TT_empty, rule_i_to_exp},
+    {1, TT_bool, TT_empty, TT_empty, rule_i_to_exp},
 };
 
 #define CONV_TERM_TO_TT(i) (terms[i].type == PREC_TOKEN ? \
@@ -69,7 +73,6 @@ T_prec_rule rules[RULES_COUNT] = {
                                     table_insert(symbol_tab, symbol)
 #define ADD_INSTR(type, dst, s1, s2) create_instr(instr_list, type, s1, s2, dst)
 #define CHECK_TYPE(symbol, type) ((symbol)->attr.var->data_type == type)
-
 
 /**
  * Simulates a rule
@@ -162,7 +165,7 @@ T_symbol *convert(T_symbol *in, T_data_type new_type, ilist *instr_list) {
 
     CREATE_SYMBOL(out, new_type);
     ADD_INSTR(TI_mov, out, in, NULL);
-    //printf("[INST] Přetypování\n");
+    //printf("[INST] Přetypování z [%s] do [%s]\n", in->id, out->id);
 
     return out;
 }
@@ -211,6 +214,8 @@ T_symbol *rule_brackets(T_prec_stack_entry terms[3],
  *                  E -> E >= E
  *                  E -> E == E
  *                  E -> E != E
+ * Where E is either int or double. Boolean comparisons (eg. E == true) are
+ * not supported, use 'rule_bool_equal' instead.
  * @param terms The input terms.
  * @param ltable The table with local variables
  * @param act_class The current class, if any.
@@ -245,11 +250,114 @@ T_symbol *rule_bool(T_prec_stack_entry terms[3],
         type = TI_greaterEq;
     }
 
-    //printf("[INST] Arithm. oper.\n");
+    //printf("[INST] Bool op: [%s] = [%s] x [%s]\n", symbol->id, s1->id,
+    //         s2->id);
     ADD_INSTR(type, symbol, s1, s2);
 
     return symbol;
 }
+
+/**
+ * Simalates rules: E -> E == E
+ *                  E -> E != E
+ * Where both expressions on the right side are bool. If not, the rule will be
+ * automatically simulated by function rule_bool.
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
+T_symbol *rule_bool_equal(T_prec_stack_entry terms[3],
+                          T_symbol_table *ltable, T_symbol *act_class,
+                          ilist *instr_list) {
+    T_symbol *s1 = terms[2].ptr.symbol;
+    T_symbol *s2 = terms[0].ptr.symbol;
+
+    if (!CHECK_TYPE(s1, is_bool) || !CHECK_TYPE(s2, is_bool))
+        return rule_bool(terms, ltable, act_class, instr_list);
+
+    CREATE_SYMBOL(symbol, is_bool);
+
+    T_instr_type type;
+    if (terms[1].ptr.token->type == TT_equal) {
+        type = TI_equal;
+    }
+    else {
+        type = TI_notequal;
+    }
+
+    ADD_INSTR(type, symbol, s1, s2);
+    return symbol;
+}
+
+
+/**
+ * Simalates rules: E -> E && E
+ *                  E -> E || E
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
+T_symbol *rule_logical(T_prec_stack_entry terms[3],
+                       T_symbol_table *ltable, T_symbol *act_class,
+                       ilist *instr_list) {
+    (void) ltable;
+    (void) act_class;
+
+    T_symbol *s1 = terms[2].ptr.symbol;
+    T_symbol *s2 = terms[0].ptr.symbol;
+
+    if (!CHECK_TYPE(s1, is_bool) || !CHECK_TYPE(s2, is_bool))
+        terminate(TYPE_ERROR);
+
+    CREATE_SYMBOL(symbol, is_bool);
+
+    T_instr_type type;
+    if (terms[1].ptr.token->type == TT_and) {
+        type = TI_and;
+    }
+    else {
+        type = TI_or;
+    }
+
+    //printf("[INST] Logická: [%s] = [%s] x [%s]\n", symbol->id, s1->id,
+    //       s2->id);
+    ADD_INSTR(type, symbol, s1, s2);
+    return symbol;
+}
+
+
+/**
+ * Simalates rule: E -> !E
+ * @param terms The input terms.
+ * @param ltable The table with local variables
+ * @param act_class The current class, if any.
+ * @param instr_list The instrunction list where the instruction will be
+ *                   generated.
+ * @return A symbol that represents the result of this expression
+ */
+T_symbol *rule_not(T_prec_stack_entry terms[3],
+                   T_symbol_table *ltable, T_symbol *act_class,
+                   ilist *instr_list) {
+    (void) ltable;
+    (void) act_class;
+
+    T_symbol *in = terms[0].ptr.symbol;
+
+    if (!CHECK_TYPE(in, is_bool))
+        terminate(TYPE_ERROR);
+
+    CREATE_SYMBOL(symbol, is_bool);
+
+    ADD_INSTR(TI_not, symbol, in, NULL);
+    return symbol;
+}
+
 
 /**
  * Simalates rule: E -> E + E
@@ -279,10 +387,11 @@ T_symbol *rule_concat(T_prec_stack_entry terms[3],
     //s1 = convert(s1, is_str, instr_list);
     //s2 = convert(s2, is_str, instr_list);
 
-    //printf("[INST] Spojení řetězců\n");
-
     CREATE_SYMBOL(symbol, is_str);
     ADD_INSTR(TI_concat, symbol, s1, s2);
+
+    //printf("[INST] Spojení řetězců [%s] a [%s] do [%s]\n", s1->id, s2->id,
+    //       symbol->id);
 
     return symbol;
 }
@@ -323,7 +432,8 @@ T_symbol *rule_arith(T_prec_stack_entry terms[3],
         type = TI_div;
     }
 
-    //printf("[INST] Arithm. oper.\n");
+    //printf("[INST] Arithm. oper. [%s] .. [%s] => [%s]\n", s1->id, s2->id,
+    //       symbol->id);
     ADD_INSTR(type, symbol, s1, s2);
 
     return symbol;
@@ -357,6 +467,9 @@ T_symbol *rule_i_to_exp(T_prec_stack_entry terms[3],
     }
     else if (terms[0].ptr.token->type == TT_string) {
         return add_constant(&terms[0].ptr.token->attr, symbol_tab, is_str);
+    }
+    else if (terms[0].ptr.token->type == TT_bool) {
+        return add_constant(&terms[0].ptr.token->attr, symbol_tab, is_bool);
     }
     else {
         // Unexpected token
