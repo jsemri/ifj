@@ -132,7 +132,7 @@ static char *arr_ifj16[] = {
 
 #define is_par(t) (t->type == TT_id || t->type == TT_fullid ||\
                    t->type == TT_string || t->type == TT_int || \
-                   t->type == TT_double)
+                   t->type == TT_double || t->type == TT_bool)
 
 #define is_const(t) (t->type == TT_string || t->type == TT_int || \
                      t->type == TT_double)
@@ -528,6 +528,9 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
         }
         else if (is_real(it) && dtype == is_double){
             sym = add_constant(&it->attr, symbol_tab, is_double);
+        }
+        else if (it->type == TT_bool) {
+            sym = add_constant(&it->attr, symbol_tab, is_bool);
         }
         else {
             terminate(TYPE_ERROR);
