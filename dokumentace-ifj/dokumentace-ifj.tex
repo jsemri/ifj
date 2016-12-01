@@ -1,0 +1,157 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[left=2cm, top=2.5 cm, text={17cm, 24cm}]{geometry}
+\usepackage[czech]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{times}
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{multirow}
+\usepackage[ruled,czech,linesnumbered,longend,noline]{algorithm2e}
+\usepackage{algorithmic}
+\usepackage{picture}
+\usepackage{graphics}
+\usepackage{lscape}
+
+\newcommand{\myuv}[1]{\quotedblbase #1\textquotedblleft}
+
+\begin{document}
+
+\begin{titlepage}
+\begin{center}
+\textsc{\Huge Vysoké učení technické v Brně\\ \medskip
+\huge Fakulta informačních technologií}\\[30mm]
+	
+\begin{center}
+\scalebox{1} {\includegraphics{fit_logo.eps}}
+\end{center}
+\vspace{\stretch{0.3}}
+
+\Huge{Implementácia interpretu imperatívneho jazyka}\\[4mm]
+\Huge{IFJ16}\\[2mm]
+\LARGE{Tím 052, variant a/2/II}\\
+\LARGE{Rozšírenia: }\\
+
+\vspace{\stretch{0.8}}
+
+\begin{flushright}
+\noindent \underline{Jakub Semrič}\\
+Petr Rusiňák\\
+Kryštof Rykala\\
+Martin Mikan\\
+\today \hfill         Martin Polakovič \newpage
+\end{flushright}
+
+\end{center}
+
+\pagebreak
+\thispagestyle{empty}
+\tableofcontents
+\pagebreak
+
+\end{titlepage}
+\newpage
+
+\section{Úvod}
+
+Tento dokument popisuje návrh a implementáciu interpretu imperatívneho jazyka IFJ16, ktorý je podmnožinou jazyka JAVA.
+Program funguje ako konzolová aplikácia, ktorá načíta zdrojový súbor programu v~jazyku IFJ16 a následne ho interpretuje. V~prípade výskytu chyby, program vracia kód chyby.
+
+Dokument sa skladá z~viacerých častí. V~kapitole \ref{popis} je popísané riešenie jednotlivých častí interpretu, v~kapitole \ref{algoritmy} sa venujeme použitým algoritmom a v~nasledujúcej kapitole \ref{struktury} dátovým štruktúram. Kapitola \ref{rozsirenia} dokumentuje vypracované rozšírenia, kapitola \ref{testovanie} rozoberá náš postup pri testovaní a kapitola \ref{tim} je zameraná na zhodnotenie našej práce v~tíme. V~poslednej kapitole \ref{zaver} je krátke shrnutie.
+
+\section{Popis riešenia a implementácia jazyka IFJ16} 
+\label{popis}
+
+Projekt sme implementovali z niekoľkých funkčných celkov. V nasledujúcich podkapitolách sú jednotlivé moduly detailne popísané.
+
+    \subsection{Lexikálny analyzátor}
+    \label{lexer}
+
+    TODO
+
+    \subsection{Syntaktický a sémantický analyzátor}
+    \label{parser}
+
+    TODO
+
+        \subsubsection{Spracovanie jazykových inštrukcií - rekurzívny zostup}
+        \label{rekurzia}
+    
+        TODO
+    
+        \subsubsection{Precedenčná analýza výrazov}
+        \label{precedencna analyza}
+    
+    TODO
+    
+    \subsection{Interpret vnútorného kódu}
+    \label{interpret}
+    
+    TODO
+
+\section{Použité algoritmy} 
+\label{algoritmy}
+
+TODO
+
+    \subsection{Radiaci algoritmus - Heap Sort}
+    
+    TODO
+
+    \subsection{Vyhľadávací algoritmus - Knuth-Morris-Pratt}
+    
+    TODO
+    
+\section{Využívané dátové štruktúry} 
+\label{struktury}
+
+        \subsection{Tabuľka s rozptýlenými položkami}
+    
+    TODO
+    
+        \subsection{Zásobník}
+    
+    TODO
+    
+        \subsection{Reťazec}
+    
+    TODO
+    
+\section{Rozšírenia} 
+\label{rozsirenia}
+
+    \subsection{SIMPLE}
+    
+    TODO
+    
+    \subsection{BOOLOP}
+    
+    TODO
+    
+\section{Testovanie} 
+\label{testovanie}
+
+TODO
+
+\section{Práca v tíme} 
+\label{tim}
+
+    \subsection{Rozdelenie úloh}
+    
+    TODO doplnim tabulku
+
+\section{Záverom} 
+\label{zaver}
+
+\section{Použité zdroje}
+
+TODO - prosím pridajte link alebo názov zdroja, dohľadám bibliografické informácie
+
+\section{Prílohy}
+
+
+\subsection{Konečný automat}
+
+\subsection{LL-gramatika}
+
+\subsection{Precedenčná tabuľka}
+
+\end{document}

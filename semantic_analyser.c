@@ -46,7 +46,7 @@ static bool get_token_flag = false;
 // global variables
 ilist *glist;
 T_symbol_table *symbol_tab;
-T_symbol *acc;
+static T_symbol *acc_b, *acc_s, *acc_d, *acc_n;
 T_token *token;
 // pointer to actual class
 static T_symbol *actual_class;
@@ -542,6 +542,12 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
 
     list_insert_last(L, return_label);
 
+    T_data_type dtype = fsym->attr.func->data_type;
+    T_symbol *acc = dtype == is_str ? acc_s: acc_b;
+    acc = dtype == is_int ? acc_n : acc;
+    acc = dtype == is_double ? acc_d: acc;
+
+
     if (dest) {
         create_instr(L, TI_mov, acc, NULL, dest);
     }
@@ -674,8 +680,17 @@ static void func()
 static void par()
 {{{
     fun = __func__;
-    while (token->type != TT_rBracket)
+    while (token->type != TT_rBracket) {
         get_token();
+        if (token->type == TT_id) {
+            // check for id of function in same class
+            T_symbol *Func = table_find(symbol_tab, token->attr.str,
+                                        actual_class);
+            if (Func && Func->symbol_type == is_func) {
+                terminate(DEFINITION_ERROR);
+            }
+        }
+    }
 }}}
 
 // FBODY -> { ST_LIST }
@@ -736,6 +751,14 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                         // redefinition
                         terminate(DEFINITION_ERROR);
                     }
+                    // XXX
+                    // check for id of function in same class
+                    T_symbol *Func = table_find(symbol_tab, token->attr.str,
+                                                actual_class);
+                    if (Func && Func->symbol_type == is_func) {
+                        terminate(DEFINITION_ERROR);
+                    }
+                    // XXX
                     // creating a new variable symbol
                     T_symbol *sym = create_var(token->attr.str, dtype);
                     // discredit free call on token
@@ -797,10 +820,9 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                     if (tv->size == 1 ) {
                         terminate(SYNTAX_ERROR);
                     }
-                    acc->attr.var->data_type = is_bool;
                     // result will be stored in accumulator
                     part = 2;
-                    precedence_analyser(tv->arr, tv->last-1, acc, local_tab,
+                    precedence_analyser(tv->arr, tv->last-1, acc_b, local_tab,
                                         actual_class, instr_list );
                     part = 1;
                     token_vec_delete(tv);
@@ -864,7 +886,9 @@ static void stat(T_symbol_table *local_tab, ilist *instr_list)
                         terminate(4);
                     }
                     // return value will be stored in accumulator
-                    acc->attr.var->data_type = dtype;
+                    T_symbol *acc = dtype == is_str ? acc_s: acc_b;
+                    acc = dtype == is_int ? acc_n : acc;
+                    acc = dtype == is_double ? acc_d: acc;
                     part = 2;
                     if (dtype != is_void)
                         precedence_analyser(tv->arr, tv->last, acc, local_tab,
@@ -977,7 +1001,7 @@ static void st_else2(T_symbol_table *local_tab, ilist *instr_list)
 
     // result will be stored in accumulator
     part = 2;
-    precedence_analyser(tv->arr, tv->last-1, acc, local_tab, actual_class,
+    precedence_analyser(tv->arr, tv->last-1, acc_b, local_tab, actual_class,
                         instr_list );
     part = 1;
 
@@ -1013,7 +1037,11 @@ static void st_else2(T_symbol_table *local_tab, ilist *instr_list)
 int second_throughpass() {
     part = 1;
     row = 1;
-    acc = table_find_simple(symbol_tab, "|accumulator|",NULL);
+    acc_b = table_find_simple(symbol_tab, "|accumulator_bool|",NULL);
+    acc_n = table_find_simple(symbol_tab, "|accumulator_int|",NULL);
+    acc_s = table_find_simple(symbol_tab, "|accumulator_str|",NULL);
+    acc_d = table_find_simple(symbol_tab, "|accumulator_double|",NULL);
+    assert(acc_b && acc_n && acc_d && acc_s);
     prog();
     //print_table(symbol_tab);
     return 0;

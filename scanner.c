@@ -264,6 +264,10 @@ int get_token() {
                     push_char('\n');
                     state = S_string;
                 }
+                else if (c == '"') {
+                    push_char('"');
+                    state = S_string;
+                }
                 else if (c == 't'){
                     push_char('\t');
                     state = S_string;
@@ -299,6 +303,9 @@ int get_token() {
 
                 if (is_oct(c)) {
                     c = c - '0' + (b1*64) + (b2*8);
+                    // \ddd <001, 377>
+                    if (c == 0 || c > 255)
+                        terminate(1);
                     push_char(c);
                     state = S_string;
                 }
@@ -479,6 +486,7 @@ int get_token() {
                     terminate(LEX_ERROR);
                 }
                 else {
+                    row = c == '\n' ? row + 1: row;
                     state = S_commentBlock;
                 }
                 break;
