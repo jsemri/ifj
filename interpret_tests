@@ -9,19 +9,37 @@ IFJ=testsuites/ifj16.java
 DIR=testsuites/interpret/*.java
 
 for i in $DIR; do
+
+  # input file if any
   ifile="`echo "$i"|sed 's/java/input/g'`"
   if [ ! -f "$ifile" ];then
     ifile="`echo "$i"|sed 's/ifj16.java/input/g'`"
   fi
 
-  cat $IFJ $i > tmp.java
-  javac tmp.java
+  # output file if any
+  ofile="`echo "$i"|sed 's/java/output/g'`"
+  if [ ! -f "$ifile" ];then
+    ofile="`echo "$i"|sed 's/ifj16.java/output/g'`"
+  fi
+
   if [ -f "$ifile" ];then
     res="`./ifj $i < $ifile`"
-    out="`java ifj16 < $ifile`"
+    if [ -f "$ofile" ];then
+      out="`cat $ofile`"
+    else
+      cat $IFJ $i > tmp.java
+      javac tmp.java
+      out="`java ifj16 < $ifile`"
+    fi
   else
     res="`./ifj $i`"
-    out="`java ifj16`"
+    if [ -f "$ofile" ];then
+      out="`cat $ofile`"
+    else
+      cat $IFJ $i > tmp.java
+      javac tmp.java
+      out="`java ifj16`"
+    fi
   fi
 
   if [ "$res" == "$out" ];then
@@ -32,35 +50,4 @@ for i in $DIR; do
 done
 
 rm tmp.java *.class
-
-
-# tests with *.out
-
-DIR=testsuites/tests_output/*.java
-
-for i in $DIR; do
-  ifile="`echo "$i"|sed 's/java/input/g'`"
-
-  if [ ! -f "$ifile" ];then
-    ifile="`echo "$i"|sed 's/ifj16.java/input/g'`"
-  fi
-
-  if [ -f "$ifile" ];then
-    res="`./ifj $i < $ifile`"
-  else
-    res="`./ifj $i`"
-  fi
-  ofile="`echo "$i"|sed 's/java/output/g'`"
-  out="`cat $ofile`"
-  if [ "$res" == "$out" ];then
-    printf "${GREEN}OK${NOCLR}\n"
-  else
-    printf "${RED}Wrong${NOCLR} - $i\n"
-    echo "$out"
-    echo "======="
-    echo "$res"
-  fi
-
-done
-
 
