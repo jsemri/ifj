@@ -55,7 +55,41 @@ Martin Mikan\\
 Tento dokument popisuje návrh a implementáciu interpretu imperatívneho jazyka IFJ16, ktorý je podmnožinou jazyka JAVA.
 Program funguje ako konzolová aplikácia, ktorá načíta zdrojový súbor programu v~jazyku IFJ16 a následne ho interpretuje. V~prípade výskytu chyby, program vracia kód chyby.
 
-Dokument sa skladá z~viacerých častí. V~kapitole \ref{popis} je popísané riešenie jednotlivých častí interpretu, v~kapitole \ref{algoritmy} sa venujeme použitým algoritmom a v~nasledujúcej kapitole \ref{struktury} dátovým štruktúram. Kapitola \ref{rozsirenia} dokumentuje vypracované rozšírenia, kapitola \ref{testovanie} rozoberá náš postup pri testovaní a kapitola \ref{tim} je zameraná na zhodnotenie našej práce v~tíme. V~poslednej kapitole \ref{zaver} je krátke shrnutie.
+Dokument sa skladá z~viacerých častí. V~kapitole \ref{tim} je stručne popísaný vývoj projektu, v časti \ref{popis} je popísané riešenie jednotlivých častí interpretu, v~kapitole \ref{algoritmy} sa venujeme použitým algoritmom a v~nasledujúcej kapitole \ref{struktury} dátovým štruktúram. Kapitola \ref{rozsirenia} dokumentuje vypracované rozšírenia, kapitola \ref{testovanie} rozoberá náš postup pri testovaní interpretu.
+
+
+\section{Práca v tíme} 
+\label{tim}
+
+    \subsection{Rozdelenie úloh}
+    \begin{center}
+    \begin{tabular}{|c|c|}
+    \hline
+    Lexikálny analyzátor & Kryštof Rykala \\
+    \hline
+    Parser & Jakub Semrič \\
+    \hline
+    Precedenčná analýza & Peter Rusiňák \\
+    \hline
+    Algoritmy, tabuľka symbolov & Martin Polakovič \\
+    \hline
+    Interpret & Martin Mikan \\
+    \hline
+    \end{tabular}
+\end{center}
+    
+    \subsection{Priebeh vývoja}
+    \label{vyvoj}
+    Pre nedostatok vedomostí týmu a nestabilitu návrhu, vývoj prebiehal v niekoľkých iteráciach. Na začiatku každej iterácie
+    sa plánovalo s primeranou mierou, v ďalšej fáze sa implementovalo a na konci iterácie sa zamýšľalo čo sa bude robiť ďalej a
+    ako riešiť novo vzniknuté problémy.
+
+    Pri návrhu a implementácii
+    jednotlivých modulov sa postupovalo tak, aby výsledok bol čo najviac flexibilný a~interoperabilný s~ostatnými modulmi.
+    Na každom stretnutí, ktoré
+    bolo približne raz za tri týždňe, sa stanovili ciele, ktoré museli byť do najbližšieho stretnutia dosiahnuté. Tieto ciele
+    sa naozaj podarilo za určený čas splniť a spolu zo zavedením regresných testov vývoj celého projektu prebiehal  prekvapujúco
+    rýchlo.
 
 \section{Popis riešenia a implementácia jazyka IFJ16}
 \label{popis}
@@ -66,19 +100,19 @@ Projekt sme implementovali z niekoľkých funkčných celkov. V nasledujúcich p
     \label{lexer}
     Lexikálny analyzátor tvorí vstupnú časť interpretu. Model tvorí deterministický konečný automat.
     Spracováva zdrojový súbor a~identifikuje v ňom platńe lexémy, ktoré posiela syntaktickému analyzátoru vo forme tokenu.
-    Token obsahuje typ lexémy a~v~prípade aj hodnotu ak sa jedná o~celočíselný, desatinný, logický alebo reťazcový literál.
+    Token obsahuje typ lexémy a~v~prípade aj hodnotu ak sa jedná o~celočíselný, desatinný alebo reťazcový literál.
 
     Konečný automat je implementovaný tak aby vedel spracovat aj jednoduché \texttt{//} a~blokové \texttt{/* */} komentáre.
     Po ukončení komentáru  automat prejde do začínajúceho stavu a~začne spracovávať nasledujúcu lexému alebo ďalší komentár.
 
-    Model konečného automatu môžete násjť v~prílohe 10.1. % TODO referencia na automat
+    Model konečného automatu môžete násjť v~prílohe 9.1. % TODO referencia na automat
 
 
     \subsection{Syntaktický a sémantický analyzátor}
     \label{parser}
     Syntaktický analýzátor (parser) je hlavná časť interpretu. Parser dostáva riadenie hned po otvorení súboru. Má za úlohu nielen
     preveriť syntax a~sémantiku zdrojového súboru, ale taktiež vkladá inštrukcie do inštrukčnej pásky. Jeho implementácia spočíva
-    v~rekurzívnom zostupe, ktorý je riadený LL(1) gramatikou. % TODO referencia na tabulku
+    v~rekurzívnom zostupe, ktorý je riadený LL(1) gramatikou. % TODO referencia na gramatiku
 
     Keďže jazyk \emph{IFJ16} je podmnožinou jazyka \emph{JAVA SE 8}, ktorého preklad je zložený z dvoch priechodov, je parser zložený
     taktiež z~dvoch priechodov. Prvý priechod analyzuje program zo syntaktického a~lexikálneho hľadiska, súčastne vkladá do tabuľky
@@ -87,7 +121,7 @@ Projekt sme implementovali z niekoľkých funkčných celkov. V nasledujúcich p
 
 
 
-        \subsubsection{Spracovanie jazykových inštrukcií - rekurzívny zostup}
+        \subsubsection{Spracovanie jazykových inštrukcií\,-- rekurzívny zostup}
         \label{rekurzia}
         Rekurzívny zostup riadený LL(1) gramatikou, bol implementovaný tak, že každý neterminál v~gramatike bol reprezentovaný funkciou,
         z~ktorej sa postupne volali ďalšie funkcie na základe aktuálneho tokenu a~pravidla v~gramatike. Aktuálne načítaný token zase reprezentoval
@@ -110,7 +144,7 @@ Projekt sme implementovali z niekoľkých funkčných celkov. V nasledujúcich p
 
         \subsubsection{Precedenčná analýza výrazov}
         \label{precedencna analyza}
-    
+        % TODO referencia na tabulku 
     TODO
     
     \subsection{Interpret vnútorného kódu}
@@ -140,11 +174,11 @@ Projekt sme implementovali z niekoľkých funkčných celkov. V nasledujúcich p
 
 TODO
 
-    \subsection{Radiaci algoritmus - Heap Sort}
+    \subsection{Radiaci algoritmus\,-- Heap Sort}
     
     TODO
 
-    \subsection{Vyhľadávací algoritmus - Knuth-Morris-Pratt}
+    \subsection{Vyhľadávací algoritmus\,-- Knuth-Morris-Pratt}
     
     TODO
     
@@ -157,56 +191,101 @@ TODO
         a súčastne rovnakou členskou triedou. Toto vyhľadávanie zabráňuje kolíziam symbolov rovnakých mien v rôznych úrovniach.
         Kedže lokálne premenné nemajú členskú triedu existuje varianta vyhľadávaní v tabuľke iba s jedným kľúčom.
 
-        V interprete sa používaju dve typy tabuliek: lokálna a~globálna. V~globálnej tabuľke sú uložené symboly reprezentujúce
+        V interprete sa používaju dva typy tabuliek: lokálna a~globálna. V~globálnej tabuľke sú uložené symboly reprezentujúce
         triedy, funkcie, konštanty, statické premenné a~registre. V~lokálnej tabuľke, sú uložené iba lokálne premenné a~parametre
         funkcií, ktoré majú vlastnú tabuľku symbolov.
 
         \subsection{Zásobník}
-        Zásobník je implementovaný ako pole ukazateľov určitej kapacity. Ak vrchol zásbníku spôsobí zaplnenie zásobníku dôjde
+        Zásobník je implementovaný ako pole ukazateľov určitej kapacity. Ak je zásobník plný dôjde
         k automatickej realokácii a zvýšeniu kapacity zásobníku. V~interprete sa používaju dva zásobníky. Jeden z~nich
         sa používa na uloženie odkazov na miesta skokov a odkazy na parametre funkcií. Druhý zásobník je použitý na ukladanie
         rámcov, ktoré obsahujú lokálnu tabuľku symbolov.
-        \subsection{Reťazec}
-        Reťazec je implementovaný ako jednoduchý ukazateľ na dátový typ \texttt{char}. Tento ukazateľ sa v~prípade potreby
-        realokuje.
 
 \section{Rozšírenia} 
 \label{rozsirenia}
 
     \subsection{SIMPLE}
-    
-    TODO
-    
+    Rozšírenie \emph{SIMPLE} umožňuje skrátený zápis konštrukcií cyklov a podmienok vynechaním zložených zátvoriek. Keďže by terminálne symboly
+    \texttt{\{ \} } moholi byť vynechané, jednalo by sa už o kontextovú gramatiku. Tento problém bol vyriešený implementačne bez zmeny
+    gramatiky tak, že sa v prípade absencie zložených zátvoriek namiesto volania funkcie reprezentujúcej neterminál \texttt{STLIST}, vložila
+    funkcia reprezentujúca neterminál \texttt{STAT}, čiže sa namiesto zloženého príkazu vykonal jednoduchý príkaz.
+
     \subsection{BOOLOP}
-    
-    TODO
-    
+    Rozšírenie umožňuje poporovať nový dátový typ\,-- \emph{boolean}. Interpret podporuje deklarácie premenných a~funkcií typu boolean. Navyše
+    umožnuje vyhodnocovanie zložených podmienok.
+
 \section{Testovanie} 
 \label{testovanie}
-
-TODO
-
-\section{Práca v tíme} 
-\label{tim}
-
-    \subsection{Rozdelenie úloh}
-    
-    TODO doplnim tabulku
-
-\section{Záverom} 
-\label{zaver}
+Návrh testov bol založený na metóde ekvivalenčných tried. Testy mali charakter regresných testov, takže zmena zdrojových súborov nebola možná ak
+všetky testy neboli úspešné. Testy sa delili do dvoch skupín\,-- testy detekcie chýb a interpretačné testy. Pri testovaní bol použitý program
+\texttt{gcovr}, ktrorý nám ukázal, ktoré časti interpretu neboli otestované.
+% TODO odkaz na gcovr: http://gcovr.com/
 
 \section{Použité zdroje}
 
 TODO - prosím pridajte link alebo názov zdroja, dohľadám bibliografické informácie
 
+\newpage
 \section{Prílohy}
 
 
 \subsection{Konečný automat}
 
-\subsection{LL-gramatika}
 
+\newpage
+
+\subsection{LL-gramatika}
+%TODO 2 stlpce
+PROG $\rightarrow$ BODY eof \\
+BODY $\rightarrow$ CLASS BODY \\
+BODY $\rightarrow$ $\epsilon$ \\
+CLASS $\rightarrow$ class id \{ CBODY \} \\
+CBODY $\rightarrow$ static TYPE id CBODY2 CBODY \\
+CBODY $\rightarrow$ $\epsilon$ \\
+CBODY2 $\rightarrow$ INIT ; \\
+CBODY2 $\rightarrow$ FUNC \\
+FUNC $\rightarrow$ ( PAR ) FBODY \\
+FBODY $\rightarrow$ \{ STLIST \} \\
+PAR $\rightarrow$ TYPE PAR2 \\
+PAR $\rightarrow$ $\epsilon$ \\
+PAR2 $\rightarrow$ $\epsilon$ \\
+PAR2 $\rightarrow$ id PAR3 \\
+PAR3 $\rightarrow$ com TYPE id PAR3 \\
+PAR3 $\rightarrow$ $\epsilon$ \\
+STLIST $\rightarrow$ STAT STLIST \\
+STLIST $\rightarrow$  $\epsilon$ \\
+STAT $\rightarrow$ while ( EXPR ) \{ STLIST \} \\
+STAT $\rightarrow$ if ( EXPR ) \{ STLIST \} ELSE \\
+STAT $\rightarrow$ return RET ; \\
+STAT $\rightarrow$ id = CALLEXPR ; \\
+STAT $\rightarrow$ fullid = CALLEXPR ; \\
+STAT $\rightarrow$ static TYPE id INIT ; \\
+STAT $\rightarrow$ TYPE id INIT ; \\
+CALLEXPR $\rightarrow$ fullid ( ARG ) \\
+CALLEXPR $\rightarrow$ id ( ARG ) \\
+CALLEXPR $\rightarrow$ EXPR \\
+ARG $\rightarrow$ $\epsilon$ \\
+ARG $\rightarrow$ id ARG2 \\
+ARG $\rightarrow$ fullid ARG2 \\
+ARG2 $\rightarrow$ $\epsilon$ \\
+ARG2 $\rightarrow$ com ARG3 ARG2 \\
+ARG3 $\rightarrow$ fullid \\
+ARG3 $\rightarrow$ id \\
+INIT $\rightarrow$ = CALLEXPR \\
+INIT $\rightarrow$ $\epsilon$ \\
+RET $\rightarrow$ EXPR \\
+RET $\rightarrow$ $\epsilon$ \\
+ELSE $\rightarrow$ $\epsilon$ \\
+ELSE $\rightarrow$ else ELSE2 \\
+ELSE2 $\rightarrow$ if ( EXPR ) \{ STLIST \} ELSE \\
+ELSE2 $\rightarrow$ \{ STLIST \} \\
+TYPE $\rightarrow$ void \\
+TYPE $\rightarrow$ int \\
+TYPE $\rightarrow$ string \\
+TYPE $\rightarrow$ double \\
+TYPE $\rightarrow$ boolean \\
+
+\newpage
 \subsection{Precedenčná tabuľka}
 
 \end{document}

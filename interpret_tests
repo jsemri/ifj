@@ -5,8 +5,8 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NOCLR='\033[0m'
 
-IFJ=testsuites/ifj16.java
-DIR=testsuites/interpret/*.java
+IFJ=tests/ifj16.java
+DIR=tests/interpret/*.java
 
 for i in $DIR; do
 

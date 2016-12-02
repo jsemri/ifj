@@ -7,6 +7,9 @@ PROJ=ifj
 SRC_FILES=$(wildcard *.c)
 HEADERS=$(wildcard *.h)
 OBJ_FILES=$(patsubst %.c, %.o, $(SRC_FILES))
+# tests + some formalities
+TEST_FILES="tests error_detection_test interpret_tests"
+FORMAL="rozdeleni dokumentace.pdf"
 
 .PHONY: all clean release pack pack_test
 
@@ -25,7 +28,7 @@ pack:
 	zip xsemri00.zip *.c *.h Makefile rozdeleni dokumentace.pdf
 
 pack_test:
-	zip -r xsemri00_tests.zip *.c *.h Makefile testsuites error_detection_test interpret_tests
+	zip -r xsemri00_tests.zip *.c *.h Makefile $(FORMAL) $(TEST_FILES)
 
 test:
 	./error_detection_test; ./interpret_tests
