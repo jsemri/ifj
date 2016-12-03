@@ -5,11 +5,14 @@
 \usepackage{times}
 \usepackage{amsmath, amsthm, amssymb}
 \usepackage{multirow}
+\usepackage{multicol}
 \usepackage[ruled,czech,linesnumbered,longend,noline]{algorithm2e}
 \usepackage{algorithmic}
 \usepackage{picture}
 \usepackage{graphics}
 \usepackage{lscape}
+
+
 
 \newcommand{\myuv}[1]{\quotedblbase #1\textquotedblleft}
 
@@ -102,7 +105,7 @@ Projekt sme implementovali z niekoľkých funkčných celkov. V nasledujúcich p
     Spracováva zdrojový súbor a~identifikuje v ňom platé lexémy, ktoré posiela syntaktickému analyzátoru vo forme tokenov.
     Token obsahuje typ lexémy a~v~prípade aj hodnotu, ak sa jedná o~celočíselný, desatinný alebo reťazcový literál.
 
-    Konečný automat je implementovaný tak aby vedel spracovat aj jednoduché \texttt{//} a~blokové \texttt{/* */} komentáre.
+    Konečný automat je implementovaný tak, aby vedel spracovať aj jednoduché \texttt{//} a~blokové \texttt{/* */} komentáre.
     Po ukončení komentáru  automat prejde do začínajúceho stavu a~začne spracovávať nasledujúcu lexému alebo ďalší komentár.
 
     Model konečného automatu môžete násjť v~prílohe \ref{app:automat}.
@@ -165,12 +168,16 @@ Projekt sme implementovali z niekoľkých funkčných celkov. V nasledujúcich p
 \section{Použité algoritmy} 
 \label{algoritmy}
 
-TODO
+ V tejto kapitole pojednávame o popise implementovaný algoritmov potrebným pri tvorbe projektu. Na ich pochopenie a implementáciu bola použitá študijná opora z predmetu IAL.
 
     \subsection{Radiaci algoritmus\,-- Heap Sort}
     
-    TODO
-
+    Heapsort, radenie haldou, patrí medzi základné algoritmy radenia. Heap\,-- hromada je najčastejšie štruktúra stromového typu, inak tomu nie je ani v našom prípade. Pre všetky uzly tohto stromu platí rovnaký vzťah, otcovský uzol je vždy buď vačší alebo menší ako jeho synovské uzly. Hromada je implementovaná polom o veľkosti $N$, kde uzol umiestnený na indexe $i$ má svojho ľavého syna na indexe $2i+1-base$\footnote{index prvej položky poľa} a pravého na $2i+2-base$. 
+    
+    Dôležitou časťou algoritmu je pomocná funkcia \textit{sift down} zabezpečujúca rekonštrukciu hromady. Ak nastane porušenie hromady v koreni, táto funkcia postupnými výmenami dostane prvok z koreňa na správne miesto a do koreňa uloží prvok tak,aby bolo splnené pravidlo hromady. Opakovaným volaním funkcie sift down sa bude v koreni nachádzať prvok s najväčšou hodnotou a tohto faktu potom využívame pri samotnom radení. Odobratý prvok z koreňa sa vždy nahradí najmenším a najpravejším uzlom hromady.
+    
+    Táto radiaca metóda má linearitmickú zložitosť.
+    
     \subsection{Vyhľadávací algoritmus\,-- Knuth-Morris-Pratt}
     
     TODO
@@ -213,8 +220,6 @@ všetky testy neboli úspešné. Testy sa delili do dvoch skupín\,-- testy dete
 
 \section{Použité zdroje}
 
-TODO - prosím pridajte link alebo názov zdroja, dohľadám bibliografické informácie
-
 \newpage
 \section{Prílohy}
 
@@ -227,55 +232,57 @@ TODO - prosím pridajte link alebo názov zdroja, dohľadám bibliografické inf
 
 \subsection{LL-gramatika}
 \label{gramatika}
-%TODO 2 stlpce
-PROG $\rightarrow$ BODY eof \\
-BODY $\rightarrow$ CLASS BODY \\
-BODY $\rightarrow$ $\epsilon$ \\
-CLASS $\rightarrow$ class id \{ CBODY \} \\
-CBODY $\rightarrow$ static TYPE id CBODY2 CBODY \\
-CBODY $\rightarrow$ $\epsilon$ \\
-CBODY2 $\rightarrow$ INIT ; \\
-CBODY2 $\rightarrow$ FUNC \\
-FUNC $\rightarrow$ ( PAR ) FBODY \\
-FBODY $\rightarrow$ \{ STLIST \} \\
-PAR $\rightarrow$ TYPE PAR2 \\
-PAR $\rightarrow$ $\epsilon$ \\
-PAR2 $\rightarrow$ $\epsilon$ \\
-PAR2 $\rightarrow$ id PAR3 \\
-PAR3 $\rightarrow$ com TYPE id PAR3 \\
-PAR3 $\rightarrow$ $\epsilon$ \\
-STLIST $\rightarrow$ STAT STLIST \\
-STLIST $\rightarrow$  $\epsilon$ \\
-STAT $\rightarrow$ while ( EXPR ) \{ STLIST \} \\
-STAT $\rightarrow$ if ( EXPR ) \{ STLIST \} ELSE \\
-STAT $\rightarrow$ return RET ; \\
-STAT $\rightarrow$ id = CALLEXPR ; \\
-STAT $\rightarrow$ fullid = CALLEXPR ; \\
-STAT $\rightarrow$ static TYPE id INIT ; \\
-STAT $\rightarrow$ TYPE id INIT ; \\
-CALLEXPR $\rightarrow$ fullid ( ARG ) \\
-CALLEXPR $\rightarrow$ id ( ARG ) \\
-CALLEXPR $\rightarrow$ EXPR \\
-ARG $\rightarrow$ $\epsilon$ \\
-ARG $\rightarrow$ id ARG2 \\
-ARG $\rightarrow$ fullid ARG2 \\
-ARG2 $\rightarrow$ $\epsilon$ \\
-ARG2 $\rightarrow$ com ARG3 ARG2 \\
-ARG3 $\rightarrow$ fullid \\
-ARG3 $\rightarrow$ id \\
-INIT $\rightarrow$ = CALLEXPR \\
-INIT $\rightarrow$ $\epsilon$ \\
-RET $\rightarrow$ EXPR \\
-RET $\rightarrow$ $\epsilon$ \\
-ELSE $\rightarrow$ $\epsilon$ \\
-ELSE $\rightarrow$ else ELSE2 \\
-ELSE2 $\rightarrow$ if ( EXPR ) \{ STLIST \} ELSE \\
-ELSE2 $\rightarrow$ \{ STLIST \} \\
-TYPE $\rightarrow$ void \\
-TYPE $\rightarrow$ int \\
-TYPE $\rightarrow$ string \\
-TYPE $\rightarrow$ double \\
-TYPE $\rightarrow$ boolean \\
+\begin{tabular}{l c l}
+PROG & $\rightarrow$ & BODY eof \\
+BODY & $\rightarrow$ & CLASS BODY \\
+BODY & $\rightarrow$ & $\epsilon$ \\
+CLASS & $\rightarrow$& class id \{ CBODY \} \\
+CBODY &$\rightarrow$& static TYPE id CBODY2 CBODY \\
+CBODY &$\rightarrow$& $\epsilon$ \\
+CBODY2 &$\rightarrow$& INIT ; \\
+CBODY2 &$\rightarrow$& FUNC \\
+FUNC &$\rightarrow$& ( PAR ) FBODY \\
+FBODY &$\rightarrow$& \{ STLIST \} \\
+PAR &$\rightarrow$& TYPE PAR2 \\
+PAR &$\rightarrow$& $\epsilon$ \\
+PAR2 &$\rightarrow$& $\epsilon$ \\
+PAR2 &$\rightarrow$& id PAR3 \\
+PAR3 &$\rightarrow$& com TYPE id PAR3 \\
+PAR3 &$\rightarrow$& $\epsilon$ \\
+STLIST &$\rightarrow$& STAT STLIST \\
+STLIST &$\rightarrow$&  $\epsilon$ \\
+STAT &$\rightarrow$& while ( EXPR ) \{ STLIST \} \\
+STAT &$\rightarrow$& if ( EXPR ) \{ STLIST \} ELSE \\
+STAT &$\rightarrow$& return RET ; \\
+STAT &$\rightarrow$& id = CALLEXPR ; \\
+STAT &$\rightarrow$& fullid = CALLEXPR ; \\
+STAT &$\rightarrow$& static TYPE id INIT ; \\
+STAT &$\rightarrow$& TYPE id INIT ; \\
+CALLEXPR &$\rightarrow$& fullid ( ARG ) \\
+CALLEXPR &$\rightarrow$& id ( ARG ) \\
+CALLEXPR &$\rightarrow$& EXPR \\
+ARG &$\rightarrow$& $\epsilon$ \\
+ARG &$\rightarrow$& id ARG2 \\
+ARG &$\rightarrow$& fullid ARG2 \\
+ARG2 &$\rightarrow$& $\epsilon$ \\
+ARG2 &$\rightarrow$& com ARG3 ARG2 \\
+ARG3 &$\rightarrow$& fullid \\
+ARG3 &$\rightarrow$& id \\
+INIT &$\rightarrow$& = CALLEXPR \\
+INIT &$\rightarrow$& $\epsilon$ \\
+RET &$\rightarrow$& EXPR \\
+RET &$\rightarrow$& $\epsilon$ \\
+ELSE &$\rightarrow$& $\epsilon$ \\
+ELSE &$\rightarrow$& else ELSE2 \\
+ELSE2 &$\rightarrow$& if ( EXPR ) \{ STLIST \} ELSE \\
+ELSE2 &$\rightarrow$& \{ STLIST \} \\
+TYPE &$\rightarrow$& void \\
+TYPE &$\rightarrow$& int \\
+TYPE &$\rightarrow$& string \\
+TYPE &$\rightarrow$& double \\
+TYPE &$\rightarrow$& boolean \\
+\end{tabular}
+
 
 \newpage
 \subsection{Precedenčná tabuľka}
