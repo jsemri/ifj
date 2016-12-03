@@ -1,6 +1,7 @@
 class Main {
 	static int a;
-    static int run() {
+    static void run() {}
+    static int brun() {
         return b; // returning undeclared variable
     }
 }

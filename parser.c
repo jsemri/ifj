@@ -681,6 +681,12 @@ int parse()
         terminate(DEFINITION_ERROR);
     }
 
+    if (run_func->attr.func->par_count != 0 ||
+        run_func->attr.func->data_type != is_void)
+    {
+        terminate(DEFINITION_ERROR);
+    }
+
     if (fseek(source, 0, SEEK_SET)) {
         terminate(INTERNAL_ERROR);
     } else {

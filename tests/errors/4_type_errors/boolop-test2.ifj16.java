@@ -1,5 +1,5 @@
 class Main {
-    static boolean run() {
+    static void run() {
         int a = true;  // 1
     }
 }

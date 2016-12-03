@@ -1,6 +1,7 @@
 class Main {
     static double a;
-    static void run(int a, double b) {
+    static void run() {}
+    static void ruen(int a, double b) {
         a = ifj16.sort("fads"); /// lvalue double
     }
 }

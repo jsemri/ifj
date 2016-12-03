@@ -9,7 +9,7 @@ HEADERS=$(wildcard *.h)
 OBJ_FILES=$(patsubst %.c, %.o, $(SRC_FILES))
 # tests + some formalities
 TEST_FILES="tests error_detection_test interpret_tests"
-FORMAL="rozdeleni dokumentace.pdf"
+FORMAL="rozdeleni dokumentace.pdf rozsireni"
 
 .PHONY: all clean release pack pack_test
 
@@ -28,7 +28,7 @@ pack:
 	zip xsemri00.zip *.c *.h Makefile rozdeleni dokumentace.pdf
 
 pack_test:
-	zip -r xsemri00_tests.zip *.c *.h Makefile $(FORMAL) $(TEST_FILES)
+	zip -r xsemri00_tests.zip *.c *.h Makefile "$(FORMAL)" "$(TEST_FILES)"
 
 test:
 	./error_detection_test; ./interpret_tests
