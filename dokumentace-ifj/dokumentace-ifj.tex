@@ -27,8 +27,8 @@
 
 \Huge{Implementácia interpretu imperatívneho jazyka}\\[4mm]
 \Huge{IFJ16}\\[2mm]
-\LARGE{Tím 052, variant a/2/II}\\
-\LARGE{Rozšírenia: }\\
+\LARGE{Tím 036, variant a/2/II}\\
+\LARGE{Rozšírenia: SIMPLE, BOOLOP}\\
 
 \vspace{\stretch{0.8}}
 
@@ -52,7 +52,7 @@ Martin Mikan\\
 
 \section{Úvod}
 
-Tento dokument popisuje návrh a implementáciu interpretu imperatívneho jazyka IFJ16, ktorý je podmnožinou jazyka JAVA.
+Tento dokument popisuje návrh a implementáciu interpretu imperatívneho jazyka \emph{IFJ16}, ktorý je podmnožinou jazyka \emph{JAVA SE 8}.
 Program funguje ako konzolová aplikácia, ktorá načíta zdrojový súbor programu v~jazyku IFJ16 a následne ho interpretuje. V~prípade výskytu chyby, program vracia kód chyby.
 
 Dokument sa skladá z~viacerých častí. V~kapitole \ref{tim} je stručne popísaný vývoj projektu, v časti \ref{popis} je popísané riešenie jednotlivých častí interpretu, v~kapitole \ref{algoritmy} sa venujeme použitým algoritmom a v~nasledujúcej kapitole \ref{struktury} dátovým štruktúram. Kapitola \ref{rozsirenia} dokumentuje vypracované rozšírenia, kapitola \ref{testovanie} rozoberá náš postup pri testovaní interpretu.
@@ -61,9 +61,16 @@ Dokument sa skladá z~viacerých častí. V~kapitole \ref{tim} je stručne popí
 \section{Práca v tíme} 
 \label{tim}
 
+Keďže sa jednalo o rozsiahly projekt, na ktorom pracoval tím o 5 členoch, bolo potrebné si určiť opatrenia a metódy spolupráce. Tie sme si stanovili hneď na začiatku vývojového cyklu. Zaviedli sme konvenciu písania kódu, ktorá nám zabezpečila prehľadnosť a jednotnosť projektu. Taktiež sme zaviedli konvenciu písania komentárov, aby spĺňali normu pre vygenerovanie dokumentácie v nástroji \texttt{doxygen}. K spolupráci viacerých ľudí na jednom projekte sme využili vytvorenie vzdialeného privátneho repozitára na servery \texttt{GitHub, Inc.}.
+
+Tímovú komuníkaciu a kolaboráciu sme riešili osobnými stretnutiami, ktoré boli približne raz za tri týždňe. Stanovili sme si ciele, ktoré museli byť do najbližšieho stretnutia dosiahnuté. Tieto ciele sa naozaj podarilo za určený čas splniť a spolu zo zavedením regresných testov vývoj celého projektu prebiehal prekvapujúco. Mimo týchto stretnutí sme komunikovali pomocou webovej služby Facebook.
+
     \subsection{Rozdelenie úloh}
     \begin{center}
     \begin{tabular}{|c|c|}
+    \hline
+    \large{\textbf{Implementovaná časť}} & \large{\textbf{Člen týmu}}\\
+    \hline
     \hline
     Lexikálny analyzátor & Kryštof Rykala \\
     \hline
@@ -80,16 +87,9 @@ Dokument sa skladá z~viacerých častí. V~kapitole \ref{tim} je stručne popí
     
     \subsection{Priebeh vývoja}
     \label{vyvoj}
-    Pre nedostatok vedomostí týmu a nestabilitu návrhu, vývoj prebiehal v niekoľkých iteráciach. Na začiatku každej iterácie
-    sa plánovalo s primeranou mierou, v ďalšej fáze sa implementovalo a na konci iterácie sa zamýšľalo čo sa bude robiť ďalej a
-    ako riešiť novo vzniknuté problémy.
+    Pre nedostatok vedomostí týmu a nestabilitu návrhu, vývoj prebiehal v niekoľkých iteráciach. Na začiatku každej iterácie sa plánovali ďalšie kroky, v ďalšej fáze sa implementovalo a na konci iterácie sa zamýšľalo čo sa bude robiť ďalej, a ako riešiť novo vzniknuté problémy.
 
-    Pri návrhu a implementácii
-    jednotlivých modulov sa postupovalo tak, aby výsledok bol čo najviac flexibilný a~interoperabilný s~ostatnými modulmi.
-    Na každom stretnutí, ktoré
-    bolo približne raz za tri týždňe, sa stanovili ciele, ktoré museli byť do najbližšieho stretnutia dosiahnuté. Tieto ciele
-    sa naozaj podarilo za určený čas splniť a spolu zo zavedením regresných testov vývoj celého projektu prebiehal  prekvapujúco
-    rýchlo.
+    Pri návrhu a implementácii jednotlivých modulov sa postupovalo tak, aby výsledok bol čo najviac flexibilný a~interoperabilný s~ostatnými modulmi. Na každom stretnutí, 
 
 \section{Popis riešenia a implementácia jazyka IFJ16}
 \label{popis}
@@ -99,39 +99,30 @@ Projekt sme implementovali z niekoľkých funkčných celkov. V nasledujúcich p
     \subsection{Lexikálny analyzátor}
     \label{lexer}
     Lexikálny analyzátor tvorí vstupnú časť interpretu. Model tvorí deterministický konečný automat.
-    Spracováva zdrojový súbor a~identifikuje v ňom platńe lexémy, ktoré posiela syntaktickému analyzátoru vo forme tokenu.
-    Token obsahuje typ lexémy a~v~prípade aj hodnotu ak sa jedná o~celočíselný, desatinný alebo reťazcový literál.
+    Spracováva zdrojový súbor a~identifikuje v ňom platé lexémy, ktoré posiela syntaktickému analyzátoru vo forme tokenov.
+    Token obsahuje typ lexémy a~v~prípade aj hodnotu, ak sa jedná o~celočíselný, desatinný alebo reťazcový literál.
 
     Konečný automat je implementovaný tak aby vedel spracovat aj jednoduché \texttt{//} a~blokové \texttt{/* */} komentáre.
     Po ukončení komentáru  automat prejde do začínajúceho stavu a~začne spracovávať nasledujúcu lexému alebo ďalší komentár.
 
-    Model konečného automatu môžete násjť v~prílohe 9.1. % TODO referencia na automat
+    Model konečného automatu môžete násjť v~prílohe \ref{app:automat}.
 
 
     \subsection{Syntaktický a sémantický analyzátor}
     \label{parser}
-    Syntaktický analýzátor (parser) je hlavná časť interpretu. Parser dostáva riadenie hned po otvorení súboru. Má za úlohu nielen
-    preveriť syntax a~sémantiku zdrojového súboru, ale taktiež vkladá inštrukcie do inštrukčnej pásky. Jeho implementácia spočíva
-    v~rekurzívnom zostupe, ktorý je riadený LL(1) gramatikou. % TODO referencia na gramatiku
+    Syntaktický analýzátor (parser) je hlavná časť interpretu. Parser dostáva riadenie hneď po otvorení súboru. Má za úlohu nielen preveriť syntax a~sémantiku zdrojového súboru, ale taktiež vkladá inštrukcie do inštrukčnej pásky. Jeho implementácia spočíva v~rekurzívnom zostupe, ktorý je riadený LL gramatikou znázorňenou v prílohe \ref{gramatika}.
 
-    Keďže jazyk \emph{IFJ16} je podmnožinou jazyka \emph{JAVA SE 8}, ktorého preklad je zložený z dvoch priechodov, je parser zložený
-    taktiež z~dvoch priechodov. Prvý priechod analyzuje program zo syntaktického a~lexikálneho hľadiska, súčastne vkladá do tabuľky
-    symbolov názvy tried, statických funkcií a~premmenných a kontroluje pokus o redefiníciu triedy, funkcie alebo statickej premmennej.
+    Keďže jazyk \texttt{IFJ16} je podmnožinou jazyka \texttt{JAVA SE 8}, ktorého preklad je zložený z dvoch priechodov, je parser zložený taktiež z~dvoch priechodov. Prvý priechod analyzuje program zo syntaktického a~lexikálneho hľadiska, súčasne vkladá do tabuľky symbolov názvy tried, statických funkcií a~premmenných, a kontroluje pokus o redefiníciu triedy, funkcie alebo statickej premmennej.
     Druhý priechod kontroluje semántiku programu, spracováva telá funkcií a~vytvára inštrukčnú pásku.
 
 
 
         \subsubsection{Spracovanie jazykových inštrukcií\,-- rekurzívny zostup}
         \label{rekurzia}
-        Rekurzívny zostup riadený LL(1) gramatikou, bol implementovaný tak, že každý neterminál v~gramatike bol reprezentovaný funkciou,
-        z~ktorej sa postupne volali ďalšie funkcie na základe aktuálneho tokenu a~pravidla v~gramatike. Aktuálne načítaný token zase reprezentoval
-        terminálne symboly gramatiky.
+        Rekurzívny zostup riadený LL gramatikou, bol implementovaný tak, že každý neterminál v~gramatike bol reprezentovaný funkciou, z~ktorej sa postupne volali ďalšie funkcie na základe aktuálneho tokenu a~pravidla v~gramatike. Aktuálne načítaný token zase reprezentoval terminálne symboly gramatiky.
 
         Druhý priechod je tiež založený na rekurzívnom zostupe, avšak úloha jednotlivých funkcií sa od prvého priechodu značne odlišuje.
-        Pri inicializácii statických premenných sa výraz za \texttt{=} vyhodnotí precedenčnou analýzou a~vložia sa inštrukcie do hlavného
-        inštrukčného listu. Pri analýze funkcií sa postupne vložia ďalšie inštrukcie do inštrukčného listu aktuálne spracovávanej funkcie
-        a~v~prípade vyhodnotenia výrazu (pri príkazoch
-        \texttt{while/if/else if ( \emph{EXP} ), id = \emph{EXP}}) sa predá riadenie precedenčnej analýze.
+        Pri inicializácii statických premenných sa výraz za \texttt{=} vyhodnotí precedenčnou analýzou a~vložia sa inštrukcie do hlavného inštrukčného listu. Pri analýze funkcií sa postupne vložia ďalšie inštrukcie do inštrukčného listu aktuálne spracovávanej funkcie a~v~prípade vyhodnotenia výrazu (pri príkazoch \texttt{while/if/else if ( \emph{EXP} ), id = \emph{EXP}}) sa predá riadenie precedenčnej analýze.
 
         V~prípade volania funkcie sa skontroluje existencia funkcie v~členskej triede, počet a~typ parametrov a~v~prípade priradenia
         návratový typ funkcie a~premennej, do ktorej je volanie priradené.
@@ -144,26 +135,28 @@ Projekt sme implementovali z niekoľkých funkčných celkov. V nasledujúcich p
 
         \subsubsection{Precedenčná analýza výrazov}
         \label{precedencna analyza}
-        % TODO referencia na tabulku 
-    TODO
-    
+        
+        Pre spracovanie výrazov sme použili precedenčnú syntaktickú analýzu zdola nahor. Pri spracovávaní výrazu, parser zavolá modul TODO. Aktuálne načítaný token je začiatočný token výrazu. Po spracovaní výrazu vracia modul typ výsledného výrazu a chybový kód. 
+        
+        Precedenčná analýza je implementovaná pomocou precedenčnej tabuľky viz. príloha \ref{tabulka} a pomocného zásobníku pre ukladanie výrazov a operátorov.
+        
+        TODO
+        
     \subsection{Interpret vnútorného kódu}
     \label{interpret}
     Interpret postupne vykonáva inštrukcie v~inštrukčnom liste až kým nenarazí na chybu (napr. práca s neinicializovanou premennou)
     alebo na koniec listu. Každá inštrukcia má osobitnú implementáciu. Interpret aktívne využíva hlavný zásobník a~zásobník rámcov.
-    Lokálne premenné s~ktorými má pracovať  sú v~tabuľke, ktorá je na vrchole zásobníku rámcov. Statické premenné a~konštanty sú spracovávané
+    Lokálne premenné, s~ktorými má pracovať  sú v~tabuľke, ktorá je na vrchole zásobníku rámcov. Statické premenné a~konštanty sú spracovávané
     priamo bez vyhľadania v tabuľke.
 
        \subsubsection{Volanie a návrat z funkcií}
        \label{funkcia}
-       Pri inštrukcii volania funkcie \texttt{CALL} sa podľa prvej adresy (3-adresný kód inštrukcie) zistí o~akú funkciu sa jedná
-       a~koľko parametrov je na zásobníku.
-       Vytvorí sa nový rámec s lokálnou tabuľkou skopírovanou z lokálnej tabuľky volanej funkcie a súčastne sa naplnia parametre
-       hodnotamy premenných na zásobníku. Rámec sa uloží na vrchol zásobníku rámcov, potom
-       nasleduje skok na prvú položku inštrukčného listu danej funkcie.
+       Pri inštrukcii volania funkcie \texttt{CALL} sa podľa prvej adresy (3-adresný kód inštrukcie) zistí o~akú funkciu sa jedná a~koľko parametrov je na zásobníku.
+       Vytvorí sa nový rámec s lokálnou tabuľkou skopírovanou z lokálnej tabuľky volanej funkcie a súčasne sa naplnia parametre
+       hodnotami premenných na zásobníku. Rámec sa uloží na vrchol zásobníku rámcov. Nasleduje skok na prvú položku inštrukčného listu danej funkcie.
        Pri inštrukcii \texttt{RET} (príkaz \texttt{return}) nasleduje skok na miesto odkiaľ bola funkcia volaná, takže na inštrukciu za
        inštrukciou \texttt{CALL} v predošlom liste. Miesto reprezentované inštrukciou \texttt{LAB} je uložené na hlavný zásobník aby sa
-       vedelo, ktorou inštruciou sa má pokračovať. Návratová hodnota funkcie je uložená v~špeciálnych premenných uložených v~globálnej
+       vedelo, ktorou inštrukciou sa má pokračovať. Návratová hodnota funkcie je uložená v~špeciálnych premenných uložených v~globálnej
        tabuľke symbolov. Jedná sa o emuláciu registrov, ktoré zjednodušujú implementáciu celého interpretu.
 
     
@@ -187,8 +180,8 @@ TODO
 
         \subsection{Tabuľka s rozptýlenými položkami}
         Tabuľka s rozptýlenými položkami je implementovaná ako pole jednosmerne viazaných zoznamov symbolov. Symbol obsahuje
-        mimo identifikátora aj ukazatel na členskú triedu. Vyhľadávanie spočíva v nájdení symbolu s~rovnakým identifikátorom
-        a súčastne rovnakou členskou triedou. Toto vyhľadávanie zabráňuje kolíziam symbolov rovnakých mien v rôznych úrovniach.
+        mimo identifikátora aj ukazateľ na členskú triedu. Vyhľadávanie spočíva v nájdení symbolu s~rovnakým identifikátorom
+        a súčasne rovnakou členskou triedou. Toto vyhľadávanie zabráňuje kolíziam symbolov rovnakých mien v rôznych úrovniach.
         Kedže lokálne premenné nemajú členskú triedu existuje varianta vyhľadávaní v tabuľke iba s jedným kľúčom.
 
         V interprete sa používaju dva typy tabuliek: lokálna a~globálna. V~globálnej tabuľke sú uložené symboly reprezentujúce
@@ -196,10 +189,7 @@ TODO
         funkcií, ktoré majú vlastnú tabuľku symbolov.
 
         \subsection{Zásobník}
-        Zásobník je implementovaný ako pole ukazateľov určitej kapacity. Ak je zásobník plný dôjde
-        k automatickej realokácii a zvýšeniu kapacity zásobníku. V~interprete sa používaju dva zásobníky. Jeden z~nich
-        sa používa na uloženie odkazov na miesta skokov a odkazy na parametre funkcií. Druhý zásobník je použitý na ukladanie
-        rámcov, ktoré obsahujú lokálnu tabuľku symbolov.
+        Zásobník je implementovaný ako pole ukazateľov určitej kapacity. Ak je zásobník plný dôjde k automatickej realokácii a zvýšeniu kapacity zásobníku. V~interprete sa používaju dva zásobníky. Jeden z~nich sa používa na uloženie odkazov na miesta skokov a odkazy na parametre funkcií. Druhý zásobník je použitý na ukladanie rámcov, ktoré obsahujú lokálnu tabuľku symbolov.
 
 \section{Rozšírenia} 
 \label{rozsirenia}
@@ -218,7 +208,7 @@ TODO
 \label{testovanie}
 Návrh testov bol založený na metóde ekvivalenčných tried. Testy mali charakter regresných testov, takže zmena zdrojových súborov nebola možná ak
 všetky testy neboli úspešné. Testy sa delili do dvoch skupín\,-- testy detekcie chýb a interpretačné testy. Pri testovaní bol použitý program
-\texttt{gcovr}, ktrorý nám ukázal, ktoré časti interpretu neboli otestované.
+\texttt{gcovr}, ktorý nám ukázal, ktoré časti interpretu neboli otestované.
 % TODO odkaz na gcovr: http://gcovr.com/
 
 \section{Použité zdroje}
@@ -230,11 +220,13 @@ TODO - prosím pridajte link alebo názov zdroja, dohľadám bibliografické inf
 
 
 \subsection{Konečný automat}
+\label{app:automat}
 
 
 \newpage
 
 \subsection{LL-gramatika}
+\label{gramatika}
 %TODO 2 stlpce
 PROG $\rightarrow$ BODY eof \\
 BODY $\rightarrow$ CLASS BODY \\
@@ -287,5 +279,6 @@ TYPE $\rightarrow$ boolean \\
 
 \newpage
 \subsection{Precedenčná tabuľka}
+\label{tabulka}
 
 \end{document}
