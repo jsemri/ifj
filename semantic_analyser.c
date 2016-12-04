@@ -549,6 +549,7 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
     T_symbol *acc = dtype == is_str ? acc_s: acc_b;
     acc = dtype == is_int ? acc_n : acc;
     acc = dtype == is_double ? acc_d: acc;
+    acc = dtype == is_void ? NULL : acc;
 
 
     if (dest) {

@@ -259,11 +259,11 @@ void interpret_loop(ilist *instr_list)
                 dest = get_var(ins->dest);
                 op1 = get_var(ins->op1);
                 // uninitialized or assign from void funtion
-                if (op1->attr.var->data_type == is_void ||
-                    !is_init(op1))
+                if (!op1 ||!is_init(op1))
                 {
                     terminate(8);
                 }
+
                 if (is_real(dest)) {
                     double x = is_real(op1) ? op1->attr.var->value.d :
                                               op1->attr.var->value.n;
