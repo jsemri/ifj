@@ -247,7 +247,7 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 if (is_rbrac(it))
                     terminate(TYPE_ERROR);   // FIXME DEF_ERROR ???
 
-                bool is_atleast_one_str;
+                bool is_atleast_one_str = false;
                 int count = 0;
                 it = it - 2 + tcount; // going form last
                 tcount-=2;
@@ -303,6 +303,12 @@ int handle_builtins(T_token *it, int tcount, ilist *L, T_symbol *dest,
                 val.n = count;
                 create_instr(L, TI_print, add_constant(&val, symbol_tab, is_int),
                              NULL, NULL);
+
+                // void assignment -error 8
+                if (dest) {
+                    create_instr(L, TI_mov, NULL, NULL, dest);
+                }
+
                 return 0;
             }}}
         case b_length:
@@ -489,7 +495,6 @@ int handle_function(T_token *it, int tcount, ilist *L, T_symbol *dest,
     if (dest && fsym->attr.func->data_type != is_void) {
         T_data_type d1 = fsym->attr.func->data_type;
         T_data_type d2 = dest->attr.var->data_type;
-        // d1 == d2 || (d1 = in_int && d2 = is_double)
         if ( d1 != d2 && (d1 != is_int  || d2 !=is_double) )
             terminate(TYPE_ERROR);
     }
