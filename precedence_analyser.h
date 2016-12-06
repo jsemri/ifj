@@ -47,7 +47,7 @@
  * @param lvalue Symbol where the result of the expression will be stored
  * @param local_table The table with local variables
  * @param act_class The current class, if any.
- * @param instr_list The instrunction list where the instruction will be
+ * @param instr_list The instruction list where the instruction will be
  *                   generated. The new instruction will be added to the end
  *                   of the list.
  */
