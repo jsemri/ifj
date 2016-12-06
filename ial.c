@@ -194,34 +194,50 @@ void sift_down(char *str, int left, int right)
     str[i] = tmp;
 }}}
 
+/**
+ * Find a substring in a string
+ * @param str The string where the substring will be searched
+ * @param pattern The substring to be found
+ * @return Index of the start of the first occurrence of pattern in the str
+ *         or -1, if the pattern won't be found
+ */
 int find_kmp(char *str, char *pattern)
-{{{
-    unsigned k;
+{
+    int pattern_length = (int) strlen(pattern);
+    int str_length = (int) strlen(str);
+
+    // Generate fail vector:
+    int k;
     int r;
-    int fail_vector[strlen(pattern)];
+    int fail_vector[pattern_length];
 
     fail_vector[0] = -1;
-    for (k = 1; k < strlen(pattern); k++) {
+    for (k = 1; k < pattern_length; k++) {
         r = fail_vector[k-1];
         while ((r > -1) && (pattern[r] != pattern[k-1]))
             r = fail_vector[r];
         fail_vector[k] = r + 1;
     }
 
-    unsigned string_index = 0;
-    unsigned pattern_index = 0;
+    // Find the substring:
+    int string_index = 0;
+    int pattern_index = 0;
 
-    while ((string_index < strlen(str)) && (pattern_index < strlen(pattern))) {
-        if ((pattern_index == 0) || (str[string_index] == pattern[pattern_index])) {
+    while ((string_index < str_length) && (pattern_index < pattern_length)) {
+        if ((pattern_index == -1) || (str[string_index] ==
+                                      pattern[pattern_index])) {
             string_index++;
             pattern_index++;
         }
         else
             pattern_index = fail_vector[pattern_index];
     }
-    if (pattern_index == strlen(pattern))
-        return string_index - strlen(pattern);
+
+    if (pattern_index == pattern_length)
+        // Return the result:
+        return string_index - pattern_length;
     else
+        // No match was found
         return -1;
-}}}
+}
 
