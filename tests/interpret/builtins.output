@@ -53,61 +53,202 @@ Lorem ipsum
 1
 
 [TEST 19] Hledání podřetězce: dva prázdný
-0
+Kde: '', co: ''
+      
+Výsledek: 0
 
 [TEST 20] Hledání podřetězce: první prázdný
--1
+Kde: '', co: 'Ahoj'
+Výsledek: -1
 
 [TEST 21] Hledání podřetězce: druhý prázdný
-0
+Kde: 'Ahoj', co: ''
+      
+Výsledek: 0
 
 [TEST 22] Hledání podřetězce: dva stejný
-0
+Kde: 'Ahoj', co: 'Ahoj'
+      ^^^^
+Výsledek: 0
 
 [TEST 23] Hledání podřetězce: první má znak navíc
-0
+Kde: 'Ahoj ', co: 'Ahoj'
+      ^^^^
+Výsledek: 0
 
 [TEST 24] Hledání podřetězce: druhý má znak navíc
--1
+Kde: 'Ahoj', co: 'Ahoj '
+Výsledek: -1
 
-[TEST 25] Hledání podřetězce: první menší
--1
+[TEST 25] Hledání podřetězce: mezera před prvním
+Kde: ' Ahoj', co: 'Ahoj'
+       ^^^^
+Výsledek: 1
 
-[TEST 26] Hledání podřetězce: první větší
--1
+[TEST 26] Hledání podřetězce: mezera před druhým
+Kde: 'Ahoj', co: ' Ahoj'
+Výsledek: -1
 
-[TEST 27] Hledání podřetězce: na začátku
-0
+[TEST 27] Hledání podřetězce: první menší
+Kde: 'ahoj', co: 'světe'
+Výsledek: -1
 
-[TEST 28] Hledání podřetězce: nutnost se vrátit
-5
+[TEST 28] Hledání podřetězce: první větší
+Kde: 'světe', co: 'ahoj'
+Výsledek: -1
 
-[TEST 29] Hledání podřetězce: další vracení
-13
+[TEST 29] Hledání podřetězce: na začátku
+Kde: 'Skakal pes pres oves', co: 'Skakal'
+      ^^^^^^
+Výsledek: 0
 
-[TEST 30] Hledání podřetězce: na konci
-18
+[TEST 30] Hledání podřetězce: nutnost se vrátit
+Kde: 'SSSSSSkakal pes', co: 'Skakal'
+           ^^^^^^
+Výsledek: 5
 
-[TEST 31] Hledání podřetězce: skoro na konci, ale znak chybí
--1
+[TEST 31] Hledání podřetězce: další vracení
+Kde: 'SSkaSSkakaSSkakal pes', co: 'Skakal'
+                 ^^^^^^
+Výsledek: 11
 
-[TEST 32] Seřazení textu: prázdný řetězec
+[TEST 32] Hledání podřetězce: na konci
+Kde: 'Skakal pes pres oves', co: 'oves'
+                      ^^^^
+Výsledek: 16
+
+[TEST 33] Hledání podřetězce: skoro na konci, ale znak chybí
+Kde: 'Lazy dog', co: 'dogs'
+Výsledek: -1
+
+[TEST 34] Hledání podřetězce: Test od Dávida
+Kde: 'good', co: 'g'
+      ^
+Výsledek: 0
+
+[TEST 35] Hledání podřetězce: Test od Dávida
+Kde: 'good', co: 'o'
+       ^
+Výsledek: 1
+
+[TEST 36] Hledání podřetězce: Test od Dávida
+Kde: 'good', co: 'd'
+         ^
+Výsledek: 3
+
+[TEST 37] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: ''
+      
+Výsledek: 0
+
+[TEST 38] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'm'
+           ^
+Výsledek: 5
+
+[TEST 39] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'a'
+       ^
+Výsledek: 1
+
+[TEST 40] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'ma'
+           ^^
+Výsledek: 5
+
+[TEST 41] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'aa'
+            ^^
+Výsledek: 6
+
+[TEST 42] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'maa'
+           ^^^
+Výsledek: 5
+
+[TEST 43] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'aaa'
+            ^^^
+Výsledek: 6
+
+[TEST 44] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'maaa'
+           ^^^^
+Výsledek: 5
+
+[TEST 45] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'aaaa'
+            ^^^^
+Výsledek: 6
+
+[TEST 46] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'maaaa'
+           ^^^^^
+Výsledek: 5
+
+[TEST 47] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'aaaaa'
+            ^^^^^
+Výsledek: 6
+
+[TEST 48] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'maaaaa'
+           ^^^^^^
+Výsledek: 5
+
+[TEST 49] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'aaaaaa'
+            ^^^^^^
+Výsledek: 6
+
+[TEST 50] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'maaaaaa'
+           ^^^^^^^
+Výsledek: 5
+
+[TEST 51] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'aaaaaaa'
+            ^^^^^^^
+Výsledek: 6
+
+[TEST 52] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'maaaaaaa'
+           ^^^^^^^^
+Výsledek: 5
+
+[TEST 53] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'aaaaaaaa'
+Výsledek: -1
+
+[TEST 54] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'maaaaaaaa'
+Výsledek: -1
+
+[TEST 55] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'aaaaaaaaa'
+Výsledek: -1
+
+[TEST 56] Hledání podřetězce: Test na motiv Martiny G. a Dávida
+Kde: 'Ta Tamaaaaaaara', co: 'maaaaaaaaa'
+Výsledek: -1
+
+[TEST 57] Seřazení textu: prázdný řetězec
  -> 
 
-[TEST 33] Seřazení textu: jeden znak
+[TEST 58] Seřazení textu: jeden znak
 A -> A
 
-[TEST 34] Seřazení textu: několik stejných znaků
+[TEST 59] Seřazení textu: několik stejných znaků
 !!!!!!!!!! -> !!!!!!!!!!
 
-[TEST 35] Seřazení textu: již seřazený řetězec
+[TEST 60] Seřazení textu: již seřazený řetězec
 cennost -> cennost
 
-[TEST 36] Seřazení textu: opačně seřazený řetězec
+[TEST 61] Seřazení textu: opačně seřazený řetězec
 tsoledb -> bdelost
 
-[TEST 37] Seřazení textu: opakující se znaky
+[TEST 62] Seřazení textu: opakující se znaky
 tamara -> aaamrt
 
-[TEST 38] Seřazení textu: normální řetězec
+[TEST 63] Seřazení textu: normální řetězec
 V saline bylo 42 lidi. ->     .24Vabdeiiilllnosy
