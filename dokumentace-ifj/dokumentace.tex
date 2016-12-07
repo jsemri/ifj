@@ -1,4 +1,5 @@
 \documentclass[11pt,a4paper]{article}
+
 \usepackage[left=2cm, top=2.5 cm, text={17cm, 24cm}]{geometry}
 \usepackage[czech]{babel}
 \usepackage[utf8]{inputenc}
@@ -14,6 +15,7 @@
 \usepackage{hyperref}
 \usepackage{natbib}
 \usepackage{breakurl}
+\usepackage[IL2]{fontenc}
 
 
 
@@ -21,6 +23,7 @@
 
 \begin{document}
 
+\renewcommand{\refname}{}
 	\begin{titlepage}
 		\begin{center}
 			\textsc{\Huge Vysoké učení technické v Brně\\ \medskip
@@ -167,7 +170,8 @@
 	\subsubsection{Precedenčná analýza výrazov}
 	\label{precedencna analyza}
 
-	Pre spracovanie výrazov sme použili precedenčnú syntaktickú analýzu zdola nahor.
+	Pre spracovanie výrazov sme použili precedenčnú syntaktickú analýzu zdola nahor,
+    riadenú vlastnou gramatikou.
 	Parser načítal postupnosť tokenov, ktoré mali byť súčasťou výrazu a predal
 	riadenie precedenčnej analýze. Jej výstupom postupnosť inštrukcií, ktoré vyhodnotia tento výraz.
 
@@ -177,13 +181,8 @@
 	Precedenčná tabulka je implementována ako statické pole, kde index prvku je vyjadrený vzťahom $[row * width + col]$.
 	Typy tokenov reprezentujúce premenné alebo konštatnty zdieľajú jeden stĺpec.
 
-	Operácie nad zásobníkom sú zjednodušené vynechaním napríklad operácie, ktorá by vracala prvok na vrchu zásovníka, keďže táto funkcia nie je potrebná. Naopak bol rozšírený o funkcie ako TODO, ktorá vracia typ najbližšieho tokenu k vrcholu zásobníku alebo o funkciu TODO, ktorá odoberie a vráti všetky neterminály zo zásobníku až po prvý handle, vrátane.
-
-	 % Existujú pravidla, pomocí ktorých se
-	%redukuje, v poli struktur, kde každá struktura představuje jedno pravidlo.
-	%Struktura obahuje prvky pravé strany pravidla vyjádřených pomocí typů tokenů
-	%(např. E, ==, E), kde pro Expression je rezervován vyhrazen typ tokenu
-	%TT_empty a odkaz na funkci, která toto pravidlo odsimuluje. TODO
+	Operácie nad zásobníkom sú zjednodušené vynechaním napríklad operácie, ktorá by
+    vracala prvok na vrchu zásobníka, keďže táto funkcia nie je potrebná.
 
 	\subsection{Interpret vnútorného kódu}
 	\label{interpret}
@@ -207,7 +206,7 @@
 	Pri inštrukcii \texttt{RET} (príkaz \texttt{return}) nasleduje skok na
 	miesto odkiaľ bola funkcia volaná, takže na inštrukciu za inštrukciou
 	\texttt{CALL} v predošlom liste. Miesto reprezentované inštrukciou
-	\texttt{LAB} %TODO label - footnote - navestie
+    \texttt{LAB}\footnote{Label\,--\,inštrukcia reprezentujúca návestie}
     je uložené na hlavný zásobník aby sa vedelo, ktorou inštrukciou
 	sa má pokračovať. Návratová hodnota funkcie je uložená v~špeciálnych
 	premenných uložených v~globálnej tabuľke symbolov. Jedná sa o emuláciu
@@ -263,9 +262,10 @@
 	\subsection{Zásobník}
 	Zásobník je implementovaný ako pole ukazateľov určitej kapacity. Ak je zásobník
 	plný dôjde k automatickej realokácii a zvýšeniu kapacity zásobníku.
-	V~interprete sa používaju dva zásobníky. Jeden z~nich sa používa na uloženie
+	V~interprete sa používaju tri zásobníky. Jeden z~nich sa používa na uloženie
 	odkazov na miesta skokov a odkazy na parametre funkcií. Druhý zásobník je
 	použitý na ukladanie rámcov, ktoré obsahujú lokálnu tabuľku symbolov.
+    Posledný zásobník používa analýza výrazov, ktorá si naň ukladá operandy a~operátory.
 
 	\section{Rozšírenia}
 	\label{rozsirenia}
@@ -292,7 +292,7 @@
 	všetky testy neboli úspešné. Testy sa delili do dvoch skupín\,--\,testy
 	detekcie chýb a interpretačné testy. Pri testovaní bol použitý program
 	\texttt{gcovr} od \cite{COV}, ktorý nám ukázal aké časti interpretu neboli otestované.
-
+    \newpage
 	\section{Použité zdroje}
 	\bibliography{dokumentace.bib}{}
 	\bibliographystyle{czechiso}
@@ -303,6 +303,7 @@
 
 	\subsection{Konečný automat}
 	\label{app:automat}
+% TODO
 %	\begin{center}
 	%	\scalebox{0.9} {\includegraphics{IFJ.eps}}
 %	\end{center}
@@ -367,5 +368,44 @@
 	\newpage
 	\subsection{Precedenčná tabuľka}
 	\label{tabulka}
+    \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+    \hline
+    & + & - & / & * & ==& !=& \textless & \textgreater & \textless = & \textgreater = & \&\& & \textbar \textbar & ! & ( & ) & i & \$
+    \\ \hline
+ +  & \textgreater & \textgreater & \textless & \textless & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+    \\ \hline
+ -  & \textgreater & \textgreater & \textless & \textless & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+    \\ \hline
+ /  & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+    \\ \hline
+ *  & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+    \\ \hline
+ == & \textless & \textless & \textless & \textless &   &   & \textless & \textless & \textless & \textless & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+    \\ \hline
+ != & \textless & \textless & \textless & \textless &   &   & \textless & \textless & \textless & \textless & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+    \\ \hline
+ \textless  & \textless & \textless & \textless & \textless & \textgreater & \textgreater &   &   &   &   & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+    \\ \hline
+ \textgreater  & \textless & \textless & \textless & \textless & \textgreater & \textgreater &   &   &   &   & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+    \\ \hline
+ \textless= & \textless & \textless & \textless & \textless & \textgreater & \textgreater &   &   &   &   & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+    \\ \hline
+ \textgreater= & \textless & \textless & \textless & \textless & \textgreater & \textgreater &   &   &   &   & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+    \\ \hline
+ \&\& & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+    \\ \hline
+ \textbar \textbar & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+    \\ \hline
+ !  & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+    \\ \hline
+ (  & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & = & \textless &
+    \\ \hline
+ )  & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater &   & \textgreater &   & \textgreater
+    \\ \hline
+ i  & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater &   & \textgreater &   & \textgreater
+    \\ \hline
+ \$  & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless &   & \textless &
+\\    \hline
+\end{tabular}
 
 \end{document}
