@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "debug.h"
+#include "precedence_analyser_stack.h"
 
 T_symbol_table *symbol_tab;
 FILE *source;
@@ -95,7 +96,7 @@ void terminate(int err_code) {
     token_free(&token);
     if (global_token_vector)
         token_vec_delete(global_token_vector);
-    //prec_stack_free();
+    prec_stack_free();
     stack_remove(&frame_stack, true);
     stack_remove(&main_stack, false);
     // dividing lists
@@ -114,8 +115,6 @@ void terminate(int err_code) {
     fclose(source);
     table_remove(&symbol_tab);
     free(char_vector);
-
-    print_error(err_code);
 
     exit(err_code);
 }
