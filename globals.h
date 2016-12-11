@@ -70,14 +70,6 @@ extern int vector_size;
 // for dividing merged lists
 extern T_instr *div_point;
 
-struct T_pool {
-    void **first;
-    void **last;
-    int size;
-};
-
-void *alloc(size_t size);
-void *ralloc(void *ptr, size_t size);
 void terminate(int err_code);
 
 #endif
