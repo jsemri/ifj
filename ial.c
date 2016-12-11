@@ -153,19 +153,15 @@ void table_remove(T_symbol_table **stab)
 
 void heap_sort(char *str)
 {{{
-	int n = strlen(str) - 1;
-	int left = n / 2;
-	int right = n;
-	char tmp;
-    //establishment of heap
-    for (int i = left; i >= 0; i--) {
-        sift_down(str, i, right);
-    }
-    //heap-sort
-    for (right = n; right >= 1; right--) {
-        tmp = str[0];
-        str[0] = str[right];
-        str[right] = tmp;
+	int right = strlen(str)-1;
+
+    for (int left = right/2; left >= 0; left--)
+        sift_down(str, left, right);
+
+    for (; right >= 1; right--) {
+        str[0] ^= str[right];
+        str[right] ^= str[0];
+        str[0] ^= str[right];
         sift_down(str, 0, right - 1);
     }
 }}}
@@ -175,20 +171,16 @@ void sift_down(char *str, int left, int right)
     int i = left;
     int j = 2 * i; //left son index
     char tmp = str[i];
-    bool cont = j <= right;
 
-    while (cont) {
-        if (j < right)
-            if (str[j] < str[j + 1]) {
-                j = j + 1;
-            } // if
+    while (j <= right) {
+        if (j < right && str[j] < str[j+1])
+            j++;
         if (tmp >= str[j])
-            cont = false;
+            break;
         else {
             str[i] = str[j];
             i = j;
-            j = 2 * i;
-            cont = j <= right;
+            j *= 2;
         }
     }
     str[i] = tmp;
@@ -201,43 +193,36 @@ void sift_down(char *str, int left, int right)
  * @return Index of the start of the first occurrence of pattern in the str
  *         or -1, if the pattern won't be found
  */
-int find_kmp(char *str, char *pattern)
-{
-    int pattern_length = (int) strlen(pattern);
-    int str_length = (int) strlen(str);
+int find_kmp(char *str, char *substr)
+{{{
+    int sub_len = strlen(substr);
+    int str_len = strlen(str);
 
     // Generate fail vector:
-    int k;
-    int r;
-    int fail_vector[pattern_length];
+    int fail_vector[sub_len];
 
     fail_vector[0] = -1;
-    for (k = 1; k < pattern_length; k++) {
-        r = fail_vector[k-1];
-        while ((r > -1) && (pattern[r] != pattern[k-1]))
+    for (int k = 1; k < sub_len; k++) {
+        int r = fail_vector[k-1];
+        while ((r > -1) && (substr[r] != substr[k-1]))
             r = fail_vector[r];
         fail_vector[k] = r + 1;
     }
 
     // Find the substring:
-    int string_index = 0;
-    int pattern_index = 0;
+    int str_index = 0;
+    int sub_index = 0;
 
-    while ((string_index < str_length) && (pattern_index < pattern_length)) {
-        if ((pattern_index == -1) || (str[string_index] ==
-                                      pattern[pattern_index])) {
-            string_index++;
-            pattern_index++;
+    while ((str_index < str_len) && (sub_index < sub_len)) {
+        if ((sub_index == -1) || (str[str_index] == substr[sub_index])) {
+            str_index++;
+            sub_index++;
         }
-        else
-            pattern_index = fail_vector[pattern_index];
+        else {
+            sub_index = fail_vector[sub_index];
+        }
     }
 
-    if (pattern_index == pattern_length)
-        // Return the result:
-        return string_index - pattern_length;
-    else
-        // No match was found
-        return -1;
-}
+    return (sub_index == sub_len) ? str_index - sub_len: -1;
+}}}
 
