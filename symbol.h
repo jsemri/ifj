@@ -59,7 +59,6 @@ typedef struct {
 /// Function attributes.
 typedef struct {
     T_data_type data_type;      // return data type
-    T_var_symbol return_var;    // return variable
     ilist *func_ilist;          // instruction list
     unsigned par_count;         // number of parameters
     void **arguments;           // pointer to parameters in local table

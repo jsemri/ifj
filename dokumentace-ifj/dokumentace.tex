@@ -1,4 +1,5 @@
 \documentclass[11pt,a4paper]{article}
+
 \usepackage[left=2cm, top=2.5 cm, text={17cm, 24cm}]{geometry}
 \usepackage[czech]{babel}
 \usepackage[utf8]{inputenc}
@@ -13,6 +14,8 @@
 \usepackage{lscape}
 \usepackage{hyperref}
 \usepackage{natbib}
+\usepackage{breakurl}
+\usepackage[IL2]{fontenc}
 
 
 
@@ -20,6 +23,7 @@
 
 \begin{document}
 	
+	\renewcommand{\refname}{}
 	\begin{titlepage}
 		\begin{center}
 			\textsc{\Huge Vysoké učení technické v Brně\\ \medskip
@@ -66,7 +70,7 @@
 	\section{Práca v tíme}
 	\label{tim}
 	
-	Keďže sa jednalo o~tímový projekt, na ktorom pracoval tím o~5 členoch, bolo potrebné si určiť opatrenia a metódy spolupráce. Tie sme si stanovili hneď na začiatku vývojového cyklu. Zaviedli sme konvenciu písania kódu, ktorá nám zabezpečila prehľadnosť a jednotnosť projektu. Taktiež sme zaviedli konvenciu písania komentárov, aby spĺňali normu pre vygenerovanie dokumentácie v nástroji \texttt{doxygen}. K spolupráci viacerých ľudí na jednom projekte sme využili vytvorenie vzdialeného privátneho repozitára na serveri \texttt{GitHub, Inc.}.
+	Keďže sa jednalo o~tímový projekt, na ktorom pracoval tím o~5 členoch, bolo potrebné si určiť opatrenia a~metódy spolupráce. Tie sme si stanovili hneď na začiatku vývojového cyklu. Zaviedli sme konvenciu písania kódu, ktorá nám zabezpečila prehľadnosť a jednotnosť projektu. Taktiež sme zaviedli konvenciu písania komentárov, aby spĺňali normu pre vygenerovanie dokumentácie v nástroji \texttt{doxygen}. K spolupráci viacerých ľudí na jednom projekte sme využili vytvorenie vzdialeného privátneho repozitára na serveri \texttt{GitHub, Inc.}.
 	
 	Tímovú komuníkaciu a kolaboráciu sme riešili osobnými stretnutiami, ktoré boli približne raz za tri týždňe. Stanovili sme si ciele, ktoré museli byť do najbližšieho stretnutia dosiahnuté.
 	
@@ -101,7 +105,7 @@
 	\section{Popis riešenia a implementácia jazyka IFJ16}
 	\label{popis}
 	
-	Projekt sme implementovali z~niekoľkých funkčných celkov. V nasledujúcich podkapitolách sú jednotlivé moduly detailne popísané.
+	Projekt sme implementovali z~niekoľkých funkčných celkov. V nasledujúcich podkapitolách je popis jednotlivých modulov.
 	
 	\subsection{Lexikálny analyzátor}
 	\label{lexer}
@@ -123,15 +127,14 @@
 	riadenie hneď po otvorení súboru. Má za úlohu nielen preveriť syntax
 	a~sémantiku zdrojového súboru, ale taktiež vkladá inštrukcie do inštrukčnej
 	pásky. Jeho implementácia spočíva v~rekurzívnom zostupe, ktorý je riadený
-	LL gramatikou znázorňenou v prílohe \ref{gramatika}. Na vygenerovanie
-	LL tabuľky sme použili online nástroj \cite{aLLT}.
+	LL gramatikou znázorňenou v~prílohe \ref{gramatika}.
 	
 	Keďže jazyk \texttt{IFJ16} je podmnožinou jazyka \texttt{JAVA SE 8},
 	ktorého preklad je zložený z dvoch priechodov, je parser zložený
 	taktiež z~dvoch priechodov. Prvý priechod analyzuje program zo syntaktického
 	a~lexikálneho hľadiska, súčasne vkladá do tabuľky symbolov názvy tried,
-	statických funkcií a~premmenných, a kontroluje pokus o redefiníciu triedy,
-	funkcie alebo statickej premmennej. Druhý priechod kontroluje semántiku
+	statických funkcií a~premmenných, a kontroluje pokus o redefiníciu.
+	Druhý priechod kontroluje semántiku
 	programu, spracováva telá funkcií a~vytvára inštrukčnú pásku.
 	
 	
@@ -167,7 +170,8 @@
 	\subsubsection{Precedenčná analýza výrazov}
 	\label{precedencna analyza}
 	
-	Pre spracovanie výrazov sme použili precedenčnú syntaktickú analýzu zdola nahor.
+	Pre spracovanie výrazov sme použili precedenčnú syntaktickú analýzu zdola nahor,
+	riadenú vlastnou gramatikou.
 	Parser načítal postupnosť tokenov, ktoré mali byť súčasťou výrazu a predal
 	riadenie precedenčnej analýze. Jej výstupom postupnosť inštrukcií, ktoré vyhodnotia tento výraz.
 	
@@ -175,15 +179,10 @@
 	príloha \ref{tabulka} a pomocného zásobníku pre ukladanie výrazov a operátorov.
 	
 	Precedenčná tabulka je implementována ako statické pole, kde index prvku je vyjadrený vzťahom $[row * width + col]$.
-	Typy tokenů \texttt{TT\_int , TT\_double, TT\_string, TT\_bool, TT\_id, TT\_fullid} sdieľajú jeden stĺpec.
+	Typy tokenov reprezentujúce premenné alebo konštatnty zdieľajú jeden stĺpec.
 	
-	Operácie nad zásobníkom sú zjednodušené vynechaním napríklad operácie, ktorá by vracala prvok na vrchu zásovníka, keďže táto funkcia nie je potrebná. Naopak bol rozšírený o funkcie ako TODO, ktorá vracia typ najbližšieho tokenu k vrcholu zásobníku alebo o funkciu TODO, ktorá odoberie a vráti všetky neterminály zo zásobníku až po prvý handle, vrátane.
-	
-	%TODO * V souboru precedence_rules.c jsou uloženy pravidla, pomocí kterých se
-	%redukuje, v poli struktur, kde každá struktura představuje jedno pravidlo.
-	%Struktura obahuje prvky pravé strany pravidla vyjádřených pomocí typů tokenů
-	%(např. E, ==, E), kde pro Expression je rezervován vyhrazen typ tokenu
-	%TT_empty a odkaz na funkci, která toto pravidlo odsimuluje. TODO
+	Operácie nad zásobníkom sú zjednodušené vynechaním napríklad operácie, ktorá by
+	vracala prvok na vrchu zásobníka, keďže táto funkcia nie je potrebná.
 	
 	\subsection{Interpret vnútorného kódu}
 	\label{interpret}
@@ -207,7 +206,8 @@
 	Pri inštrukcii \texttt{RET} (príkaz \texttt{return}) nasleduje skok na
 	miesto odkiaľ bola funkcia volaná, takže na inštrukciu za inštrukciou
 	\texttt{CALL} v predošlom liste. Miesto reprezentované inštrukciou
-	\texttt{LAB} je uložené na hlavný zásobník aby sa vedelo, ktorou inštrukciou
+	\texttt{LAB}\footnote{Label\,--\,inštrukcia reprezentujúca návestie}
+	je uložené na hlavný zásobník aby sa vedelo, ktorou inštrukciou
 	sa má pokračovať. Návratová hodnota funkcie je uložená v~špeciálnych
 	premenných uložených v~globálnej tabuľke symbolov. Jedná sa o emuláciu
 	registrov, ktoré zjednodušujú implementáciu celého interpretu.
@@ -218,21 +218,26 @@
 	\section{Použité algoritmy}
 	\label{algoritmy}
 	
-	V tejto kapitole pojednávame o popise implementovaný algoritmov potrebným pri tvorbe projektu. Na ich pochopenie a implementáciu bola použitá študijná opora z predmetu IAL \cite{opora}.
+	V tejto kapitole pojednávame o popise implementovaný algoritmov potrebným pri tvorbe projektu. Na ich pochopenie a implementáciu bola použitá študijná opora z predmetu IAL (viz prof. \cite{opora}).
 	
-	\subsection{Radiaci algoritmus\,-- Heap Sort}
+	\subsection{Radiaci algoritmus\,--\,Heap Sort}
 	
-	Heapsort, radenie haldou, patrí medzi základné algoritmy radenia. Heap\,-- hromada je najčastejšie štruktúra stromového typu, inak tomu nie je ani v našom prípade. Pre všetky uzly tohto stromu platí rovnaký vzťah, otcovský uzol je vždy buď vačší alebo menší ako jeho synovské uzly. Hromada je implementovaná polom o veľkosti $N$, kde uzol umiestnený na indexe $i$ má svojho ľavého syna na indexe $2i+1-base$\footnote{index prvej položky poľa} a pravého na $2i+2-base$.
+	Heapsort, radenie haldou, patrí medzi základné algoritmy radenia. Heap\,--\,hromada je
+	najčastejšie štruktúra stromového typu, inak tomu nie je ani v našom prípade.
+	Pre všetky uzly tohto stromu platí rovnaký vzťah, otcovský uzol je vždy buď
+	vačší alebo menší ako jeho synovské uzly. Hromada je implementovaná polom o~veľkosti $N$,
+	kde uzol umiestnený na indexe $i$ má svojho ľavého syna na indexe
+	$2i+1-base$\footnote{index prvej položky poľa} a~pravého na $2i+2-base$.
 	
 	Dôležitou časťou algoritmu je pomocná funkcia \textit{sift down} zabezpečujúca rekonštrukciu hromady. Ak nastane porušenie hromady v koreni, táto funkcia postupnými výmenami dostane prvok z koreňa na správne miesto a do koreňa uloží prvok tak,aby bolo splnené pravidlo hromady. Opakovaným volaním funkcie sift down sa bude v koreni nachádzať prvok s najväčšou hodnotou a tohto faktu potom využívame pri samotnom radení. Odobratý prvok z koreňa sa vždy nahradí najmenším a najpravejším uzlom hromady.
 	
 	Táto radiaca metóda má linearitmickú zložitosť.
 	
 	\subsection{Vyhľadávací algoritmus\,-- Knuth-Morris-Pratt}
-
+	
 	Jedná sa o algoritmus, využívaný funkciou \textit{find}. Slúži na vyhľadanie vzoru v~reťazci. K~svojej činnosti využíva konečný automat, ktorý je reprezentovaný vektorom prvkov typu \textit{int}, kde index prvku sa zhoduje s~indexom znaku vo vzore a hodnota prvku reprezentuje cieľový index, na ktorý sa má vrátiť pri nezhode porovnania.
-		
-	Vyhľadávanie je implementované ako jedna funkcia, ktorej parametrami je ukazovateľ na prehľadávaný reťazec a ukazovateľ na vzor. Na začiatku funkcie sa vytvorí vyššie spomínaný vektor \texttt{fail\_vector}. Následne algoritmus sekvenčne prechádza prehľadávaný reťazec a vzor a porovnáva ich znaky. Pri nezhode sa index vzoru nastaví na hodnotu, ktorej odpovedá hodnota vo vektore na aktuálnom indexe. Porovnávanie prebieha, pokiaľ index reťazca a vzoru nepresiahne	index ich posledných znakov. Návratovou hodnotou je index prvého vyhľadania vzoru v~reťazci. V~prípade neúspechu $-1$.	
+	
+	Vyhľadávanie je implementované ako jedna funkcia, ktorej parametrami je ukazovateľ na prehľadávaný reťazec a ukazovateľ na vzor. Na začiatku funkcie sa vytvorí vyššie spomínaný vektor \texttt{fail\_vector}. Následne algoritmus sekvenčne prechádza prehľadávaný reťazec a vzor a porovnáva ich znaky. Pri nezhode sa index vzoru nastaví na hodnotu, ktorej odpovedá hodnota vo vektore na aktuálnom indexe. Porovnávanie prebieha, pokiaľ index reťazca a vzoru nepresiahne	index ich posledných znakov. Návratovou hodnotou je index prvého vyhľadania vzoru v~reťazci. V~prípade neúspechu $-1$.
 	
 	Výhodou algoritmu je, že sa nevracia späť v~prehľadávanom reťazci. Nemusí porovnávať už porovnané prvky. Časová zložitosť algoritmu je ${m+n}$.
 	
@@ -257,9 +262,10 @@
 	\subsection{Zásobník}
 	Zásobník je implementovaný ako pole ukazateľov určitej kapacity. Ak je zásobník
 	plný dôjde k automatickej realokácii a zvýšeniu kapacity zásobníku.
-	V~interprete sa používaju dva zásobníky. Jeden z~nich sa používa na uloženie
+	V~interprete sa používaju tri zásobníky. Jeden z~nich sa používa na uloženie
 	odkazov na miesta skokov a odkazy na parametre funkcií. Druhý zásobník je
 	použitý na ukladanie rámcov, ktoré obsahujú lokálnu tabuľku symbolov.
+	Posledný zásobník používa analýza výrazov, ktorá si naň ukladá operandy a~operátory.
 	
 	\section{Rozšírenia}
 	\label{rozsirenia}
@@ -285,11 +291,11 @@
 	regresných testov, takže zmena zdrojových súborov nebola možná ak
 	všetky testy neboli úspešné. Testy sa delili do dvoch skupín\,--\,testy
 	detekcie chýb a interpretačné testy. Pri testovaní bol použitý program
-	\texttt{gcovr} \cite{COV}, ktorý nám ukázal aké časti interpretu neboli otestované.
-	
+	\texttt{gcovr} od \cite{COV}, ktorý nám ukázal aké časti interpretu neboli otestované.
+	\newpage
 	\section{Použité zdroje}
-	\bibliographystyle{plain}
 	\bibliography{dokumentace.bib}{}
+	\bibliographystyle{czechiso}
 	
 	\newpage
 	\section{Prílohy}
@@ -297,8 +303,9 @@
 	
 	\subsection{Konečný automat}
 	\label{app:automat}
+	\hspace{2cm}
 	\begin{center}
-		\scalebox{0.9} {\includegraphics{IFJ.eps}}
+		\scalebox{0.7} {\includegraphics{IFJ.eps}}
 	\end{center}
 	
 	
@@ -321,7 +328,7 @@
 		PAR &$\rightarrow$& $\epsilon$ \\
 		PAR2 &$\rightarrow$& $\epsilon$ \\
 		PAR2 &$\rightarrow$& id PAR3 \\
-		PAR3 &$\rightarrow$& com TYPE id PAR3 \\
+		PAR3 &$\rightarrow$& , TYPE id PAR3 \\
 		PAR3 &$\rightarrow$& $\epsilon$ \\
 		STLIST &$\rightarrow$& STAT STLIST \\
 		STLIST &$\rightarrow$&  $\epsilon$ \\
@@ -339,7 +346,7 @@
 		ARG &$\rightarrow$& id ARG2 \\
 		ARG &$\rightarrow$& fullid ARG2 \\
 		ARG2 &$\rightarrow$& $\epsilon$ \\
-		ARG2 &$\rightarrow$& com ARG3 ARG2 \\
+		ARG2 &$\rightarrow$& , ARG3 ARG2 \\
 		ARG3 &$\rightarrow$& fullid \\
 		ARG3 &$\rightarrow$& id \\
 		INIT &$\rightarrow$& = CALLEXPR \\
@@ -361,5 +368,44 @@
 	\newpage
 	\subsection{Precedenčná tabuľka}
 	\label{tabulka}
+	\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+		\hline
+		& + & - & / & * & ==& !=& \textless & \textgreater & \textless = & \textgreater = & \&\& & \textbar \textbar & ! & ( & ) & i & \$
+		\\ \hline
+		+  & \textgreater & \textgreater & \textless & \textless & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+		\\ \hline
+		-  & \textgreater & \textgreater & \textless & \textless & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+		\\ \hline
+		/  & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+		\\ \hline
+		*  & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+		\\ \hline
+		== & \textless & \textless & \textless & \textless &   &   & \textless & \textless & \textless & \textless & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+		\\ \hline
+		!= & \textless & \textless & \textless & \textless &   &   & \textless & \textless & \textless & \textless & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+		\\ \hline
+		\textless  & \textless & \textless & \textless & \textless & \textgreater & \textgreater &   &   &   &   & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+		\\ \hline
+		\textgreater  & \textless & \textless & \textless & \textless & \textgreater & \textgreater &   &   &   &   & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+		\\ \hline
+		\textless= & \textless & \textless & \textless & \textless & \textgreater & \textgreater &   &   &   &   & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+		\\ \hline
+		\textgreater= & \textless & \textless & \textless & \textless & \textgreater & \textgreater &   &   &   &   & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+		\\ \hline
+		\&\& & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+		\\ \hline
+		\textbar \textbar & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+		\\ \hline
+		!  & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textless & \textless & \textgreater & \textless & \textgreater
+		\\ \hline
+		(  & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & = & \textless &
+		\\ \hline
+		)  & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater &   & \textgreater &   & \textgreater
+		\\ \hline
+		i  & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater & \textgreater &   & \textgreater &   & \textgreater
+		\\ \hline
+		\$  & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless & \textless &   & \textless &
+		\\    \hline
+	\end{tabular}
 	
 \end{document}
