@@ -69,9 +69,15 @@
 	\section{Práca v tíme}
 	\label{tim}
 
-	Keďže sa jednalo o~tímový projekt, na ktorom pracoval tím o~5 členoch, bolo potrebné si určiť opatrenia a~metódy spolupráce. Tie sme si stanovili hneď na začiatku vývojového cyklu. Zaviedli sme konvenciu písania kódu, ktorá nám zabezpečila prehľadnosť a jednotnosť projektu. Taktiež sme zaviedli konvenciu písania komentárov, aby spĺňali normu pre vygenerovanie dokumentácie v nástroji \texttt{doxygen}. K spolupráci viacerých ľudí na jednom projekte sme využili vytvorenie vzdialeného privátneho repozitára na serveri \texttt{GitHub, Inc.}.
+	Keďže sa jednalo o~tímový projekt, na ktorom pracoval tím o~5 členoch, bolo potrebné
+    si určiť opatrenia a~metódy spolupráce.  Zaviedli sme konvenciu písania kódu, ktorá nám
+    zabezpečila prehľadnosť a jednotnosť projektu. Taktiež sme zaviedli konvenciu písania
+    komentárov, aby spĺňali normu pre vygenerovanie dokumentácie v nástroji \emph{doxygen}.
+    K spolupráci viacerých ľudí na jednom projekte sme využili vytvorenie vzdialeného
+    privátneho repozitára na serveri \emph{GitHub, Inc.}.
 
-	Tímovú komuníkaciu a kolaboráciu sme riešili osobnými stretnutiami, ktoré boli približne raz za tri týždňe. Stanovili sme si ciele, ktoré museli byť do najbližšieho stretnutia dosiahnuté.
+	Tímovú komuníkaciu a kolaboráciu sme riešili osobnými stretnutiami, ktoré boli približne
+    raz za tri týždňe. Stanovili sme si ciele, ktoré museli byť do najbližšieho stretnutia dosiahnuté.
 
 	\subsection{Rozdelenie úloh}
 	\begin{center}
@@ -113,8 +119,8 @@
 	ktoré posiela syntaktickému analyzátoru vo forme tokenov. Token obsahuje typ lexémy
 	a v~prípade aj hodnotu, ak sa jedná o~celočíselný, desatinný alebo reťazcový literál.
 
-	Konečný automat je implementovaný tak, aby vedel spracovať aj jednoduché \texttt{//}
-	a~blokové \texttt{/* */} komentáre. Po ukončení komentáru  automat prejde do
+    Konečný automat je implementovaný tak, aby vedel spracovať aj jednoduché (\texttt{//})
+    a~blokové (\texttt{/* */}) komentáre. Po ukončení komentáru  automat prejde do
 	začínajúceho stavu a~začne spracovávať nasledujúcu lexému alebo ďalší komentár.
 
 	Model konečného automatu môžete násjť v~prílohe \ref{app:automat}.
@@ -128,7 +134,7 @@
 	pásky. Jeho implementácia spočíva v~rekurzívnom zostupe, ktorý je riadený
 	LL gramatikou znázorňenou v~prílohe \ref{gramatika}.
 
-	Keďže jazyk \texttt{IFJ16} je podmnožinou jazyka \texttt{JAVA SE 8},
+	Keďže jazyk \texttt{IFJ16} je podmnožinou jazyka \emph{JAVA SE 8},
 	ktorého preklad je zložený z dvoch priechodov, je parser zložený
 	taktiež z~dvoch priechodov. Prvý priechod analyzuje program zo syntaktického
 	a~lexikálneho hľadiska, súčasne vkladá do tabuľky symbolov názvy tried,
@@ -162,26 +168,24 @@
 
 	Pokiaľ nebola nájdená syntaktická alebo sémantická chyba, po narazení na
 	token typu koniec súboru sa v~tabuľke symbolov nájde trieda \emph{Main}
-	a~funkcia zapuzdrená v~tejto triede \emph{run()} a~spojí sa hlavný inštrukčný
+	a~funkcia \emph{run()} zapuzdrená v~tejto triede. Potom sa spojí hlavný inštrukčný
 	list s~inštrukčným listom funkcie \emph{run()}. Pokiaľ požadovane entity
-	boli nájdené analýza končí a riadenie je predané interpretu.
+	boli nájdené analýza končí a~riadenie je predané interpretu.
 
 	\subsubsection{Precedenčná analýza výrazov}
 	\label{precedencna analyza}
 
 	Pre spracovanie výrazov sme použili precedenčnú syntaktickú analýzu zdola nahor,
 	riadenú vlastnou gramatikou.
-	Parser načítal postupnosť tokenov, ktoré mali byť súčasťou výrazu a predal
+	Parser načíta postupnosť tokenov, ktoré by mali byť súčasťou výrazu a predá
 	riadenie precedenčnej analýze. Jej výstupom postupnosť inštrukcií, ktoré vyhodnotia tento výraz.
 
-	Precedenčná analýza je implementovaná pomocou precedenčnej tabuľky viz.
-	príloha \ref{tabulka} a pomocného zásobníku pre ukladanie výrazov a operátorov.
+    Precedenčná analýza je implementovaná pomocou precedenčnej tabuľky (viz
+    príloha \ref{tabulka}) a~pomocného zásobníku pre ukladanie výrazov a operátorov.
 
 	Precedenčná tabulka je implementována ako statické pole, kde index prvku je vyjadrený vzťahom $[row * width + col]$.
 	Typy tokenov reprezentujúce premenné alebo konštatnty zdieľajú jeden stĺpec.
 
-	Operácie nad zásobníkom sú zjednodušené vynechaním napríklad operácie, ktorá by
-	vracala prvok na vrchu zásobníka, keďže táto funkcia nie je potrebná.
 
 	\subsection{Interpret vnútorného kódu}
 	\label{interpret}
@@ -217,7 +221,7 @@
 	\section{Použité algoritmy}
 	\label{algoritmy}
 
-	V tejto kapitole pojednávame o popise implementovaný algoritmov potrebným pri tvorbe projektu. Na ich pochopenie a implementáciu bola použitá študijná opora z predmetu IAL (viz prof. \cite{opora}).
+	V tejto kapitole pojednávame o popise implementovaný algoritmov potrebným pri tvorbe projektu. Na ich pochopenie a implementáciu bola použitá študijná opora z predmetu IAL (prof. \cite{opora}).
 
 	\subsection{Radiaci algoritmus\,--\,Heap Sort}
 
@@ -228,7 +232,7 @@
 	kde uzol umiestnený na indexe $i$ má svojho ľavého syna na indexe
 	$2i+1-base$\footnote{index prvej položky poľa} a~pravého na $2i+2-base$.
 
-	Dôležitou časťou algoritmu je pomocná funkcia \textit{sift down} zabezpečujúca rekonštrukciu hromady. Ak nastane porušenie hromady v koreni, táto funkcia postupnými výmenami dostane prvok z koreňa na správne miesto a do koreňa uloží prvok tak,aby bolo splnené pravidlo hromady. Opakovaným volaním funkcie sift down sa bude v koreni nachádzať prvok s najväčšou hodnotou a tohto faktu potom využívame pri samotnom radení. Odobratý prvok z koreňa sa vždy nahradí najmenším a najpravejším uzlom hromady.
+	Dôležitou časťou algoritmu je pomocná funkcia \textit{sift down} zabezpečujúca rekonštrukciu hromady. Ak nastane porušenie hromady v koreni, táto funkcia postupnými výmenami dostane prvok z koreňa na správne miesto a~do koreňa uloží prvok tak, aby bolo splnené pravidlo hromady. Opakovaným volaním funkcie sift down sa bude v koreni nachádzať prvok s najväčšou hodnotou a tohto faktu potom využívame pri samotnom radení. Odobratý prvok z koreňa sa vždy nahradí najmenším a najpravejším uzlom hromady.
 
 	Táto radiaca metóda má linearitmickú zložitosť.
 
