@@ -144,7 +144,9 @@ T_symbol *is_defined(char *iden, T_symbol_table *local_tab,
         sym = table_find(symbol_tab, iden, actual_class);
         // only case if initializing static variable with static one
         // which was not initialized before
-        if (sym && !sym->attr.var->is_def && local_tab == symbol_tab) {
+        if (sym && !sym->attr.var->is_def && local_tab == symbol_tab &&
+            sym->symbol_type == is_var)
+        {
             terminate(SEMANTIC_ERROR);
         }
     }

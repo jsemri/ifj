@@ -110,10 +110,10 @@ void sift_down(char *str, int left, int right);
  * and returns its position.
  *
  * @param   string      Pointer to string.
- * @param   pattern     Pointer to substring.
+ * @param   substr     Pointer to substring.
  *
  * @return  Index of first occurrence substring in string.
  */
-int find_kmp(char *str, char *pattern);
+int find_kmp(char *str, char *substr);
 
 #endif
